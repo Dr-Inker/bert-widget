@@ -54,6 +54,11 @@ npm run verify:release -- android/app/build/outputs/apk/release/app-release.apk 
 This gate verifies the APK signature, pinned signing certificate, package, increasing version code, version
 name, SHA-256, manifest consistency, effective cleartext-network setting and backup prohibition.
 
+Install `deploy/nginx-widget-security.conf` as `/etc/nginx/snippets/bert-widget-security.conf`, include it in
+every widget location, then run `nginx -t` before reloading Nginx. The include must be repeated in locations
+that set `Cache-Control`, because Nginx does not inherit parent `add_header` directives once a child location
+defines one of its own.
+
 Never commit either file. Keep an encrypted off-server backup of both. Losing the keystore prevents publishing an upgrade that can replace the installed app.
 
 Verify a published APK with Android build tools:
