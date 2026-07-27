@@ -64,6 +64,10 @@ context. Both public quote routes should use the request and connection zones an
 client exceeds them. The Berthalla server must continue loading the Cloudflare real-IP configuration so the
 limit key is the visitor IP rather than a Cloudflare edge address.
 
+Serve the complete `/widget/download/` directory through the dedicated APK location. Do not add one rule per
+version: every current and future APK must receive the Android package MIME type, attachment disposition,
+`nosniff`, the shared security policy and bounded cache lifetime.
+
 Never commit either file. Keep an encrypted off-server backup of both. Losing the keystore prevents publishing an upgrade that can replace the installed app.
 
 Verify a published APK with Android build tools:
