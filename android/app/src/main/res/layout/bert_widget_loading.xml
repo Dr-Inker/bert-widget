@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#FFF7ED"
-    android:gravity="center"
+    android:background="#071A2F"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
     android:padding="16dp"
-    android:text="$BERT"
-    android:textColor="#9A3412"
-    android:textSize="20sp"
-    android:textStyle="bold" />
+    >
+
+    <ImageView
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:contentDescription="BERT token"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bert_token" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="$BERT"
+        android:textColor="#FFFFFF"
+        android:textSize="20sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="LIVE TOKEN PRICE"
+        android:textColor="#9CB0C5"
+        android:textSize="9sp"
+        android:textStyle="bold" />
+</LinearLayout>

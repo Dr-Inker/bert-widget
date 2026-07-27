@@ -40,11 +40,12 @@ struct QuoteScreen: View {
         List {
             Section {
                 HStack(spacing: 16) {
-                    Image(systemName: "pawprint.fill")
-                        .font(.system(size: 38))
-                        .foregroundStyle(.orange)
+                    Image("bert_token")
+                        .resizable()
+                        .scaledToFill()
                         .frame(width: 58, height: 58)
-                        .background(.orange.opacity(0.12), in: Circle())
+                        .clipShape(Circle())
+                        .accessibilityLabel("BERT token")
                     VStack(alignment: .leading) {
                         Text(BERTFormatters.price(envelope.quote.priceUsd))
                             .font(.title.bold())

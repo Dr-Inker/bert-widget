@@ -2,7 +2,7 @@
 
 Native home-screen widgets for tracking **Bertram The Pomeranian ($BERT)** on Solana.
 
-The Android v0.1.0 release is live at [berthalla.io/widget](https://berthalla.io/widget/). The repository also contains the production quote service, deployment templates, and an iOS WidgetKit scaffold.
+The signed Android v0.3.5 release is live at [berthalla.io/widget](https://berthalla.io/widget/). The repository also contains the production quote service, deployment templates, and an unshipped iOS WidgetKit codebase.
 
 The token identity is pinned by mint rather than ticker:
 
@@ -38,13 +38,15 @@ The Android companion app and Jetpack Glance widget provide:
 - 24-hour percentage change
 - Market cap, 24-hour volume, and liquidity
 - Last-updated time and a stale-data indicator
-- Tap-through to a detailed chart
+- Optional, locally stored BERT holdings with a live USD value
+- Compact 2×2 and Market 4×2 home-screen widgets
+- Tap-through to the native market desk and widget setup
 
-The widget is informational only. It does not hold keys, connect a wallet, or execute trades. The signed v0.1.0 APK supports Android 8.0 and newer.
+The widget is informational only. It does not hold keys, connect a wallet, transmit the holdings amount, or execute trades. The signed v0.3.5 APK supports Android 8.0 and newer.
 
 ## iOS client
 
-The initial SwiftUI app and WidgetKit extension live in [`ios/`](./ios). They share the API model and App Group cache, support small and medium widgets, request 15-minute timeline refreshes, and retain the last valid quote when an update fails. See [`ios/README.md`](./ios/README.md) for macOS/Xcode setup.
+The initial SwiftUI app and WidgetKit extension live in [`ios/`](./ios). They share the API model and App Group cache, support small and medium widgets, request 15-minute timeline refreshes, and retain the last valid quote when an update fails. They are not signed, tested, or distributed yet. See [`ios/README.md`](./ios/README.md) for the remaining macOS, Xcode, signing, and TestFlight work.
 
 ## Android client
 
@@ -56,7 +58,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
 - Android package: `global.bert.widget`
-- Current version: `0.1.0` (`versionCode` 1)
+- Current Android version: `0.3.5` (`versionCode` 9)
 - Minimum Android: 8.0 / API 26
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.

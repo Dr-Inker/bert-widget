@@ -7,6 +7,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
 import java.net.URL
+import java.time.Instant
 
 class BERTQuoteRepository(context: Context) {
     private val preferences = context.getSharedPreferences("bert_quote", Context.MODE_PRIVATE)
@@ -39,6 +40,7 @@ class BERTQuoteRepository(context: Context) {
         require(asset.getString("chain") == "solana") { "Unexpected chain" }
         require(asset.getString("mint") == BERT_MINT) { "Unexpected BERT mint" }
         val quote = root.getJSONObject("quote")
+        val source = root.getJSONObject("source")
         val price = quote.getDouble("priceUsd")
         require(price.isFinite() && price > 0) { "Invalid BERT price" }
 
@@ -49,6 +51,10 @@ class BERTQuoteRepository(context: Context) {
             volume24hUsd = quote.optionalDouble("volume24hUsd"),
             liquidityUsd = quote.optionalDouble("liquidityUsd"),
             freshness = root.getJSONObject("meta").getString("freshness"),
+            observedAtEpochMillis = Instant.parse(source.getString("observedAt")).toEpochMilli(),
+            sourceName = source.getString("name"),
+            dex = source.getString("dex"),
+            pairUrl = source.getString("pairUrl"),
         )
     }
 

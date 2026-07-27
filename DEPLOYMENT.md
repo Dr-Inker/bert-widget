@@ -5,7 +5,7 @@
 `bert-widget.service` runs the dependency-free Node quote service as `www-data` on `127.0.0.1:8787`. nginx exposes the landing page and proxies the public quote routes:
 
 - `/widget/api/quote` — canonical production endpoint
-- `/widget/v1/bert/quote` — compatibility endpoint used by Android v0.1.0
+- `/widget/v1/bert/quote` — compatibility quote endpoint
 - `/widget/download/bert-widget.apk` — signed Android release
 
 The public landing-page files live in the separate Berthalla website repository and are not duplicated here.
@@ -57,10 +57,11 @@ The expected signing-certificate SHA-256 digest is:
 f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c
 ```
 
-## v0.1.0 release record
+## v0.3.5 Android release record
 
 - Package: `global.bert.widget`
-- Version code: `1`
+- Version code: `9`
 - Minimum Android: API 26
-- APK SHA-256: `939cbd1ab205bc24aa30a0380fec4817528f6aa555e6afd5af92f1a5eb12e930`
-- Download: <https://berthalla.io/widget/download/bert-widget.apk>
+- APK SHA-256: `c2bec7205da024c6272fe803996bf1353d9655bc15012704601e5840ba6e2745`
+- Versioned download: <https://berthalla.io/widget/download/bert-widget-0.3.5.apk>
+- Stable download: <https://berthalla.io/widget/download/bert-widget.apk>

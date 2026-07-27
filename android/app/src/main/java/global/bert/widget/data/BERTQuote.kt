@@ -7,6 +7,10 @@ data class BERTQuote(
     val volume24hUsd: Double?,
     val liquidityUsd: Double?,
     val freshness: String,
+    val observedAtEpochMillis: Long,
+    val sourceName: String,
+    val dex: String,
+    val pairUrl: String,
 ) {
     val isStale: Boolean get() = freshness != "fresh"
 }
