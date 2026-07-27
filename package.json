@@ -8,7 +8,8 @@
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "test": "node --test",
-    "check": "node --check src/server.js && node --test"
+    "check": "node --check src/server.js && node --check tools/verify-release.mjs && node --test",
+    "verify:release": "node tools/verify-release.mjs"
   },
   "engines": {
     "node": ">=22"

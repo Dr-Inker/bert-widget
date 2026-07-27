@@ -42,6 +42,18 @@ Production releases must use the same signing identity so Android accepts upgrad
 /etc/bert-widget/keystore.pass
 ```
 
+Release tasks fail closed when either file is absent. Alternate protected paths can be supplied with the
+`BERT_RELEASE_KEYSTORE` and `BERT_RELEASE_PASSWORD_FILE` Gradle properties.
+
+After generating `release.json`, verify the exact publication pair before deployment:
+
+```bash
+npm run verify:release -- android/app/build/outputs/apk/release/app-release.apk /path/to/release.json PREVIOUS_VERSION_CODE
+```
+
+This gate verifies the APK signature, pinned signing certificate, package, increasing version code, version
+name, SHA-256, manifest consistency and effective cleartext-network setting.
+
 Never commit either file. Keep an encrypted off-server backup of both. Losing the keystore prevents publishing an upgrade that can replace the installed app.
 
 Verify a published APK with Android build tools:
