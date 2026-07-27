@@ -119,6 +119,8 @@ The normalized backend and native Android path described above reached v0.3.6 on
 
 The production backend pins the mint, chooses the highest-liquidity valid base-token pool, caches fresh quotes for one minute, and can serve the last valid quote for up to 30 minutes during upstream failure. The v0.3.6 security pass also added bounded upstream responses, strict external-link validation, HTTPS-only release traffic, disabled Android backup/device transfer, fail-closed release verification, hardened web headers, API rate limiting, and secure APK response handling.
 
+The landing page deliberately separates product demonstration from market reporting. Its mock widgets use a stable positive illustrative snapshot, are labelled `EXAMPLE SNAPSHOT`, and are not overwritten by the live quote endpoint. The native app remains the current-data surface; this avoids presenting a transient red or green trading day as part of the product’s permanent visual identity without misrepresenting the preview as live.
+
 ## Original implementation sequence
 
 1. Confirm brand assets and permission to use them.

@@ -69,6 +69,8 @@ Production runs the Node service on loopback behind nginx. The checked-in unit a
 
 The landing page links directly to this repository and its release history so users can inspect the implementation, permissions, data flow, security controls, and published changes before installing the APK.
 
+Landing-page widget mockups use a stable, clearly labelled illustrative market snapshot so short-term price movement does not distort the product presentation. This affects marketing previews only: the installed widgets and production quote API continue to display validated current data.
+
 ## Repository layout
 
 ```text
