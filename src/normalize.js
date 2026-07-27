@@ -38,7 +38,7 @@ export function normalizePair(pair, observedAt = new Date()) {
       name: "dexscreener",
       pairAddress: requiredString(pair?.pairAddress, "pairAddress"),
       dex: requiredString(pair?.dexId, "dexId"),
-      pairUrl: requiredString(pair?.url, "url"),
+      pairUrl: requiredDexScreenerPairUrl(pair?.url),
       observedAt: observedAt.toISOString(),
     },
   };
@@ -69,6 +69,32 @@ function requiredString(value, field) {
     throw new QuoteDataError(`${field} is missing or invalid`);
   }
   return value;
+}
+
+function requiredDexScreenerPairUrl(value) {
+  const raw = requiredString(value, "url");
+  let url;
+  try {
+    url = new URL(raw);
+  } catch {
+    throw new QuoteDataError("url is not a valid URL");
+  }
+
+  const allowedHost = url.hostname === "dexscreener.com" || url.hostname === "www.dexscreener.com";
+  const solanaPairPath = /^\/solana\/[1-9A-HJ-NP-Za-km-z]+\/?$/.test(url.pathname);
+  if (
+    url.protocol !== "https:" ||
+    !allowedHost ||
+    url.port !== "" ||
+    url.username !== "" ||
+    url.password !== "" ||
+    url.search !== "" ||
+    url.hash !== "" ||
+    !solanaPairPath
+  ) {
+    throw new QuoteDataError("url is not an allowed DEX Screener Solana pair URL");
+  }
+  return url.href;
 }
 
 export class QuoteDataError extends Error {

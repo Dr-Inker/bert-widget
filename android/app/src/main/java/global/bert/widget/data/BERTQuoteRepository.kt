@@ -6,6 +6,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 
@@ -54,7 +55,7 @@ class BERTQuoteRepository(context: Context) {
             observedAtEpochMillis = Instant.parse(source.getString("observedAt")).toEpochMilli(),
             sourceName = source.getString("name"),
             dex = source.getString("dex"),
-            pairUrl = source.getString("pairUrl"),
+            pairUrl = requireValidDexScreenerPairUrl(source.getString("pairUrl")),
         )
     }
 
@@ -64,5 +65,15 @@ class BERTQuoteRepository(context: Context) {
     companion object {
         const val BERT_MINT = "HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump"
         private const val KEY = "last_valid_quote"
+
+        fun requireValidDexScreenerPairUrl(raw: String): String {
+            val uri = runCatching { URI(raw) }.getOrElse { throw IllegalArgumentException("Invalid market URL") }
+            val host = uri.host?.lowercase()
+            require(uri.scheme.equals("https", ignoreCase = true)) { "Market URL must use HTTPS" }
+            require(host == "dexscreener.com" || host == "www.dexscreener.com") { "Unexpected market host" }
+            require(uri.port == -1 && uri.userInfo == null && uri.query == null && uri.fragment == null) { "Unsafe market URL" }
+            require(Regex("^/solana/[1-9A-HJ-NP-Za-km-z]+/?$").matches(uri.path.orEmpty())) { "Unexpected market path" }
+            return uri.toASCIIString()
+        }
     }
 }

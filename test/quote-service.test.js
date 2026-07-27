@@ -15,7 +15,7 @@ function upstreamPair() {
     chainId: "solana",
     dexId: "raydium",
     pairAddress: "pair",
-    url: "https://example.test/pair",
+    url: "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
     baseToken: { address: BERT.mint, symbol: "Bert" },
     priceUsd: "0.01",
     liquidity: { usd: 100 },

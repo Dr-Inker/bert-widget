@@ -205,7 +205,10 @@ private fun QuoteDashboard(
             colors = ButtonDefaults.buttonColors(containerColor = Orange),
         ) { Text(if (refreshing) "Refreshing…" else "Refresh", fontWeight = FontWeight.Bold) }
         OutlinedButton(
-            onClick = { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(quote.pairUrl))) },
+            onClick = {
+                val safeUrl = BERTQuoteRepository.requireValidDexScreenerPairUrl(quote.pairUrl)
+                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(safeUrl)))
+            },
             modifier = Modifier.weight(1f),
             border = BorderStroke(1.dp, Color.White.copy(alpha = 0.22f)),
         ) { Text("View market ↗", color = Cream, fontWeight = FontWeight.Bold) }

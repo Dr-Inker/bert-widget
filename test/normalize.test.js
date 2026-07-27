@@ -8,7 +8,7 @@ function pair(overrides = {}) {
     chainId: "solana",
     dexId: "raydium",
     pairAddress: "best-pair",
-    url: "https://dexscreener.com/solana/best-pair",
+    url: "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
     baseToken: { address: BERT.mint, symbol: "Bert" },
     quoteToken: { address: "sol", symbol: "SOL" },
     priceUsd: "0.009",
@@ -45,4 +45,20 @@ test("normalizes numeric strings and missing optional fields", () => {
   assert.equal(result.quote.priceUsd, 0.009);
   assert.equal(result.quote.marketCapUsd, null);
   assert.equal(result.source.observedAt, "2026-07-27T12:00:00.000Z");
+});
+
+test("accepts only HTTPS DEX Screener Solana pair URLs", () => {
+  const accepted = normalizePair(pair({ url: "https://www.dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY" }));
+  assert.equal(accepted.source.pairUrl, "https://www.dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY");
+
+  for (const url of [
+    "http://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+    "intent://scan/#Intent;scheme=zxing;end",
+    "https://dexscreener.com.evil.test/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+    "https://user@dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+    "https://dexscreener.com/ethereum/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+    "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY?redirect=evil",
+  ]) {
+    assert.throws(() => normalizePair(pair({ url })), /not an allowed DEX Screener/);
+  }
 });

@@ -58,4 +58,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.work:work-runtime:2.11.2")
+    testImplementation("junit:junit:4.13.2")
 }
