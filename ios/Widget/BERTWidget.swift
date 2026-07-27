@@ -4,21 +4,24 @@ import WidgetKit
 struct BERTEntry: TimelineEntry {
     let date: Date
     let quote: BERTQuoteEnvelope?
+    let holdings: Double?
     let message: String?
 }
 
 struct BERTProvider: TimelineProvider {
     private let client = BERTQuoteClient()
     private let store = BERTQuoteStore()
+    private let settings = BERTSettingsStore()
 
     func placeholder(in context: Context) -> BERTEntry {
-        BERTEntry(date: Date(), quote: .preview, message: nil)
+        BERTEntry(date: Date(), quote: .preview, holdings: 1_000_000, message: nil)
     }
 
     func getSnapshot(in context: Context, completion: @escaping (BERTEntry) -> Void) {
         completion(BERTEntry(
             date: Date(),
             quote: context.isPreview ? .preview : store.load(),
+            holdings: context.isPreview ? 1_000_000 : settings.loadHoldings(),
             message: nil
         ))
     }
@@ -29,11 +32,12 @@ struct BERTProvider: TimelineProvider {
             do {
                 let quote = try await client.fetch()
                 store.save(quote)
-                entry = BERTEntry(date: Date(), quote: quote, message: nil)
+                entry = BERTEntry(date: Date(), quote: quote, holdings: settings.loadHoldings(), message: nil)
             } catch {
                 entry = BERTEntry(
                     date: Date(),
                     quote: store.load(),
+                    holdings: settings.loadHoldings(),
                     message: "Update delayed"
                 )
             }
@@ -67,12 +71,12 @@ struct BERTWidgetView: View {
     }
 
     private func quoteView(_ envelope: BERTQuoteEnvelope) -> some View {
-        VStack(alignment: .leading, spacing: 9) {
+        VStack(alignment: .leading, spacing: family == .systemMedium ? 6 : 9) {
             HStack {
                 Image("bert_token")
                     .resizable()
                     .scaledToFill()
-                    .frame(width: 40, height: 40)
+                    .frame(width: family == .systemMedium ? 34 : 40, height: family == .systemMedium ? 34 : 40)
                     .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                     .accessibilityLabel("BERT token")
                 VStack(alignment: .leading, spacing: 1) {
@@ -93,18 +97,40 @@ struct BERTWidgetView: View {
                 }
             }
 
-            Text(BERTFormatters.price(envelope.quote.priceUsd))
-                .font(.system(family == .systemMedium ? .title : .title2, design: .rounded, weight: .heavy))
-                .foregroundStyle(.white)
-                .minimumScaleFactor(0.65)
-                .lineLimit(1)
+            HStack(alignment: .top, spacing: 16) {
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(BERTFormatters.price(envelope.quote.priceUsd))
+                        .font(.system(.title2, design: .rounded, weight: .heavy))
+                        .foregroundStyle(.white)
+                        .minimumScaleFactor(0.65)
+                        .lineLimit(1)
+                    Text(BERTFormatters.percent(envelope.quote.change24hPct) + " · 24H")
+                        .font(.caption.bold())
+                        .foregroundStyle(changeColor(envelope.quote.change24hPct))
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
 
-            Text(BERTFormatters.percent(envelope.quote.change24hPct) + " 24h")
-                .font(.caption.bold())
-                .foregroundStyle(changeColor(envelope.quote.change24hPct))
+                if family == .systemMedium {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("YOUR BERT")
+                            .font(.system(size: 8, weight: .semibold))
+                            .tracking(0.4)
+                            .foregroundStyle(.white.opacity(0.55))
+                        Text(BERTFormatters.holdingsUSD(tokens: entry.holdings, price: envelope.quote.priceUsd))
+                            .font(.headline.bold())
+                            .foregroundStyle(entry.holdings == nil ? amber : .white)
+                        if let holdings = entry.holdings {
+                            Text(BERTFormatters.tokenAmount(holdings) + " BERT")
+                                .font(.system(size: 8, weight: .medium))
+                                .foregroundStyle(.white.opacity(0.58))
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
 
             if family == .systemMedium {
-                HStack(spacing: 24) {
+                HStack(spacing: 12) {
                     metric("MARKET CAP", envelope.quote.marketCapUsd)
                     metric("24H VOLUME", envelope.quote.volume24hUsd)
                     metric("LIQUIDITY", envelope.quote.liquidityUsd)
@@ -151,7 +177,10 @@ struct BERTWidgetView: View {
                 .foregroundStyle(.white.opacity(0.55))
             Text(BERTFormatters.compactUSD(value)).font(.caption.bold()).foregroundStyle(.white)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
+
+    private var amber: Color { Color(red: 1, green: 0.78, blue: 0.34) }
 
     private func changeColor(_ value: Double?) -> Color {
         guard let value else { return .white.opacity(0.55) }
@@ -178,11 +207,11 @@ struct BERTWidget: Widget {
 #Preview(as: .systemSmall) {
     BERTWidget()
 } timeline: {
-    BERTEntry(date: .now, quote: .preview, message: nil)
+    BERTEntry(date: .now, quote: .preview, holdings: 1_000_000, message: nil)
 }
 
 #Preview(as: .systemMedium) {
     BERTWidget()
 } timeline: {
-    BERTEntry(date: .now, quote: .preview, message: nil)
+    BERTEntry(date: .now, quote: .preview, holdings: 1_000_000, message: nil)
 }

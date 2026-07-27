@@ -7,7 +7,11 @@ settings:
   base:
     SWIFT_VERSION: "5.10"
     DEVELOPMENT_TEAM: ""
-    BERT_API_BASE_URL: "http://127.0.0.1:8787"
+  configs:
+    Debug:
+      BERT_QUOTE_URL: "http://127.0.0.1:8787/v1/bert/quote"
+    Release:
+      BERT_QUOTE_URL: "https://berthalla.io/widget/api/quote"
 targets:
   BERTApp:
     type: application
@@ -19,12 +23,15 @@ targets:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: global.bert.widget
         CODE_SIGN_ENTITLEMENTS: App/BERTApp.entitlements
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
     info:
       path: App/Info.plist
       properties:
         CFBundleDisplayName: BERT
         UILaunchScreen: {}
-        BERT_API_BASE_URL: $(BERT_API_BASE_URL)
+        BERT_QUOTE_URL: $(BERT_QUOTE_URL)
         CFBundleURLTypes:
           - CFBundleURLName: global.bert.widget
             CFBundleURLSchemes:
@@ -45,11 +52,13 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: global.bert.widget.extension
         CODE_SIGN_ENTITLEMENTS: Widget/BERTWidget.entitlements
         APPLICATION_EXTENSION_API_ONLY: YES
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
     info:
       path: Widget/Info.plist
       properties:
         CFBundleDisplayName: BERT Widget
-        BERT_API_BASE_URL: $(BERT_API_BASE_URL)
+        BERT_QUOTE_URL: $(BERT_QUOTE_URL)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         NSAppTransportSecurity:
