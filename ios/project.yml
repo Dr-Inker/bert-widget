@@ -9,7 +9,7 @@ settings:
     DEVELOPMENT_TEAM: ""
   configs:
     Debug:
-      BERT_QUOTE_URL: "http://127.0.0.1:8787/v1/bert/quote"
+      BERT_QUOTE_URL: "https://berthalla.io/widget/api/quote"
     Release:
       BERT_QUOTE_URL: "https://berthalla.io/widget/api/quote"
 targets:
@@ -36,8 +36,6 @@ targets:
           - CFBundleURLName: global.bert.widget
             CFBundleURLSchemes:
               - bertwidget
-        NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true
     dependencies:
       - target: BERTWidgetExtension
         embed: true
@@ -61,5 +59,3 @@ targets:
         BERT_QUOTE_URL: $(BERT_QUOTE_URL)
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
-        NSAppTransportSecurity:
-          NSAllowsLocalNetworking: true

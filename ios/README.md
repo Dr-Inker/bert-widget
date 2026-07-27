@@ -20,7 +20,7 @@ Before signing or shipping:
 4. Confirm the Release `BERT_QUOTE_URL` is `https://berthalla.io/widget/api/quote`.
 5. Confirm the official BERT token artwork is present in both targets' generated asset catalogs.
 
-Debug builds use `http://127.0.0.1:8787/v1/bert/quote` for local simulator development. A physical device cannot use that address to reach a development computer. Release builds use `https://berthalla.io/widget/api/quote` directly.
+Debug and Release builds use `https://berthalla.io/widget/api/quote` by default, and neither target carries an App Transport Security exception. Local API development must use an explicitly configured HTTPS endpoint; do not add a cleartext or local-network exception to shared project metadata.
 
 The app and widget share the last valid quote and optional holdings amount through `group.global.bert.widget`. Holdings never leave the shared App Group container; the medium widget calculates the USD value locally from the public quote.
 
