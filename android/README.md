@@ -20,4 +20,4 @@ The resulting development APK is written to `app/build/outputs/apk/debug/app-deb
 
 Release builds use the explicit production endpoint `https://berthalla.io/widget/api/quote`. Signing credentials are intentionally kept outside Git. See [`../DEPLOYMENT.md`](../DEPLOYMENT.md) before producing or replacing a release APK.
 
-The published v0.3.5 package is `global.bert.widget` (`versionCode` 9), requires Android 8.0 or newer, and is distributed from [berthalla.io/widget](https://berthalla.io/widget/).
+The published v0.3.6 package is `global.bert.widget` (`versionCode` 10), requires Android 8.0 or newer, and is distributed from [berthalla.io/widget](https://berthalla.io/widget/).

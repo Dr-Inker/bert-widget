@@ -91,3 +91,13 @@ f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c
 - APK SHA-256: `c2bec7205da024c6272fe803996bf1353d9655bc15012704601e5840ba6e2745`
 - Versioned download: <https://berthalla.io/widget/download/bert-widget-0.3.5.apk>
 - Stable download: <https://berthalla.io/widget/download/bert-widget.apk>
+
+## v0.3.6 Android release record
+
+- Package: `global.bert.widget`
+- Version code: `10`
+- Minimum Android: API 26
+- APK SHA-256: `20d5de5ce124d886b2b13fe8200168e94281dd616448af349030108e462f9934`
+- Versioned download: <https://berthalla.io/widget/download/bert-widget-0.3.6.apk>
+- Stable download: <https://berthalla.io/widget/download/bert-widget.apk>
+- Security: backups and device transfer disabled; HTTPS-only release traffic; fail-closed release verification
