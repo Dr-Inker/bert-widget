@@ -15,7 +15,7 @@ class BERTQuoteRepositoryTest {
 
     @Test
     fun acceptsOnlyHttpsDexScreenerSolanaPairUrls() {
-        val valid = "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY"
+        val valid = "https://dexscreener.com/solana/bmsze6tkzyskys1patpkryyazgdxwfxdia4buvlg9agy"
         assertEquals(valid, BERTQuoteRepository.requireValidDexScreenerPairUrl(valid))
 
         listOf(
@@ -25,6 +25,7 @@ class BERTQuoteRepositoryTest {
             "https://user@dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
             "https://dexscreener.com/ethereum/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
             "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY?redirect=evil",
+            "https://dexscreener.com/solana/not-a-valid-pair-slug",
         ).forEach { invalid ->
             require(runCatching { BERTQuoteRepository.requireValidDexScreenerPairUrl(invalid) }.isFailure) {
                 "Expected URL to be rejected: $invalid"

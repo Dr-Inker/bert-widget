@@ -81,7 +81,7 @@ function requiredDexScreenerPairUrl(value) {
   }
 
   const allowedHost = url.hostname === "dexscreener.com" || url.hostname === "www.dexscreener.com";
-  const solanaPairPath = /^\/solana\/[1-9A-HJ-NP-Za-km-z]+\/?$/.test(url.pathname);
+  const solanaPairPath = /^\/solana\/[a-z0-9]{32,64}\/?$/i.test(url.pathname);
   if (
     url.protocol !== "https:" ||
     !allowedHost ||

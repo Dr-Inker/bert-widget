@@ -92,7 +92,7 @@ class BERTQuoteRepository(context: Context) {
             require(uri.scheme.equals("https", ignoreCase = true)) { "Market URL must use HTTPS" }
             require(host == "dexscreener.com" || host == "www.dexscreener.com") { "Unexpected market host" }
             require(uri.port == -1 && uri.userInfo == null && uri.query == null && uri.fragment == null) { "Unsafe market URL" }
-            require(Regex("^/solana/[1-9A-HJ-NP-Za-km-z]+/?$").matches(uri.path.orEmpty())) { "Unexpected market path" }
+            require(Regex("^/solana/[A-Za-z0-9]{32,64}/?$").matches(uri.path.orEmpty())) { "Unexpected market path" }
             return uri.toASCIIString()
         }
     }

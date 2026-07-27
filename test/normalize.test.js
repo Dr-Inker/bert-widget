@@ -48,8 +48,8 @@ test("normalizes numeric strings and missing optional fields", () => {
 });
 
 test("accepts only HTTPS DEX Screener Solana pair URLs", () => {
-  const accepted = normalizePair(pair({ url: "https://www.dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY" }));
-  assert.equal(accepted.source.pairUrl, "https://www.dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY");
+  const accepted = normalizePair(pair({ url: "https://www.dexscreener.com/solana/bmsze6tkzyskys1patpkryyazgdxwfxdia4buvlg9agy" }));
+  assert.equal(accepted.source.pairUrl, "https://www.dexscreener.com/solana/bmsze6tkzyskys1patpkryyazgdxwfxdia4buvlg9agy");
 
   for (const url of [
     "http://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
@@ -58,6 +58,7 @@ test("accepts only HTTPS DEX Screener Solana pair URLs", () => {
     "https://user@dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
     "https://dexscreener.com/ethereum/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
     "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY?redirect=evil",
+    "https://dexscreener.com/solana/not-a-valid-pair-slug",
   ]) {
     assert.throws(() => normalizePair(pair({ url })), /not an allowed DEX Screener/);
   }
