@@ -1,0 +1,11 @@
+node_modules/
+.env
+coverage/
+*.log
+android/.gradle/
+android/app/build/
+android/local.properties
+android/.kotlin/
+*.jks
+*.keystore
+keystore.pass
