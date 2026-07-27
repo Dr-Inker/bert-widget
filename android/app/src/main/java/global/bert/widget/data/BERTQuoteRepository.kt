@@ -5,6 +5,8 @@ import global.bert.widget.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONObject
+import java.io.ByteArrayOutputStream
+import java.io.InputStream
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -23,7 +25,9 @@ class BERTQuoteRepository(context: Context) {
             if (connection.responseCode !in 200..299) {
                 error("Quote service returned HTTP ${connection.responseCode}")
             }
-            val raw = connection.inputStream.bufferedReader().use { it.readText() }
+            val declaredLength = connection.contentLengthLong
+            require(declaredLength < 0 || declaredLength <= MAX_RESPONSE_BYTES) { "Quote response is too large" }
+            val raw = connection.inputStream.use { readUtf8WithLimit(it) }
             val quote = parse(raw)
             preferences.edit().putString(KEY, raw).apply()
             quote
@@ -65,6 +69,22 @@ class BERTQuoteRepository(context: Context) {
     companion object {
         const val BERT_MINT = "HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump"
         private const val KEY = "last_valid_quote"
+        private const val MAX_RESPONSE_BYTES = 128 * 1_024
+
+        fun readUtf8WithLimit(input: InputStream, maxBytes: Int = MAX_RESPONSE_BYTES): String {
+            require(maxBytes > 0) { "Response limit must be positive" }
+            val output = ByteArrayOutputStream(minOf(maxBytes, 8 * 1_024))
+            val buffer = ByteArray(8 * 1_024)
+            var total = 0
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                total += count
+                require(total <= maxBytes) { "Quote response is too large" }
+                output.write(buffer, 0, count)
+            }
+            return output.toString(Charsets.UTF_8.name())
+        }
 
         fun requireValidDexScreenerPairUrl(raw: String): String {
             val uri = runCatching { URI(raw) }.getOrElse { throw IllegalArgumentException("Invalid market URL") }

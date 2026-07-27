@@ -2,8 +2,17 @@ package global.bert.widget.data
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.io.ByteArrayInputStream
 
 class BERTQuoteRepositoryTest {
+    @Test
+    fun boundsQuoteResponseBeforeParsing() {
+        assertEquals("1234", BERTQuoteRepository.readUtf8WithLimit(ByteArrayInputStream("1234".toByteArray()), 4))
+
+        val oversized = ByteArrayInputStream("12345".toByteArray())
+        require(runCatching { BERTQuoteRepository.readUtf8WithLimit(oversized, 4) }.isFailure)
+    }
+
     @Test
     fun acceptsOnlyHttpsDexScreenerSolanaPairUrls() {
         val valid = "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY"

@@ -9,6 +9,7 @@ export const CONFIG = Object.freeze({
   host: process.env.HOST || "127.0.0.1",
   port: readPositiveInteger("PORT", 8787),
   upstreamTimeoutMs: readPositiveInteger("UPSTREAM_TIMEOUT_MS", 5_000),
+  maxUpstreamResponseBytes: readPositiveInteger("MAX_UPSTREAM_RESPONSE_BYTES", 256 * 1_024),
   freshTtlMs: readPositiveInteger("FRESH_TTL_MS", 60_000),
   staleTtlMs: readPositiveInteger("STALE_TTL_MS", 30 * 60_000),
   upstreamUrl: `https://api.dexscreener.com/token-pairs/v1/${BERT.chain}/${BERT.mint}`,
