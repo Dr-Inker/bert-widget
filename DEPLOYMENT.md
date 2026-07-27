@@ -59,6 +59,11 @@ every widget location, then run `nginx -t` before reloading Nginx. The include m
 that set `Cache-Control`, because Nginx does not inherit parent `add_header` directives once a child location
 defines one of its own.
 
+Install `deploy/nginx-widget-rate-limit.conf` under `/etc/nginx/conf.d/` so its zones load in the `http`
+context. Both public quote routes should use the request and connection zones and return HTTP 429 when a
+client exceeds them. The Berthalla server must continue loading the Cloudflare real-IP configuration so the
+limit key is the visitor IP rather than a Cloudflare edge address.
+
 Never commit either file. Keep an encrypted off-server backup of both. Losing the keystore prevents publishing an upgrade that can replace the installed app.
 
 Verify a published APK with Android build tools:
