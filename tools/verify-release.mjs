@@ -51,6 +51,9 @@ if (digest !== release.sha256?.toLowerCase()) fail(`SHA-256 mismatch: APK ${dige
 
 const manifestTree = run(aapt, ["dump", "xmltree", apk, "AndroidManifest.xml"]);
 if (!/android:usesCleartextTraffic[^\n]*0x0/.test(manifestTree)) fail("Effective manifest does not explicitly disable cleartext traffic");
+if (!/android:allowBackup[^\n]*0x0/.test(manifestTree)) fail("Effective manifest does not disable application backup");
+if (!/android:fullBackupContent[^\n]*0x0/.test(manifestTree)) fail("Effective manifest does not disable full backup");
+if (!/android:dataExtractionRules[^\n]*@0x[0-9a-f]+/i.test(manifestTree)) fail("Effective manifest does not include data extraction rules");
 
 console.log(`Release verified: ${packageName} v${versionName} (${versionCode})`);
 console.log(`APK SHA-256: ${digest}`);

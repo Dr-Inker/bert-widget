@@ -52,7 +52,7 @@ npm run verify:release -- android/app/build/outputs/apk/release/app-release.apk 
 ```
 
 This gate verifies the APK signature, pinned signing certificate, package, increasing version code, version
-name, SHA-256, manifest consistency and effective cleartext-network setting.
+name, SHA-256, manifest consistency, effective cleartext-network setting and backup prohibition.
 
 Never commit either file. Keep an encrypted off-server backup of both. Losing the keystore prevents publishing an upgrade that can replace the installed app.
 

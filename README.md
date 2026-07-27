@@ -11,6 +11,9 @@ The token identity is pinned by mint rather than ticker:
 - Network: Solana
 - Mint: `HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump`
 
+Optional holdings and cached quotes remain in private application storage. Android cloud backup and
+device-to-device transfer are disabled, with explicit extraction exclusions as defense in depth.
+
 See [RESEARCH.md](./RESEARCH.md) for the architecture, refresh constraints, and MVP plan.
 
 ## Quote service
