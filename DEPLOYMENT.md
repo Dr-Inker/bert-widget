@@ -8,7 +8,7 @@
 - `/widget/v1/bert/quote` — compatibility quote endpoint
 - `/widget/download/bert-widget.apk` — signed Android release
 
-The public landing-page files live in the separate Berthalla website repository and are not duplicated here.
+The public landing-page files live under `website/widget/` in the separate Berthalla website repository and are not duplicated here. The page links back to the public source repository and release history; keep those transparency links current whenever the repository or release process changes.
 
 ## Service deployment
 

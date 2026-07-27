@@ -115,9 +115,9 @@ Do not infer a trustworthy sparkline from a single quote response. Add a histori
 
 ## Implementation status
 
-The normalized backend and native Android path described above reached v0.3.5 on 2026-07-27. It is distributed directly from `berthalla.io/widget`, outside the Play Store, with Compact 2×2 and Market 4×2 widgets plus a locally stored holdings-value feature. The iOS source is still unshipped because WidgetKit compilation, device validation, signing, and TestFlight distribution require macOS and an Apple Developer team.
+The normalized backend and native Android path described above reached v0.3.6 on 2026-07-27. It is distributed directly from `berthalla.io/widget`, outside the Play Store, with Compact 2×2 and Market 4×2 widgets plus a locally stored holdings-value feature. The source repository is public and linked from the landing page alongside the signed release manifest and APK checksum. The iOS source is still unshipped because WidgetKit compilation, device validation, signing, and TestFlight distribution require macOS and an Apple Developer team.
 
-The production backend pins the mint, chooses the highest-liquidity valid base-token pool, caches fresh quotes for one minute, and can serve the last valid quote for up to 30 minutes during upstream failure.
+The production backend pins the mint, chooses the highest-liquidity valid base-token pool, caches fresh quotes for one minute, and can serve the last valid quote for up to 30 minutes during upstream failure. The v0.3.6 security pass also added bounded upstream responses, strict external-link validation, HTTPS-only release traffic, disabled Android backup/device transfer, fail-closed release verification, hardened web headers, API rate limiting, and secure APK response handling.
 
 ## Original implementation sequence
 

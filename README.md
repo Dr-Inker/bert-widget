@@ -2,7 +2,7 @@
 
 Native home-screen widgets for tracking **Bertram The Pomeranian ($BERT)** on Solana.
 
-The signed Android v0.3.6 release is live at [berthalla.io/widget](https://berthalla.io/widget/). The repository also contains the production quote service, deployment templates, and an unshipped iOS WidgetKit codebase.
+The signed Android v0.3.6 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
 
 The token identity is pinned by mint rather than ticker:
 
@@ -58,6 +58,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 ## Production
 
 - Landing page: <https://berthalla.io/widget/>
+- Public source: <https://github.com/Dr-Inker/bert-widget>
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
 - Android package: `global.bert.widget`
@@ -65,6 +66,8 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 - Minimum Android: 8.0 / API 26
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.
+
+The landing page links directly to this repository and its release history so users can inspect the implementation, permissions, data flow, security controls, and published changes before installing the APK.
 
 ## Repository layout
 
