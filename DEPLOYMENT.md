@@ -121,3 +121,13 @@ f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c
 - Versioned download: <https://berthalla.io/widget/download/bert-widget-0.3.8.apk?sha=ee1f2acb>
 - Stable download: <https://berthalla.io/widget/download/bert-widget.apk?sha=ee1f2acb>
 - UI: height-aware 4×2 layout with expanded market hierarchy, metric panels, and source/freshness footer
+
+## v0.3.9 Android release record
+
+- Package: `global.bert.widget`
+- Version code: `13`
+- Minimum Android: API 26
+- APK SHA-256: `4ff7cd14214fb43565dda02c0b653a14bb1385d17390d25d13bccae897cb1926`
+- Versioned download: <https://berthalla.io/widget/download/bert-widget-0.3.9.apk?sha=4ff7cd14>
+- Stable download: <https://berthalla.io/widget/download/bert-widget.apk?sha=4ff7cd14>
+- UI: real rolling 24-hour Compact-widget sparkline built from private on-device quote history

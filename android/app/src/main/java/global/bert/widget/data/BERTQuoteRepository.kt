@@ -12,7 +12,7 @@ import java.net.URI
 import java.net.URL
 import java.time.Instant
 
-class BERTQuoteRepository(context: Context) {
+class BERTQuoteRepository(private val context: Context) {
     private val preferences = context.getSharedPreferences("bert_quote", Context.MODE_PRIVATE)
 
     suspend fun refresh(): BERTQuote = withContext(Dispatchers.IO) {
@@ -30,6 +30,7 @@ class BERTQuoteRepository(context: Context) {
             val raw = connection.inputStream.use { readUtf8WithLimit(it) }
             val quote = parse(raw)
             preferences.edit().putString(KEY, raw).apply()
+            BERTPriceHistory(context).record(quote)
             quote
         } finally {
             connection.disconnect()

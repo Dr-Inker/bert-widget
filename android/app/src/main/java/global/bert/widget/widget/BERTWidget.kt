@@ -37,6 +37,7 @@ import androidx.glance.unit.ColorProvider
 import global.bert.widget.MainActivity
 import global.bert.widget.R
 import global.bert.widget.data.BERTHoldingsStore
+import global.bert.widget.data.BERTPriceHistory
 import global.bert.widget.data.BERTQuote
 import global.bert.widget.data.BERTQuoteRepository
 import global.bert.widget.formatAge
@@ -52,6 +53,7 @@ open class BERTWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val quote = BERTQuoteRepository(context).load()
         val holdings = BERTHoldingsStore(context).load()
+        val sparkline = BERTSparkline.render(BERTPriceHistory(context).load())
         provideContent {
             val size = LocalSize.current
             val market = size.width >= 240.dp
@@ -71,7 +73,7 @@ open class BERTWidget : GlanceAppWidget() {
                 if (market) {
                     MarketWidgetContent(quote, holdings, spacious = size.height >= 180.dp)
                 } else {
-                    CompactWidgetContent(quote)
+                    CompactWidgetContent(quote, sparkline)
                 }
             }
         }
@@ -79,7 +81,7 @@ open class BERTWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun CompactWidgetContent(quote: BERTQuote?) {
+private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.Bitmap?) {
     Column(modifier = GlanceModifier.fillMaxSize().padding(8.dp)) {
         WidgetHeader(compact = true, quote = quote)
         Spacer(GlanceModifier.height(4.dp))
@@ -101,6 +103,22 @@ private fun CompactWidgetContent(quote: BERTQuote?) {
                 "24H",
                 modifier = GlanceModifier.background(ColorProvider(PanelStrong)).padding(horizontal = 8.dp, vertical = 3.dp),
                 style = TextStyle(color = ColorProvider(Muted), fontSize = 8.sp, fontWeight = FontWeight.Bold),
+            )
+        }
+        Spacer(GlanceModifier.height(9.dp))
+        if (sparkline == null) {
+            Box(
+                modifier = GlanceModifier.fillMaxWidth().height(64.dp).background(ColorProvider(PanelStrong)),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text("COLLECTING PRICE HISTORY", style = eyebrowStyle(size = 8))
+            }
+        } else {
+            Image(
+                provider = ImageProvider(sparkline),
+                contentDescription = "BERT price history",
+                modifier = GlanceModifier.fillMaxWidth().height(64.dp),
+                contentScale = ContentScale.FillBounds,
             )
         }
         Spacer(GlanceModifier.defaultWeight())
