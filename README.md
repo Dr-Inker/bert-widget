@@ -2,7 +2,7 @@
 
 Native home-screen widgets for tracking **Bertram The Pomeranian ($BERT)** on Solana.
 
-The signed Android v0.3.7 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
+The signed Android v0.3.8 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
 
 The token identity is pinned by mint rather than ticker:
 
@@ -45,7 +45,7 @@ The Android companion app and Jetpack Glance widget provide:
 - Compact 2×2 and Market 4×2 home-screen widgets
 - Tap-through to the native market desk and widget setup
 
-The v0.3.7 visual refresh gives the Compact widget a clearer price hierarchy and movement treatment, while the Market widget adds a position capsule, accent rail, and width-based responsive layout. The widget remains informational only: it does not hold keys, connect a wallet, transmit the holdings amount, or execute trades. The signed v0.3.7 APK supports Android 8.0 and newer.
+The v0.3.8 layout makes better use of tall 4×2 launcher allocations with a larger market hierarchy, substantial metric panels, and a source/freshness footer. Compact and shorter layouts retain their existing density. The widget remains informational only: it does not hold keys, connect a wallet, transmit the holdings amount, or execute trades. The signed v0.3.8 APK supports Android 8.0 and newer.
 
 ## iOS client
 
@@ -62,7 +62,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
 - Android package: `global.bert.widget`
-- Current Android version: `0.3.7` (`versionCode` 11)
+- Current Android version: `0.3.8` (`versionCode` 12)
 - Minimum Android: 8.0 / API 26
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.
