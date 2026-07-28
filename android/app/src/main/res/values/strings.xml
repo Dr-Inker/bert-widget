@@ -2,4 +2,8 @@
 <resources>
     <string name="app_name">BERT</string>
     <string name="widget_description">Track Bertram The Pomeranian price and market data.</string>
+    <string name="widget_compact_name">BERT · Compact</string>
+    <string name="widget_compact_description">BERT price and 24-hour change in a compact 2×2 widget.</string>
+    <string name="widget_market_name">BERT · Market</string>
+    <string name="widget_market_description">BERT price, market cap, volume and liquidity in a wide 4×2 widget.</string>
 </resources>

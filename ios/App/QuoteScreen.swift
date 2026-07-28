@@ -40,11 +40,12 @@ struct QuoteScreen: View {
         List {
             Section {
                 HStack(spacing: 16) {
-                    Image(systemName: "pawprint.fill")
-                        .font(.system(size: 38))
-                        .foregroundStyle(.orange)
+                    Image("bert_token")
+                        .resizable()
+                        .scaledToFill()
                         .frame(width: 58, height: 58)
-                        .background(.orange.opacity(0.12), in: Circle())
+                        .clipShape(Circle())
+                        .accessibilityLabel("BERT token")
                     VStack(alignment: .leading) {
                         Text(BERTFormatters.price(envelope.quote.priceUsd))
                             .font(.title.bold())
@@ -59,6 +60,14 @@ struct QuoteScreen: View {
                 metric("Market cap", envelope.quote.marketCapUsd)
                 metric("24h volume", envelope.quote.volume24hUsd)
                 metric("Liquidity", envelope.quote.liquidityUsd)
+            }
+
+            Section("Your BERT") {
+                HoldingsEditor(
+                    amount: model.holdings,
+                    price: envelope.quote.priceUsd,
+                    onSave: model.saveHoldings
+                )
             }
 
             Section("Data") {
@@ -88,6 +97,59 @@ struct QuoteScreen: View {
     private func changeColor(_ value: Double?) -> Color {
         guard let value else { return .secondary }
         return value >= 0 ? .green : .red
+    }
+}
+
+private struct HoldingsEditor: View {
+    let price: Double
+    let onSave: (Double?) -> Void
+
+    @State private var input: String
+
+    init(amount: Double?, price: Double, onSave: @escaping (Double?) -> Void) {
+        self.price = price
+        self.onSave = onSave
+        _input = State(initialValue: amount.map { BERTFormatters.tokenAmount($0).replacingOccurrences(of: ",", with: "") } ?? "")
+    }
+
+    private var parsedAmount: Double? {
+        let normalized = input.replacingOccurrences(of: ",", with: "").trimmingCharacters(in: .whitespaces)
+        guard let value = Double(normalized), value.isFinite, value >= 0 else { return nil }
+        return value
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            TextField("BERT amount", text: $input)
+                .keyboardType(.decimalPad)
+                .textInputAutocapitalization(.never)
+                .accessibilityLabel("BERT holdings amount")
+
+            if input.isEmpty {
+                Text("Enter an amount to show its live USD value in the medium widget.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            } else if let amount = parsedAmount {
+                LabeledContent("Current value", value: BERTFormatters.compactUSD(amount * price))
+            } else {
+                Text("Enter a valid non-negative number.")
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+
+            HStack {
+                Button("Save to widget") { onSave(parsedAmount) }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(!input.isEmpty && parsedAmount == nil)
+                if !input.isEmpty {
+                    Button("Remove", role: .destructive) {
+                        input = ""
+                        onSave(nil)
+                    }
+                }
+            }
+        }
+        .padding(.vertical, 4)
     }
 }
 

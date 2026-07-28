@@ -6,6 +6,7 @@ import { QuoteService } from "../src/quote-service.js";
 const config = {
   upstreamUrl: "https://example.test/bert",
   upstreamTimeoutMs: 1_000,
+  maxUpstreamResponseBytes: 256 * 1_024,
   freshTtlMs: 60_000,
   staleTtlMs: 1_800_000,
 };
@@ -15,7 +16,7 @@ function upstreamPair() {
     chainId: "solana",
     dexId: "raydium",
     pairAddress: "pair",
-    url: "https://example.test/pair",
+    url: "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
     baseToken: { address: BERT.mint, symbol: "Bert" },
     priceUsd: "0.01",
     liquidity: { usd: 100 },
@@ -52,4 +53,26 @@ test("returns cached data as stale when refresh fails", async () => {
   assert.equal(result.meta.freshness, "stale");
   assert.equal(result.meta.ageSeconds, 120);
   assert.match(result.meta.warning, /network down/);
+});
+
+test("rejects oversized upstream bodies even without Content-Length", async () => {
+  const oversized = "x".repeat(config.maxUpstreamResponseBytes + 1);
+  const fetchImpl = async () => new Response(new ReadableStream({
+    start(controller) {
+      controller.enqueue(new TextEncoder().encode(oversized));
+      controller.close();
+    },
+  }));
+  const service = new QuoteService({ fetchImpl, config });
+
+  await assert.rejects(() => service.getQuote(), /exceeded the size limit/);
+});
+
+test("rejects an oversized declared Content-Length before reading", async () => {
+  const fetchImpl = async () => new Response("[]", {
+    headers: { "content-length": String(config.maxUpstreamResponseBytes + 1) },
+  });
+  const service = new QuoteService({ fetchImpl, config });
+
+  await assert.rejects(() => service.getQuote(), /exceeded the size limit/);
 });

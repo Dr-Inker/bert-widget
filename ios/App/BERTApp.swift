@@ -15,12 +15,15 @@ final class QuoteViewModel: ObservableObject {
     @Published private(set) var quote: BERTQuoteEnvelope?
     @Published private(set) var errorMessage: String?
     @Published private(set) var isLoading = false
+    @Published private(set) var holdings: Double?
 
     private let client = BERTQuoteClient()
     private let store = BERTQuoteStore()
+    private let settings = BERTSettingsStore()
 
     init() {
         quote = store.load()
+        holdings = settings.loadHoldings()
     }
 
     func refresh() async {
@@ -37,5 +40,11 @@ final class QuoteViewModel: ObservableObject {
         } catch {
             errorMessage = error.localizedDescription
         }
+    }
+
+    func saveHoldings(_ amount: Double?) {
+        settings.saveHoldings(amount)
+        holdings = amount
+        WidgetCenter.shared.reloadAllTimelines()
     }
 }

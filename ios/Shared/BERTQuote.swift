@@ -85,4 +85,14 @@ enum BERTFormatters {
                 .precision(.fractionLength(1))
         )
     }
+
+    static func tokenAmount(_ value: Double?) -> String {
+        guard let value else { return "—" }
+        return value.formatted(.number.precision(.fractionLength(0...2)))
+    }
+
+    static func holdingsUSD(tokens: Double?, price: Double) -> String {
+        guard let tokens else { return "Set holdings" }
+        return compactUSD(tokens * price)
+    }
 }

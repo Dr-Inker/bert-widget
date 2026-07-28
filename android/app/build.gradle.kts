@@ -11,22 +11,33 @@ android {
         applicationId = "global.bert.widget"
         minSdk = 26
         targetSdk = 36
-        versionCode = 1
-        versionName = "0.1.0"
+        versionCode = 13
+        versionName = "0.3.9"
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
     }
 
-    val releaseKeystore = file("/etc/bert-widget/bert-widget-release.jks")
-    val releasePasswordFile = file("/etc/bert-widget/keystore.pass")
+    val releaseKeystore = file(providers.gradleProperty("BERT_RELEASE_KEYSTORE").getOrElse("/etc/bert-widget/bert-widget-release.jks"))
+    val releasePasswordFile = file(providers.gradleProperty("BERT_RELEASE_PASSWORD_FILE").getOrElse("/etc/bert-widget/keystore.pass"))
+    val releaseSigningAvailable = releaseKeystore.isFile && releasePasswordFile.isFile
     signingConfigs {
-        if (releaseKeystore.isFile && releasePasswordFile.isFile) {
-            create("release") {
-                storeFile = releaseKeystore
-                val secret = releasePasswordFile.readText().trim()
-                storePassword = secret
-                keyAlias = "bert-widget"
-                keyPassword = secret
-            }
+        create("release") {
+            storeFile = releaseKeystore
+            val secret = if (releaseSigningAvailable) releasePasswordFile.readText().trim() else ""
+            storePassword = secret
+            keyAlias = "bert-widget"
+            keyPassword = secret
+        }
+    }
+
+    gradle.taskGraph.whenReady {
+        val releaseRequested = allTasks.any { task ->
+            task.project == project && task.name.contains("release", ignoreCase = true)
+        }
+        if (releaseRequested && !releaseSigningAvailable) {
+            throw GradleException(
+                "Release signing material is required. Expected keystore at ${releaseKeystore.absolutePath} " +
+                    "and password file at ${releasePasswordFile.absolutePath}.",
+            )
         }
     }
 
@@ -36,7 +47,7 @@ android {
         }
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.findByName("release")
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
@@ -58,4 +69,5 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.work:work-runtime:2.11.2")
+    testImplementation("junit:junit:4.13.2")
 }

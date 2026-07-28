@@ -115,9 +115,11 @@ Do not infer a trustworthy sparkline from a single quote response. Add a histori
 
 ## Implementation status
 
-The normalized backend and native Android path described above shipped as v0.1.0 on 2026-07-27. It is distributed directly from `berthalla.io/widget`, outside the Play Store. The iOS client remains a scaffold because WidgetKit compilation and signing require macOS and an Apple Developer team.
+The normalized backend and native Android path described above reached v0.3.9 on 2026-07-28. It is distributed directly from `berthalla.io/widget`, outside the Play Store, with Compact 2×2 and Market 4×2 widgets plus a locally stored holdings-value feature. The v0.3.9 Compact widget builds a real rolling sparkline from validated observations accumulated during refreshes, rather than presenting the illustrative history from the design as live data. The history is private, capped at 192 observations, and limited to 24 hours. The source repository is public and linked from the landing page alongside the signed release manifest and APK checksum. The iOS source is still unshipped because WidgetKit compilation, device validation, signing, and TestFlight distribution require macOS and an Apple Developer team.
 
-The production backend pins the mint, chooses the highest-liquidity valid base-token pool, caches fresh quotes for one minute, and can serve the last valid quote for up to 30 minutes during upstream failure.
+The production backend pins the mint, chooses the highest-liquidity valid base-token pool, caches fresh quotes for one minute, and can serve the last valid quote for up to 30 minutes during upstream failure. The v0.3.6 security pass also added bounded upstream responses, strict external-link validation, HTTPS-only release traffic, disabled Android backup/device transfer, fail-closed release verification, hardened web headers, API rate limiting, and secure APK response handling.
+
+The landing page deliberately separates product demonstration from market reporting. Its mock widgets use a stable positive illustrative snapshot, are labelled `EXAMPLE SNAPSHOT`, and are not overwritten by the live quote endpoint. The native app remains the current-data surface; this avoids presenting a transient red or green trading day as part of the product’s permanent visual identity without misrepresenting the preview as live.
 
 ## Original implementation sequence
 
