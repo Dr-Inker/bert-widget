@@ -6,7 +6,7 @@ The development `local.properties` points at `/opt/android-sdk` on this server a
 
 Debug builds use `http://10.0.2.2:8787/v1/bert/quote`, allowing an Android emulator to reach the local quote service. Release builds use `https://berthalla.io/widget/api/quote`.
 
-The widget schedules connected-network refresh work every 15 minutes, validates the Solana mint before caching, and continues showing the last valid quote when updates fail. The app exposes Compact 2×2 and Market 4×2 widgets. The v0.3.9 Compact layout records validated quote observations locally and renders a real rolling 24-hour sparkline after two distinct samples are available. The history is capped at 192 samples and never leaves private app storage. Users can optionally enter a BERT amount that remains in private app storage and is used locally to display its live USD value in the Market widget.
+The widget schedules connected-network refresh work every 15 minutes, validates the Solana mint before caching, and continues showing the last valid quote when updates fail. The app exposes Compact 2×2 and Market 4×2 widgets. The v0.4.0 Compact layout retains the real rolling 24-hour sparkline introduced in v0.3.9, recording validated quote observations locally after two distinct samples are available. The history is capped at 192 samples and never leaves private app storage. Users can optionally enter a BERT amount that remains in private app storage and is used locally to display its live USD value in the Market widget.
 
 ## Theme Studio
 
