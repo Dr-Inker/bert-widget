@@ -56,6 +56,14 @@ struct QuoteScreen: View {
                 .padding(.vertical, 8)
             }
 
+            Section {
+                BERTThemeStudio()
+            } header: {
+                Text("Theme Studio")
+            } footer: {
+                Text("Save a theme, then choose it from Settings → Wallpaper. Matching widget styles are planned for the signed iOS release.")
+            }
+
             Section("Market") {
                 metric("Market cap", envelope.quote.marketCapUsd)
                 metric("24h volume", envelope.quote.volume24hUsd)
@@ -97,6 +105,77 @@ struct QuoteScreen: View {
     private func changeColor(_ value: Double?) -> Color {
         guard let value else { return .secondary }
         return value >= 0 ? .green : .red
+    }
+}
+
+private struct PhoneTheme: Identifiable {
+    let id: String
+    let name: String
+    let subtitle: String
+    let homeResource: String
+    let lockResource: String
+    let accent: Color
+
+    static let all: [PhoneTheme] = [
+        PhoneTheme(id: "mayor", name: "Mayor Purple", subtitle: "BERT.GLOBAL · BIG ENERGY", homeResource: "wallpaper_mayor_purple_home", lockResource: "wallpaper_mayor_purple_lock", accent: Color(red: 0.55, green: 0.22, blue: 0.97)),
+        PhoneTheme(id: "woofhub", name: "Woofhub Night", subtitle: "POWERED BY BERT", homeResource: "wallpaper_woofhub_night_home", lockResource: "wallpaper_woofhub_night_lock", accent: Color(red: 0.55, green: 0.22, blue: 0.97)),
+        PhoneTheme(id: "berthalla", name: "Berthalla Nights", subtitle: "THE BERT ECOSYSTEM", homeResource: "wallpaper_berthalla_nights_home", lockResource: "wallpaper_berthalla_nights_lock", accent: Color(red: 1, green: 0.33, blue: 0.21)),
+    ]
+}
+
+private struct BERTThemeStudio: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Make your iPhone unmistakably BERT.")
+                .font(.headline)
+            Text("Three complete looks for your Home and Lock Screens.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(alignment: .top, spacing: 14) {
+                    ForEach(PhoneTheme.all) { theme in
+                        themeCard(theme)
+                    }
+                }
+            }
+            .contentMargins(.horizontal, 1, for: .scrollContent)
+        }
+        .padding(.vertical, 6)
+    }
+
+    private func themeCard(_ theme: PhoneTheme) -> some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Image(theme.lockResource)
+                .resizable()
+                .scaledToFill()
+                .frame(width: 142, height: 300)
+                .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 22, style: .continuous)
+                        .strokeBorder(.white.opacity(0.16))
+                }
+                .accessibilityLabel("\(theme.name) wallpaper preview")
+
+            Text(theme.name)
+                .font(.subheadline.bold())
+                .lineLimit(1)
+            Text(theme.subtitle)
+                .font(.system(size: 8, weight: .bold))
+                .tracking(0.35)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+
+            if let lockURL = Bundle.main.url(forResource: theme.lockResource, withExtension: "png"),
+               let homeURL = Bundle.main.url(forResource: theme.homeResource, withExtension: "png") {
+                VStack(spacing: 6) {
+                    ShareLink(item: lockURL) { Label("Lock", systemImage: "lock") }.buttonStyle(.borderedProminent).tint(theme.accent)
+                    ShareLink(item: homeURL) { Label("Home", systemImage: "apps.iphone") }.buttonStyle(.bordered)
+                }
+                .frame(maxWidth: .infinity)
+            }
+        }
+        .frame(width: 142)
     }
 }
 

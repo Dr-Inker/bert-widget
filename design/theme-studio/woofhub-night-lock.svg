@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="3200" viewBox="0 0 1440 3200">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#1A0A27"/><stop offset=".5" stop-color="#0C0712"/><stop offset="1" stop-color="#050208"/></linearGradient><radialGradient id="g"><stop stop-color="#8B37F7" stop-opacity=".34"/><stop offset="1" stop-color="#8B37F7" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1440" height="3200" fill="url(#bg)"/><circle cx="720" cy="1900" r="1160" fill="url(#g)"/>
+  <g opacity=".08" fill="#8B37F7" transform="translate(720 2030)"><path d="M0 0L-100-1550 100-1550Z"/><path d="M0 0L440-1470 620-1380Z"/><path d="M0 0L-440-1470-620-1380Z"/></g>
+  <image x="-130" y="1300" width="1700" height="995" xlink:href="sources/woofhub-hero-official.svg" preserveAspectRatio="xMidYMid meet"/>
+  <ellipse cx="720" cy="2380" rx="610" ry="90" fill="#000" opacity=".38"/>
+</svg>

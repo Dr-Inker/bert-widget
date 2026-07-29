@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="3200" viewBox="0 0 1440 3200">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#401071"/><stop offset=".6" stop-color="#26043F"/><stop offset="1" stop-color="#160224"/></linearGradient><radialGradient id="g"><stop stop-color="#A44FFF" stop-opacity=".28"/><stop offset="1" stop-color="#A44FFF" stop-opacity="0"/></radialGradient><linearGradient id="a" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#000"/><stop offset=".2" stop-color="#fff"/><stop offset=".9" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient><mask id="m"><rect x="0" y="2250" width="1440" height="950" fill="url(#a)"/></mask></defs>
+  <rect width="1440" height="3200" fill="url(#bg)"/><circle cx="1120" cy="2600" r="1050" fill="url(#g)"/>
+  <g opacity=".055" fill="#fff" transform="translate(1120 2700)"><path d="M0 0L-160-2900 100-2900Z"/><path d="M0 0L-820-2700-580-2800Z"/><path d="M0 0L-1350-2050-1210-2250Z"/></g>
+  <g mask="url(#m)"><image x="0" y="2330" width="1440" height="756" xlink:href="sources/bert-mayor-official.png"/></g>
+</svg>

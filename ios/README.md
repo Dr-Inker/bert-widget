@@ -24,6 +24,8 @@ Debug and Release builds use `https://berthalla.io/widget/api/quote` by default,
 
 The app and widget share the last valid quote and optional holdings amount through `group.global.bert.widget`. Holdings never leave the shared App Group container; the medium widget calculates the USD value locally from the public quote.
 
+The companion app also bundles the Mayor Purple, Woofhub Night, and Berthalla Nights phone-wallpaper packs. Each includes separate 1440×3200 Home and Lock Screen artwork exposed through the native share sheet; iOS does not permit third-party apps to apply system wallpaper directly.
+
 ## Distribution status
 
 No IPA, TestFlight build, or App Store listing has been produced. Apple Developer team access, final bundle identifiers, App Group registration, signing profiles, and a macOS/Xcode validation pass are still required.

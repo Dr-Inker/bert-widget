@@ -13,6 +13,8 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -20,6 +22,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -47,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -64,7 +69,12 @@ import global.bert.widget.widget.BERTMarketWidgetReceiver
 import global.bert.widget.widget.BERTWidget
 import global.bert.widget.widget.BERTWidgetReceiver
 import global.bert.widget.widget.updateAllBERTWidgets
+import global.bert.widget.theme.BERTThemePack
+import global.bert.widget.theme.BERTThemeStore
+import global.bert.widget.theme.BERTWallpaperInstaller
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 private val Navy = Color(0xFF071A2F)
 private val Panel = Color(0xFF0D2942)
@@ -115,6 +125,7 @@ private fun BERTScreen() {
             verticalArrangement = Arrangement.spacedBy(18.dp),
         ) {
             BrandHeader(refreshing)
+            ThemeStudio()
             when (val current = state) {
                 QuoteState.Loading -> LoadingPanel()
                 is QuoteState.Unavailable -> UnavailablePanel(current.message) { scope.launch { refresh() } }
@@ -139,6 +150,114 @@ private fun BERTScreen() {
                 modifier = Modifier.padding(bottom = 8.dp),
             )
         }
+    }
+}
+
+@Composable
+private fun ThemeStudio() {
+    val context = LocalContext.current
+    val store = remember { BERTThemeStore(context.applicationContext) }
+    val scope = rememberCoroutineScope()
+    var selected by remember { mutableStateOf(store.load()) }
+    var applying by remember { mutableStateOf(false) }
+
+    fun choose(theme: BERTThemePack) {
+        selected = theme
+        store.save(theme)
+        scope.launch { updateAllBERTWidgets(context) }
+    }
+
+    fun applyWallpaper(destination: Int, success: String) {
+        scope.launch {
+            applying = true
+            try {
+                withContext(Dispatchers.IO) {
+                    if (destination == BERTWallpaperInstaller.BOTH) BERTWallpaperInstaller.applyPair(context, selected)
+                    else BERTWallpaperInstaller.apply(context, selected, destination)
+                }
+                Toast.makeText(context, success, Toast.LENGTH_SHORT).show()
+            } catch (_: Exception) {
+                Toast.makeText(context, "Wallpaper could not be applied on this launcher.", Toast.LENGTH_LONG).show()
+            } finally {
+                applying = false
+            }
+        }
+    }
+
+    Card(
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF120B1B)),
+        shape = RoundedCornerShape(26.dp),
+        border = BorderStroke(1.dp, Color(0xFF8B37F7).copy(alpha = 0.34f)),
+    ) {
+        Column(modifier = Modifier.padding(vertical = 20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Column(modifier = Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text("BERT THEME STUDIO", color = Color(0xFFB96DFF), fontSize = 9.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.1.sp)
+                Text("Make your phone unmistakably BERT.", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold)
+                Text("Each pack includes a clock-safe Lock Screen and a quieter Home Screen. Your widgets match automatically.", color = Color(0xFFCAB5D6), fontSize = 12.sp, lineHeight = 17.sp)
+            }
+            Row(
+                modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 18.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                BERTThemePack.entries.forEach { theme ->
+                    ThemePackCard(theme = theme, selected = selected == theme, onClick = { choose(theme) })
+                }
+            }
+            Column(modifier = Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                    Button(
+                        onClick = { applyWallpaper(BERTWallpaperInstaller.BOTH, "${selected.displayName} applied") },
+                        enabled = !applying,
+                        modifier = Modifier.weight(1f),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(selected.accentArgb)),
+                    ) { Text(if (applying) "Applying…" else "Apply both", fontWeight = FontWeight.Bold) }
+                    OutlinedButton(
+                        onClick = { applyWallpaper(BERTWallpaperInstaller.HOME, "Home screen updated") },
+                        enabled = !applying,
+                        modifier = Modifier.weight(1f),
+                        border = BorderStroke(1.dp, Color.White.copy(alpha = 0.24f)),
+                    ) { Text("Home only", color = Color.White, fontWeight = FontWeight.Bold) }
+                }
+                OutlinedButton(
+                    onClick = { applyWallpaper(BERTWallpaperInstaller.LOCK, "Lock screen updated") },
+                    enabled = !applying,
+                    modifier = Modifier.fillMaxWidth(),
+                    border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
+                ) { Text("Lock screen only", color = Color(0xFFCAB5D6)) }
+                Text(
+                    "Android may crop artwork slightly to fit your display. Wallpaper changes stay on your device.",
+                    color = Color(0xFF8E7C99),
+                    fontSize = 10.sp,
+                    lineHeight = 14.sp,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemePackCard(theme: BERTThemePack, selected: Boolean, onClick: () -> Unit) {
+    Column(
+        modifier = Modifier.width(156.dp).clickable(onClick = onClick),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Card(
+            modifier = Modifier.width(156.dp).height(300.dp).then(if (selected) Modifier.shadow(12.dp, RoundedCornerShape(22.dp)) else Modifier),
+            shape = RoundedCornerShape(22.dp),
+            border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) Color(theme.accentArgb) else Color.White.copy(alpha = 0.12f)),
+        ) {
+            Image(
+                painter = painterResource(theme.previewRes),
+                contentDescription = "${theme.displayName} wallpaper preview",
+                modifier = Modifier.fillMaxSize().background(Color(theme.backgroundArgb)),
+                contentScale = ContentScale.Crop,
+            )
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (selected) Text("✓", color = Color(theme.accentArgb), fontWeight = FontWeight.ExtraBold)
+            Text(theme.displayName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold, maxLines = 1)
+        }
+        Text(theme.subtitle, color = Color(0xFF9E8CAA), fontSize = 8.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp, maxLines = 1)
     }
 }
 

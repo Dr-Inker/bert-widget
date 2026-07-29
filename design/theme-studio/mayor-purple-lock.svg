@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="3200" viewBox="0 0 1440 3200">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#8B37F7"/><stop offset=".55" stop-color="#58119A"/><stop offset="1" stop-color="#26043F"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#D69BFF" stop-opacity=".34"/><stop offset="1" stop-color="#D69BFF" stop-opacity="0"/></radialGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#3A0867" stop-opacity="0"/><stop offset="1" stop-color="#23033A" stop-opacity=".88"/></linearGradient>
+    <linearGradient id="heroAlpha" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#000"/><stop offset=".13" stop-color="#fff"/><stop offset=".84" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+    <mask id="heroMask"><rect x="0" y="1440" width="1440" height="1100" fill="url(#heroAlpha)"/></mask>
+  </defs>
+  <rect width="1440" height="3200" fill="url(#bg)"/><circle cx="720" cy="1540" r="1050" fill="url(#halo)"/>
+  <g opacity=".09" fill="#fff" transform="translate(720 1750)">
+    <path d="M0 0L-120-1900 120-1900Z"/><path d="M0 0L360-1840 570-1760Z"/><path d="M0 0L800-1580 980-1430Z"/>
+    <path d="M0 0L-120-1900 120-1900Z" transform="scale(-1 1)"/><path d="M0 0L360-1840 570-1760Z" transform="scale(-1 1)"/><path d="M0 0L800-1580 980-1430Z" transform="scale(-1 1)"/>
+  </g>
+  <g mask="url(#heroMask)"><image x="0" y="1510" width="1440" height="756" xlink:href="sources/bert-mayor-official.png"/></g>
+  <rect y="2420" width="1440" height="780" fill="url(#fade)"/>
+</svg>

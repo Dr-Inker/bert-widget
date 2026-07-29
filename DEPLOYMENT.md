@@ -131,3 +131,13 @@ f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c
 - Versioned download: <https://berthalla.io/widget/download/bert-widget-0.3.9.apk?sha=4ff7cd14>
 - Stable download: <https://berthalla.io/widget/download/bert-widget.apk?sha=4ff7cd14>
 - UI: real rolling 24-hour Compact-widget sparkline built from private on-device quote history
+
+## v0.4.0 Android release record
+
+- Package: `global.bert.widget`
+- Version code: `14`
+- Minimum Android: API 26
+- APK SHA-256: `a5da30d29069168eea5273dd0139eaca1e0c84faa6504d2274cd938894b13388`
+- Versioned download: <https://berthalla.io/widget/download/bert-widget-0.4.0.apk?sha=a5da30d2>
+- Stable download: <https://berthalla.io/widget/download/bert-widget.apk?sha=a5da30d2>
+- UI: Theme Studio with paired Home and Lock artwork for Mayor Purple, Woofhub Night, and Berthalla Nights; automatically matched widget palettes

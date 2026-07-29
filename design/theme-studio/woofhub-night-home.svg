@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="3200" viewBox="0 0 1440 3200">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#170B22"/><stop offset=".58" stop-color="#0B0610"/><stop offset="1" stop-color="#050208"/></linearGradient><radialGradient id="g"><stop stop-color="#6420A8" stop-opacity=".2"/><stop offset="1" stop-color="#6420A8" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1440" height="3200" fill="url(#bg)"/><circle cx="180" cy="620" r="780" fill="url(#g)"/><circle cx="1160" cy="2440" r="1080" fill="url(#g)"/>
+  <g fill="none" stroke="#9D5BDA" stroke-opacity=".11" stroke-width="15"><path d="M180 520c-70-110-210-20-145 85 44 71 145 145 145 145s102-74 145-145c66-105-74-195-145-85Z"/><circle cx="105" cy="450" r="38"/><circle cx="255" cy="450" r="38"/></g>
+  <g fill="#D69BFF" opacity=".18"><circle cx="1160" cy="420" r="7"/><circle cx="1030" cy="610" r="5"/><circle cx="1240" cy="780" r="6"/><circle cx="980" cy="980" r="4"/><circle cx="1190" cy="1190" r="7"/><circle cx="1080" cy="1420" r="4"/></g>
+  <path d="M1160 420L1030 610 1240 780 980 980 1190 1190 1080 1420" fill="none" stroke="#D69BFF" stroke-opacity=".07" stroke-width="4"/>
+  <g opacity=".05" fill="#8B37F7" transform="translate(1120 2670)"><path d="M0 0L-160-1750 70-1750Z"/><path d="M0 0L-800-1480-610-1600Z"/><path d="M0 0L410-1620 620-1500Z"/></g>
+  <ellipse cx="1020" cy="2755" rx="540" ry="74" fill="#000" opacity=".3"/>
+  <image x="160" y="1940" width="1380" height="808" xlink:href="sources/woofhub-hero-official.svg" preserveAspectRatio="xMidYMid meet"/>
+</svg>

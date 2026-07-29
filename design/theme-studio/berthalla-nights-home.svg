@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1440" height="3200" viewBox="0 0 1440 3200">
+  <defs><linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#102F53"/><stop offset=".5" stop-color="#07182F"/><stop offset="1" stop-color="#030817"/></linearGradient><radialGradient id="g"><stop stop-color="#6FC3F3" stop-opacity=".18"/><stop offset="1" stop-color="#6FC3F3" stop-opacity="0"/></radialGradient></defs>
+  <rect width="1440" height="3200" fill="url(#bg)"/><circle cx="1180" cy="2700" r="920" fill="url(#g)"/>
+  <g fill="#EAF9FF"><circle cx="120" cy="190" r="3"/><circle cx="410" cy="380" r="5"/><circle cx="960" cy="220" r="4"/><circle cx="1290" cy="520" r="6"/><circle cx="210" cy="870" r="4"/><circle cx="760" cy="740" r="3"/><circle cx="1110" cy="1080" r="4"/><circle cx="530" cy="1260" r="5"/></g>
+  <image x="-330" y="2280" width="1840" height="770" xlink:href="sources/berthalla-hero-official.jpg"/>
+</svg>

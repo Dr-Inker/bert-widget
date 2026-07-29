@@ -2,6 +2,8 @@ package global.bert.widget.widget
 
 import android.content.Context
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,6 +48,8 @@ import global.bert.widget.formatHoldingsUsd
 import global.bert.widget.formatPercent
 import global.bert.widget.formatPrice
 import global.bert.widget.formatTokenAmount
+import global.bert.widget.theme.BERTThemePack
+import global.bert.widget.theme.BERTThemeStore
 
 open class BERTWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
@@ -54,26 +58,26 @@ open class BERTWidget : GlanceAppWidget() {
         val quote = BERTQuoteRepository(context).load()
         val holdings = BERTHoldingsStore(context).load()
         val sparkline = BERTSparkline.render(BERTPriceHistory(context).load())
+        val palette = WidgetPalette.from(BERTThemeStore(context).load())
         provideContent {
-            val size = LocalSize.current
-            val market = size.width >= 240.dp
-            Box(
-                modifier = GlanceModifier.fillMaxSize()
-                    .background(ColorProvider(Navy))
-                    .clickable(actionStartActivity<MainActivity>()),
-            ) {
-                if (!market) {
-                    Image(
-                        provider = ImageProvider(R.drawable.bert_widget_ambient),
-                        contentDescription = null,
-                        modifier = GlanceModifier.fillMaxWidth().height(26.dp),
-                        contentScale = ContentScale.FillBounds,
-                    )
-                }
-                if (market) {
-                    MarketWidgetContent(quote, holdings, spacious = size.height >= 180.dp)
-                } else {
-                    CompactWidgetContent(quote, sparkline)
+            CompositionLocalProvider(LocalWidgetPalette provides palette) {
+                val size = LocalSize.current
+                val market = size.width >= 240.dp
+                Box(
+                    modifier = GlanceModifier.fillMaxSize()
+                        .background(ColorProvider(palette.background))
+                        .clickable(actionStartActivity<MainActivity>()),
+                ) {
+                    if (!market && palette.showAmbient) {
+                        Image(
+                            provider = ImageProvider(R.drawable.bert_widget_ambient),
+                            contentDescription = null,
+                            modifier = GlanceModifier.fillMaxWidth().height(26.dp),
+                            contentScale = ContentScale.FillBounds,
+                        )
+                    }
+                    if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 180.dp)
+                    else CompactWidgetContent(quote, sparkline)
                 }
             }
         }
@@ -82,6 +86,7 @@ open class BERTWidget : GlanceAppWidget() {
 
 @Composable
 private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.Bitmap?) {
+    val palette = LocalWidgetPalette.current
     Column(modifier = GlanceModifier.fillMaxSize().padding(8.dp)) {
         WidgetHeader(compact = true, quote = quote)
         Spacer(GlanceModifier.height(4.dp))
@@ -91,7 +96,7 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
         }
         Text(
             formatPrice(quote.priceUsd),
-            style = TextStyle(color = ColorProvider(Cream), fontSize = 24.sp, fontWeight = FontWeight.Bold),
+            style = TextStyle(color = ColorProvider(palette.text), fontSize = 24.sp, fontWeight = FontWeight.Bold),
         )
         Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(
@@ -101,14 +106,14 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
             Spacer(GlanceModifier.defaultWeight())
             Text(
                 "24H",
-                modifier = GlanceModifier.background(ColorProvider(PanelStrong)).padding(horizontal = 8.dp, vertical = 3.dp),
-                style = TextStyle(color = ColorProvider(Muted), fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                modifier = GlanceModifier.background(ColorProvider(palette.panel)).padding(horizontal = 8.dp, vertical = 3.dp),
+                style = TextStyle(color = ColorProvider(palette.muted), fontSize = 8.sp, fontWeight = FontWeight.Bold),
             )
         }
         Spacer(GlanceModifier.height(9.dp))
         if (sparkline == null) {
             Box(
-                modifier = GlanceModifier.fillMaxWidth().height(64.dp).background(ColorProvider(PanelStrong)),
+                modifier = GlanceModifier.fillMaxWidth().height(64.dp).background(ColorProvider(palette.panel)),
                 contentAlignment = Alignment.Center,
             ) {
                 Text("COLLECTING PRICE HISTORY", style = eyebrowStyle(size = 8))
@@ -124,15 +129,16 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
         Spacer(GlanceModifier.defaultWeight())
         Text(
             freshnessLabel(quote),
-            style = TextStyle(color = ColorProvider(if (quote.isStale) Amber else Muted), fontSize = 8.sp, fontWeight = FontWeight.Medium),
+            style = TextStyle(color = ColorProvider(if (quote.isStale) Amber else palette.muted), fontSize = 8.sp, fontWeight = FontWeight.Medium),
         )
     }
 }
 
 @Composable
 private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: Boolean) {
+    val palette = LocalWidgetPalette.current
     Row(modifier = GlanceModifier.fillMaxSize().padding(vertical = if (spacious) 12.dp else 8.dp, horizontal = 8.dp)) {
-        Spacer(GlanceModifier.width(3.dp).fillMaxHeight().background(ColorProvider(Orange)))
+        Spacer(GlanceModifier.width(3.dp).fillMaxHeight().background(ColorProvider(palette.accent)))
         Spacer(GlanceModifier.width(11.dp))
         Column(modifier = GlanceModifier.fillMaxSize()) {
             WidgetHeader(compact = false, quote = quote, spacious = spacious)
@@ -145,7 +151,7 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
                         formatPrice(quote.priceUsd),
-                        style = TextStyle(color = ColorProvider(Cream), fontSize = if (spacious) 30.sp else 25.sp, fontWeight = FontWeight.Bold),
+                        style = TextStyle(color = ColorProvider(palette.text), fontSize = if (spacious) 30.sp else 25.sp, fontWeight = FontWeight.Bold),
                     )
                     Text(
                         "${trendArrow(quote.change24hPct)} ${formatPercent(quote.change24hPct)} · 24H",
@@ -180,6 +186,7 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
 
 @Composable
 private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean = false) {
+    val palette = LocalWidgetPalette.current
     Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Image(
             provider = ImageProvider(R.drawable.bert_token),
@@ -191,7 +198,7 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
         Spacer(GlanceModifier.width(9.dp))
         Text(
             "BERT",
-            style = TextStyle(color = ColorProvider(Cream), fontSize = if (compact) 13.sp else if (spacious) 17.sp else 15.sp, fontWeight = FontWeight.Bold),
+            style = TextStyle(color = ColorProvider(palette.text), fontSize = if (compact) 13.sp else if (spacious) 17.sp else 15.sp, fontWeight = FontWeight.Bold),
         )
         Spacer(GlanceModifier.defaultWeight())
         Text(
@@ -207,15 +214,16 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
 
 @Composable
 private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boolean) {
+    val palette = LocalWidgetPalette.current
     Column(
         modifier = GlanceModifier.width(if (spacious) 154.dp else 142.dp)
-            .background(ColorProvider(PanelStrong))
+            .background(ColorProvider(palette.panel))
             .padding(horizontal = if (spacious) 14.dp else 11.dp, vertical = if (spacious) 10.dp else 6.dp),
     ) {
-        Text("YOUR POSITION", style = eyebrowStyle(color = Cream, size = 8))
+        Text("YOUR POSITION", style = eyebrowStyle(color = palette.text, size = 8))
         Text(
             if (holdings == null) "SET HOLDINGS" else formatHoldingsUsd(holdings * quote.priceUsd),
-            style = TextStyle(color = ColorProvider(if (holdings == null) Amber else Cream), fontSize = if (spacious) 15.sp else 12.sp, fontWeight = FontWeight.Bold),
+            style = TextStyle(color = ColorProvider(if (holdings == null) Amber else palette.text), fontSize = if (spacious) 15.sp else 12.sp, fontWeight = FontWeight.Bold),
         )
         if (holdings != null) {
             Text("${formatTokenAmount(holdings)} BERT", style = eyebrowStyle())
@@ -225,24 +233,27 @@ private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boole
 
 @Composable
 private fun UnavailableWidgetContent(compact: Boolean) {
+    val palette = LocalWidgetPalette.current
     Text("PRICE UNAVAILABLE", style = eyebrowStyle())
     Spacer(GlanceModifier.height(4.dp))
     Text(
         "Open BERT to refresh",
-        style = TextStyle(color = ColorProvider(Cream), fontSize = if (compact) 17.sp else 20.sp, fontWeight = FontWeight.Bold),
+        style = TextStyle(color = ColorProvider(palette.text), fontSize = if (compact) 17.sp else 20.sp, fontWeight = FontWeight.Bold),
     )
 }
 
 @Composable
 private fun WidgetMetric(label: String, value: Double?, modifier: GlanceModifier = GlanceModifier, panel: Boolean = false) {
-    Column(modifier = if (panel) modifier.background(ColorProvider(PanelStrong)).padding(horizontal = 10.dp, vertical = 9.dp) else modifier) {
+    val palette = LocalWidgetPalette.current
+    Column(modifier = if (panel) modifier.background(ColorProvider(palette.panel)).padding(horizontal = 10.dp, vertical = 9.dp) else modifier) {
         Text(label, style = eyebrowStyle(size = 8))
-        Text(formatCompactUsd(value), style = TextStyle(color = ColorProvider(Cream), fontSize = if (panel) 14.sp else 12.sp, fontWeight = FontWeight.Bold))
+        Text(formatCompactUsd(value), style = TextStyle(color = ColorProvider(palette.text), fontSize = if (panel) 14.sp else 12.sp, fontWeight = FontWeight.Bold))
     }
 }
 
 @Composable
 private fun MarketFooter(quote: BERTQuote) {
+    val palette = LocalWidgetPalette.current
     Row(modifier = GlanceModifier.fillMaxWidth()) {
         Text(
             "${quote.sourceName.uppercase()} · ${quote.dex.uppercase()}",
@@ -251,13 +262,14 @@ private fun MarketFooter(quote: BERTQuote) {
         Spacer(GlanceModifier.defaultWeight())
         Text(
             freshnessLabel(quote),
-            style = eyebrowStyle(color = if (quote.isStale) Amber else Muted, size = 8),
+            style = eyebrowStyle(color = if (quote.isStale) Amber else palette.muted, size = 8),
         )
     }
 }
 
+@Composable
 private fun changeColor(quote: BERTQuote) = when {
-    quote.change24hPct == null -> Muted
+    quote.change24hPct == null -> LocalWidgetPalette.current.muted
     quote.change24hPct >= 0 -> Green
     else -> Red
 }
@@ -271,14 +283,34 @@ private fun trendArrow(change: Double?) = when {
 private fun freshnessLabel(quote: BERTQuote): String =
     "${if (quote.isStale) "DELAYED · " else ""}${formatAge(quote.observedAtEpochMillis)}".uppercase()
 
-private fun eyebrowStyle(color: Color = Muted, size: Int = 9) =
-    TextStyle(color = ColorProvider(color), fontSize = size.sp, fontWeight = FontWeight.Medium)
+@Composable
+private fun eyebrowStyle(color: Color? = null, size: Int = 9) =
+    TextStyle(color = ColorProvider(color ?: LocalWidgetPalette.current.muted), fontSize = size.sp, fontWeight = FontWeight.Medium)
 
-private val Navy = Color(0xFF071A2F)
-private val PanelStrong = Color(0xFF123957)
-private val Cream = Color(0xFFFFF5DF)
-private val Muted = Color(0xFF9CB0C5)
-private val Orange = Color(0xFFF25836)
+private data class WidgetPalette(
+    val background: Color,
+    val panel: Color,
+    val text: Color,
+    val muted: Color,
+    val accent: Color,
+    val showAmbient: Boolean,
+) {
+    companion object {
+        fun from(theme: BERTThemePack) = WidgetPalette(
+            background = Color(theme.backgroundArgb),
+            panel = Color(theme.panelArgb),
+            text = Color(theme.textArgb),
+            muted = Color(theme.mutedArgb),
+            accent = Color(theme.accentArgb),
+            showAmbient = false,
+        )
+    }
+}
+
+private val LocalWidgetPalette = compositionLocalOf {
+    WidgetPalette.from(BERTThemePack.WOOFHUB_NIGHT)
+}
+
 private val Green = Color(0xFF45E09A)
 private val Red = Color(0xFFFF6B7A)
 private val Amber = Color(0xFFFFC857)

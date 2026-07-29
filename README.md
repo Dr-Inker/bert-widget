@@ -2,7 +2,7 @@
 
 Native home-screen widgets for tracking **Bertram The Pomeranian ($BERT)** on Solana.
 
-The signed Android v0.3.9 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
+The signed Android v0.4.0 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
 
 The token identity is pinned by mint rather than ticker:
 
@@ -43,9 +43,10 @@ The Android companion app and Jetpack Glance widget provide:
 - Prominent live, delayed, and last-updated status
 - Optional, locally stored BERT holdings in a dedicated position panel
 - Compact 2×2 and Market 4×2 home-screen widgets
+- A Theme Studio with three full phone-wallpaper packs and matching widget palettes
 - Tap-through to the native market desk and widget setup
 
-The v0.3.9 Compact widget fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed v0.3.9 APK supports Android 8.0 and newer.
+The v0.4.0 app adds Theme Studio with Mayor Purple, Woofhub Night, and Berthalla Nights phone-theme systems. Each pack includes distinct Home and Lock Screen artwork plus a matching widget palette. The Compact widget still fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed v0.4.0 APK supports Android 8.0 and newer.
 
 ## iOS client
 
