@@ -33,6 +33,40 @@ curl -fsS https://berthalla.io/widget/api/quote
 curl -fsS https://berthalla.io/widget/v1/bert/quote
 ```
 
+Treat the public checks as required, not optional. The Android client preserves its last valid quote when a
+refresh fails, so a public routing failure can look like a frozen price even while the service and upstream
+provider are healthy. Confirm that the public response is HTTP 200, `meta.freshness` is `fresh`, and
+`source.observedAt` continues to advance.
+
+### Cloudflare DNS guardrail and recovery
+
+The production apex has exactly one proxied `A` record:
+
+```text
+berthalla.io  A  89.167.123.104  proxied
+```
+
+Do not set the record content to an address returned by a public lookup of the proxied hostname. Addresses
+in Cloudflare ranges such as `104.16.0.0/13`, `172.64.0.0/13` or `2606:4700::/32` are edge addresses, not
+the origin. Using them as the record content causes Cloudflare Error 1000 (`DNS points to prohibited IP`)
+and blocks the quote API before requests reach nginx.
+
+When the widget price appears frozen:
+
+1. Request the public API with an Android-style client and inspect the status and body.
+2. Compare it with `http://127.0.0.1:8787/v1/bert/quote` and the DEX Screener token-pairs endpoint.
+3. If the origin is fresh but Cloudflare returns Error 1000, inspect the unflattened record content in the
+   Cloudflare dashboard or API; ordinary `dig` output only shows proxied edge addresses.
+4. Restore the single apex `A` record above and remove conflicting apex `A` or `AAAA` records.
+5. Verify the public endpoint returns a fresh quote through Cloudflare before closing the incident.
+
+The 2026-07-30 freeze was caused by four proxied apex records whose content was set to Cloudflare's own edge
+addresses. The Node service, nginx, origin TLS certificate and DEX Screener feed remained healthy. Replacing
+those records with the verified origin immediately restored Android requests from HTTP 403 to HTTP 200.
+
+After using a temporary Cloudflare API token for recovery, remove it from the shell and revoke it. Tokens
+should be scoped to `Zone / DNS / Edit` for this zone and restricted to the operator's expected source IPs.
+
 ## Android release signing
 
 Production releases must use the same signing identity so Android accepts upgrades. The server currently stores the key and password outside this repository:

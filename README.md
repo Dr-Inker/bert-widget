@@ -68,6 +68,12 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.
 
+The public quote URL is part of the production health boundary. A healthy loopback service does not prove
+that installed widgets can refresh: DNS, Cloudflare and nginx must also return a current `200` response.
+Production DNS must contain one proxied `A` record for `berthalla.io` pointing to the origin server; it must
+never point to Cloudflare edge addresses, which creates an Error 1000 proxy loop and leaves clients showing
+their last cached quote.
+
 The landing page links directly to this repository and its release history so users can inspect the implementation, permissions, data flow, security controls, and published changes before installing the APK.
 
 Landing-page widget mockups use a stable, clearly labelled illustrative market snapshot so short-term price movement does not distort the product presentation. This affects marketing previews only: the installed widgets and production quote API continue to display validated current data.
