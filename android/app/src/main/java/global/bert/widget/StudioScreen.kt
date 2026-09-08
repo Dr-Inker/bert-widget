@@ -23,6 +23,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -44,6 +47,7 @@ internal fun ThemeStudio() {
     val scope = rememberCoroutineScope()
     var selected by remember { mutableStateOf(store.load()) }
     var applying by remember { mutableStateOf(false) }
+    var wallpaperMessage by rememberSaveable { mutableStateOf<String?>(null) }
     var previewId by rememberSaveable { mutableStateOf(selected.id) }
     val preview = BERTThemePack.fromId(previewId)
 
@@ -61,16 +65,20 @@ internal fun ThemeStudio() {
         val themeToApply = preview
         scope.launch {
             applying = true
+            wallpaperMessage = null
             try {
-                withContext(Dispatchers.IO) {
-                    if (destination == BERTWallpaperInstaller.BOTH) BERTWallpaperInstaller.applyPair(context, themeToApply)
-                    else BERTWallpaperInstaller.apply(context, themeToApply, destination)
+                wallpaperMessage = withContext(Dispatchers.IO) {
+                    if (destination == BERTWallpaperInstaller.BOTH) BERTWallpaperInstaller.applyPair(context, themeToApply).message
+                    else { BERTWallpaperInstaller.apply(context, themeToApply, destination); success }
                 }
-                Toast.makeText(context, success, Toast.LENGTH_SHORT).show()
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
-                Toast.makeText(context, "Wallpaper could not be applied on this launcher.", Toast.LENGTH_LONG).show()
+                wallpaperMessage = when (destination) {
+                    BERTWallpaperInstaller.HOME -> "Home wallpaper couldn’t be changed. Try again or choose another pack."
+                    BERTWallpaperInstaller.LOCK -> "Lock screen wallpaper couldn’t be changed. Try again or choose another pack."
+                    else -> "Wallpaper changes couldn’t be confirmed. Check Home and Lock screens before trying again."
+                }
             } finally {
                 applying = false
             }
@@ -123,6 +131,10 @@ internal fun ThemeStudio() {
                     modifier = Modifier.fillMaxWidth(),
                     border = BorderStroke(1.dp, Color.White.copy(alpha = 0.16f)),
                 ) { Text("Lock screen only", color = Color(0xFFCAB5D6)) }
+                wallpaperMessage?.let {
+                    Text(it, color = Cream, fontSize = 14.sp, lineHeight = 21.sp,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+                }
                 Text(
                     "Android may crop artwork slightly to fit your display. Wallpaper changes stay on your device.",
                     color = Color(0xFF8E7C99),

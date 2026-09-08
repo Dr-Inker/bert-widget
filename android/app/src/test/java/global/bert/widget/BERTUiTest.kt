@@ -5,6 +5,8 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
@@ -29,8 +31,8 @@ import java.io.File
 class BERTUiTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun app(activity: ActivityState = ActivityState.Unavailable, fontScale: Float = 1f) {
-        compose.setContent {
+    private fun app(activity: ActivityState = ActivityState.Unavailable, fontScale: Float = 1f, restoration: StateRestorationTester? = null) {
+        val content: @Composable () -> Unit = {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
               BERTTheme {
                 BERTApp(QuoteState.Unavailable("No connection"), activity, emptyList(), BERTPosition(),
@@ -38,6 +40,7 @@ class BERTUiTest {
               }
             }
         }
+        if (restoration == null) compose.setContent(content) else restoration.setContent(content)
     }
 
     @Test fun activityAndCaptionCreationRender() {
@@ -148,6 +151,40 @@ class BERTUiTest {
         assertTrue(layout.single().lineCount > 4)
         compose.onNodeWithText("Read less").performScrollTo().performClick()
         compose.onNodeWithText("Tools", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test fun sectionsStayReachableAfterScrollingAtLargeText() {
+        app(fontScale = 2f)
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Share caption card").performScrollTo()
+        compose.onNodeWithText("Saved", useUnmergedTree = true).assertIsDisplayed().performClick()
+        compose.onNodeWithText("Personalize", useUnmergedTree = true).assertIsDisplayed().performClick()
+        compose.onNodeWithText("Lock screen only").performScrollTo()
+        compose.onNodeWithText("Art", useUnmergedTree = true).assertIsDisplayed()
+        capture("personalize-large-scrolled")
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Copy mint").performScrollTo()
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).assertIsDisplayed().performClick()
+        compose.onNodeWithText("Save holdings").performScrollTo()
+        compose.onNodeWithText("Market", useUnmergedTree = true).assertIsDisplayed()
+    }
+
+    @Test fun savedStateRestoresDestinationSectionAndUnfinishedCaption() {
+        val restoration = StateRestorationTester(compose)
+        app(restoration = restoration)
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("Back soon. Keep my hat.")
+        compose.onNodeWithText("Lilac", useUnmergedTree = true).performScrollTo().performClick()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithText("Art").assertIsSelected()
+        compose.onNodeWithText("Back soon. Keep my hat.").assertExists()
+        compose.onNodeWithText("Lilac").assertIsSelected()
+        waitForPreview("Back soon. Keep my hat.")
+        compose.onNodeWithText("Saved", useUnmergedTree = true).performClick()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithText("Saved").assertIsSelected()
+        compose.onNodeWithText("Art", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Back soon. Keep my hat.").assertExists()
     }
 
     private fun waitForPreview(caption: String? = null) {

@@ -11,6 +11,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -145,23 +147,31 @@ internal fun BERTApp(
             BERTDestination.CREATE -> "CREATE-$createTab"
             else -> destination.name
         }
-        savedScreens.SaveableStateProvider(screenKey) {
-            Column(
-                modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
-                    .imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(18.dp),
-            ) {
-                AppHeader(destination)
-                when (destination) {
-                    BERTDestination.HOME -> HomeScreen(activityState, now, activityRefreshing, refreshActivity) { destination = it }
-                    BERTDestination.EXPLORE -> ExploreScreen()
-                    BERTDestination.CREATE -> CreateScreen(createTab) { createTab = it }
-                    BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, toolsTab, { toolsTab = it },
-                        refresh = refresh,
-                        savePosition = savePosition,
-                    )
+        val hasSections = destination == BERTDestination.CREATE || destination == BERTDestination.TOOLS
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
+            if (hasSections) {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    AppHeader(destination)
+                    if (destination == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalize"), createTab) { createTab = it }
+                    else SectionTabs(listOf("Market", "Holdings"), toolsTab) { toolsTab = it }
                 }
-                Text("BERT · v${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
+            }
+            savedScreens.SaveableStateProvider(screenKey) {
+                Column(
+                    modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
+                        .padding(horizontal = 20.dp, vertical = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(18.dp),
+                ) {
+                    if (!hasSections) AppHeader(destination)
+                    when (destination) {
+                        BERTDestination.HOME -> HomeScreen(activityState, now, activityRefreshing, refreshActivity) { destination = it }
+                        BERTDestination.EXPLORE -> ExploreScreen()
+                        BERTDestination.CREATE -> CreateScreen(createTab) { createTab = it }
+                        BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, toolsTab,
+                            refresh = refresh, savePosition = savePosition)
+                    }
+                    Text("BERT · v${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
+                }
             }
         }
     }
@@ -169,9 +179,8 @@ internal fun BERTApp(
 
 @Composable
 private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, position: BERTPosition, now: Long,
-                        refreshing: Boolean, tab: String, selectTab: (String) -> Unit,
+                        refreshing: Boolean, tab: String,
                         refresh: () -> Unit, savePosition: (BERTPosition) -> Unit) {
-    SectionTabs(listOf("Market", "Holdings"), tab, selectTab)
     if (tab == "Market") MarketScreen(state, history, now, refreshing, refresh)
     else HoldingsScreen(position, state, now, savePosition)
 }
@@ -193,6 +202,14 @@ internal fun SectionTabs(tabs: List<String>, selected: String, select: (String) 
 
 @Composable
 private fun AppHeader(destination: BERTDestination) {
+    if (destination == BERTDestination.CREATE || destination == BERTDestination.TOOLS) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Image(painterResource(R.drawable.bert_token), null, Modifier.size(32.dp).clip(RoundedCornerShape(10.dp)))
+            Text(destination.label.uppercase(), color = Cream, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                letterSpacing = 1.sp, modifier = Modifier.semantics { heading() })
+        }
+        return
+    }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Image(painterResource(R.drawable.bert_token), "Bertram the Pomeranian", Modifier.size(42.dp).clip(RoundedCornerShape(13.dp)))
         Column {

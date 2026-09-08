@@ -81,20 +81,20 @@ object BERTWallpaperInstaller {
     const val LOCK = WallpaperManager.FLAG_LOCK
     const val BOTH = HOME or LOCK
 
-    fun apply(context: Context, theme: BERTThemePack, destination: Int) {
+    fun apply(context: Context, theme: BERTThemePack, destination: Int): Int {
         val resource = if (destination == LOCK) theme.lockWallpaperRes else theme.homeWallpaperRes
         val bitmap = requireNotNull(BitmapFactory.decodeResource(context.resources, resource)) {
             "Unable to decode ${theme.displayName} wallpaper"
         }
         try {
-            WallpaperManager.getInstance(context).setBitmap(bitmap, null, true, destination)
+            val wallpaperId = WallpaperManager.getInstance(context).setBitmap(bitmap, null, false, destination)
+            check(wallpaperId > 0) { "Android did not apply the wallpaper" }
+            return wallpaperId
         } finally {
             bitmap.recycle()
         }
     }
 
-    fun applyPair(context: Context, theme: BERTThemePack) {
-        apply(context, theme, HOME)
-        apply(context, theme, LOCK)
-    }
+    internal fun applyPair(context: Context, theme: BERTThemePack): WallpaperApplyResult =
+        applyWallpaperPair(home = { apply(context, theme, HOME) }, lock = { apply(context, theme, LOCK) })
 }

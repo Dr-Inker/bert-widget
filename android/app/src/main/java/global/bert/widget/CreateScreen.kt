@@ -22,8 +22,6 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun CreateScreen(tab: String, selectTab: (String) -> Unit) {
     val context = LocalContext.current
-    Text("Make it yours.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-    SectionTabs(listOf("Art", "Saved", "Personalize"), tab, selectTab)
     if (tab == "Art") {
         CaptionCardCreator { selectTab("Saved") }
         SectionLabel("KEEP CREATING")

@@ -14,6 +14,8 @@ Market displays selectable 1H/6H/24H windows of actual on-device observations. I
 
 Holdings are accessible without a network connection. The existing stored amount remains compatible with installed widgets; an optional total cost enables estimated unrealized gain/loss. Amounts and cost stay on the device. Theme browsing previews a pack; applying its widget palette now requires a separate action.
 
+Section tabs in Create and Tools stay visible while their content scrolls, including at large text sizes. Wallpaper actions retain their result on screen and report Home and Lock outcomes separately; a partial success names the screen that changed. Android's zero return value is treated as failure, and the app does not opt wallpaper images into OS backup. Saved-state host tests cover destination, section, caption and palette restoration; actual OS process-death behavior still requires device verification.
+
 The release metadata below still describes the published v0.4.0 APK. No version bump or signed release has been produced for this iteration.
 
 The development `local.properties` points at `/opt/android-sdk` on this server and is ignored by Git. Other machines should create it with their Android SDK location.
