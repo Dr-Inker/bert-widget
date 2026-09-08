@@ -141,6 +141,56 @@ class BERTUiTest {
         waitForPreview("Keep my unfinished idea")
     }
 
+    @Test fun savedCardBackRestoresTheCollectionPosition() = checkSavedCardNavigation()
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun savedCardBackRestoresTheCollectionPositionAtLargeText() = checkSavedCardNavigation(fontScale = 2f)
+
+    private fun checkSavedCardNavigation(fontScale: Float = 1f) {
+        val store = CaptionLibrary(compose.activity)
+        repeat(12) { index ->
+            val card = renderCaption(compose.activity, "Pack memory ${index + 1}", index % 3)
+            try { store.save(card) } finally { card.bitmap.recycle() }
+        }
+        app(fontScale = fontScale)
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Saved", useUnmergedTree = true).performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Pack memory 2").performScrollTo()
+        val before = compose.onNodeWithText("Pack memory 2", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val suffix = if (fontScale > 1f) "-large" else ""
+        capture("collection-position-before$suffix")
+        compose.onNodeWithText("Pack memory 2").performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        capture("collection-detail-open$suffix")
+        val artwork = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2")
+        val picture = artwork.getUnclippedBoundsInRoot()
+        val viewport = artwork.onAncestors().filter(hasScrollAction()).onFirst().getBoundsInRoot()
+        val title = compose.onNodeWithText("Made by you.", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        compose.onNodeWithText("Back to collection").performScrollTo().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Your collection").fetchSemanticsNodes().isNotEmpty() }
+        capture("collection-position-return$suffix")
+        val afterButton = compose.onNodeWithText("Pack memory 2", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        compose.onNodeWithText("Pack memory 2").performScrollTo().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+        compose.onNodeWithText("Saved").assertIsSelected()
+        compose.onNodeWithText("Your collection").assertExists()
+        val afterBack = compose.onNodeWithText("Pack memory 2", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val measurements = org.json.JSONObject().put("fontScale", fontScale)
+            .put("anchorBeforeTopDp", before.top.value).put("anchorAfterButtonTopDp", afterButton.top.value)
+            .put("anchorAfterBackTopDp", afterBack.top.value).put("detailTitleTopDp", title.top.value)
+            .put("artworkTopDp", picture.top.value).put("artworkBottomDp", picture.bottom.value)
+            .put("viewportTopDp", viewport.top.value).put("viewportBottomDp", viewport.bottom.value)
+        File("build/outputs/host-ui/collection-navigation$suffix.json").writeText(measurements.toString(2))
+        assertTrue("Opened card must start with its title visible", title.top >= viewport.top && title.bottom <= viewport.bottom)
+        if (fontScale == 1f) assertTrue("The complete artwork must fit on first open", picture.top >= viewport.top && picture.bottom <= viewport.bottom)
+        assertEquals("Back to collection must preserve the same card position", before.top.value, afterButton.top.value, 0.5f)
+        assertEquals("Android Back must preserve the same card position", before.top.value, afterBack.top.value, 0.5f)
+        assertEquals(12, store.list().size)
+    }
+
     @Test fun fullCollectionExplainsTheLimitAndKeepsTheDraftThroughRecovery() {
         val store = CaptionLibrary(compose.activity)
         val existing = (1..40).map { index ->
