@@ -6,6 +6,10 @@ import android.graphics.Canvas
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
@@ -31,16 +35,126 @@ import java.io.File
 class BERTUiTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
-    private fun app(activity: ActivityState = ActivityState.Unavailable, fontScale: Float = 1f, restoration: StateRestorationTester? = null) {
+    private fun app(activity: ActivityState = ActivityState.Unavailable, fontScale: Float = 1f, restoration: StateRestorationTester? = null,
+                    quote: QuoteState = QuoteState.Unavailable("No connection"), history: List<BERTPriceSample> = emptyList(),
+                    initialPosition: BERTPosition = BERTPosition(), holdingsStore: BERTHoldingsStore? = null) {
         val content: @Composable () -> Unit = {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
               BERTTheme {
-                BERTApp(QuoteState.Unavailable("No connection"), activity, emptyList(), BERTPosition(),
-                    1_789_000_000_000, false, false, {}, {}, {})
+                var position by remember { mutableStateOf(holdingsStore?.loadPosition() ?: initialPosition) }
+                BERTApp(quote, activity, history, position,
+                    1_789_000_000_000, false, false, {}, {}, { holdingsStore?.savePosition(it); position = it })
               }
             }
         }
         if (restoration == null) compose.setContent(content) else restoration.setContent(content)
+    }
+
+    // Deterministic review fixtures, never current market quotes or the user's holdings.
+    private fun marketFixture() = QuoteState.Available(BERTQuote(
+        0.0042, -12.5, 123_456_789.0, 2_345_678.0, 345_678.0, "fresh",
+        1_789_000_000_000 - 42 * 60_000, "dexscreener", "raydium",
+        "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+    ), updateDelayed = true)
+
+    private fun marketHistoryFixture() = listOf(1_200L to 0.008, 300L to 0.003, 120L to 0.005, 50L to 0.004, 42L to 0.0042)
+        .map { (minutes, price) -> BERTPriceSample(1_789_000_000_000 - minutes * 60_000, price) }
+
+    @Test fun populatedToolsKeepPricesAndControlsReadable() = checkPopulatedTools()
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun populatedToolsKeepPricesAndControlsReadableAtLargeText() = checkPopulatedTools(fontScale = 2f)
+
+    private fun checkPopulatedTools(fontScale: Float = 1f) {
+        app(fontScale = fontScale, quote = marketFixture(), history = marketHistoryFixture(), initialPosition = BERTPosition(250_000.0, 1250.0))
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        val suffix = if (fontScale > 1f) "-large" else ""
+        val measurements = org.json.JSONArray()
+        capture("market-populated$suffix")
+        for (label in listOf("$0.0042", "Delayed · Updated 42m ago")) {
+            compose.onNodeWithText(label).performScrollTo()
+            measurements.put(measureLabel(label))
+        }
+        compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertExists()
+        compose.onNodeWithText("24H").performScrollTo()
+        capture("market-ranges$suffix")
+        for (label in listOf("1H", "6H", "24H")) {
+            measurements.put(measureLabel(label))
+            compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp)
+        }
+        compose.onNodeWithText("Liquidity").performScrollTo()
+        capture("market-metrics$suffix")
+        for (label in listOf("Market cap", "$123.5M", "24h volume", "$2.3M", "Liquidity", "$345.7K")) measurements.put(measureLabel(label))
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("$1,050.00").performScrollTo()
+        capture("holdings-populated$suffix")
+        measurements.put(measureLabel("$1,050.00"))
+        compose.onNodeWithText("Unrealized loss · -$200.00").performScrollTo()
+        capture("holdings-loss$suffix")
+        compose.onNodeWithText("-16.00% return on entered cost").assertExists()
+        compose.onNodeWithText("Delayed · Updated 42m ago").assertExists()
+        File("build/outputs/host-ui/populated-tools$suffix.json").writeText(measurements.toString(2))
+        for (index in 0 until measurements.length()) {
+            val item = measurements.getJSONObject(index)
+            if (item.getString("label") != "Delayed · Updated 42m ago")
+                assertEquals("${item.getString("label")} must remain an intact label or number", 1, item.getInt("lineCount"))
+        }
+    }
+
+    @Test fun marketRangesUseTheirOwnObservationsAndKeepSelection() {
+        val restoration = StateRestorationTester(compose)
+        app(quote = marketFixture(), history = marketHistoryFixture(), restoration = restoration)
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        fun checkChart(label: String, summary: String) {
+            compose.onNodeWithText(label).performScrollTo().performClick()
+            compose.onNodeWithText(label).assertIsSelected()
+            compose.onNodeWithContentDescription(summary).assertExists()
+        }
+        checkChart("24H", "5 observed prices over the selected 24H window. Low $0.003, high $0.008. Gaps over 30 minutes are not connected.")
+        checkChart("6H", "4 observed prices over the selected 6H window. Low $0.003, high $0.005. Gaps over 30 minutes are not connected.")
+        checkChart("1H", "2 observed prices over the selected 1H window. Low $0.004, high $0.0042. Gaps over 30 minutes are not connected.")
+        capture("market-one-hour")
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Market", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("1H").assertIsSelected()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithText("1H").assertIsSelected()
+    }
+
+    @Test fun holdingsEditsValidateCancelSaveAndConfirmRemoval() {
+        val store = BERTHoldingsStore(compose.activity)
+        val original = BERTPosition(250_000.0, 1250.0)
+        store.savePosition(original)
+        val restoration = StateRestorationTester(compose)
+        app(holdingsStore = store, restoration = restoration)
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Edit holdings").performScrollTo().performClick()
+        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("1,5")
+        compose.onNodeWithText("Save holdings").performScrollTo().performClick()
+        compose.onNodeWithText("Enter zero or more, using a decimal point.").assertExists()
+        assertEquals(original, store.loadPosition())
+        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("300,000.5")
+        compose.onNodeWithText("Total cost in USD (optional)").performScrollTo().performTextReplacement("1200.00")
+        compose.onNodeWithText("Cancel").performScrollTo().performClick()
+        assertEquals(original, store.loadPosition())
+        compose.onNodeWithText("Edit holdings").performScrollTo().performClick()
+        compose.onNodeWithText("BERT amount").assertTextContains("250000")
+        compose.onNodeWithText("Total cost in USD (optional)").assertTextContains("1250")
+        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("300,000.5")
+        compose.onNodeWithText("Total cost in USD (optional)").performScrollTo().performTextReplacement("")
+        compose.onNodeWithText("Save holdings").performScrollTo().performClick()
+        assertEquals(BERTPosition(300_000.5), BERTHoldingsStore(compose.activity).loadPosition())
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithText("300,000.5 BERT").assertExists()
+        compose.onNodeWithText("Remove holdings").performScrollTo().performClick()
+        compose.onNodeWithText("Keep holdings").performClick()
+        assertEquals(BERTPosition(300_000.5), store.loadPosition())
+        compose.onNodeWithText("Remove holdings").performScrollTo().performClick()
+        compose.onNodeWithText("Remove", useUnmergedTree = true).performClick()
+        assertEquals(BERTPosition(), store.loadPosition())
+        compose.onNodeWithText("BERT amount").assertExists()
     }
 
     @Test fun activityAndCaptionCreationRender() {
