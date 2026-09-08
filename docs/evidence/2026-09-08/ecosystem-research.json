@@ -1,0 +1,205 @@
+{
+  "scope": "Public GET observations for product research; HTTP success does not verify mobile interaction or service reliability. No authenticated flows or generation requests performed.",
+  "checked_at_utc": "2026-09-08T17:32:46.430889+00:00",
+  "application_source_sha": "30007889bd9948142090b8afdf692a9e4ab5626e",
+  "observations": [
+    {
+      "url": "https://berthalla.io/",
+      "fetched_at_utc": "2026-09-08T17:32:46.430900+00:00",
+      "http_status": 200,
+      "final_url": "https://berthalla.io/",
+      "body_sha256": "15e8b4a59c7c46955cfd44116c3eb081802d2eed933f46a5614bd500240064e1",
+      "links": [
+        "/",
+        "/studio/",
+        "/widget/",
+        "https://x.com/Berthalla_bot",
+        "https://t.me/flappybertofficialbot",
+        "/music/",
+        "https://dexscreener.com/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump",
+        "https://bert.global",
+        "/studio/privacy"
+      ],
+      "scripts": [
+        "/app.js?v=8"
+      ],
+      "fallback_checks": {
+        "contains_summer_event_name": true,
+        "contains_september_1_end_label": true
+      }
+    },
+    {
+      "url": "https://berthalla.io/status.json",
+      "fetched_at_utc": "2026-09-08T17:32:46.658654+00:00",
+      "http_status": 200,
+      "final_url": "https://berthalla.io/status.json",
+      "body_sha256": "7c39bd75c0b28e99575001c98828a8753c15f84810a3b54667940baf38a53390",
+      "observed_fields": {
+        "top_level_keys": [
+          "bert",
+          "flappy",
+          "latest_post",
+          "mood",
+          "updated_at"
+        ],
+        "updated_at": 1788888601,
+        "updated_at_utc": "2026-09-08T17:30:01+00:00",
+        "mood": "smug",
+        "latest_post_present": true,
+        "flappy_keys": [
+          "ends_at",
+          "name",
+          "play_url",
+          "pool",
+          "sponsor",
+          "status",
+          "top"
+        ],
+        "flappy_name": "The Autumn Arc",
+        "flappy_status": "live",
+        "flappy_ends_at": "2026-12-01T00:00:00Z",
+        "flappy_leaderboard_rows": 5,
+        "flappy_play_url": "https://t.me/flappybertofficialbot"
+      }
+    },
+    {
+      "url": "https://berthalla.io/app.js?v=8",
+      "fetched_at_utc": "2026-09-08T17:32:46.727446+00:00",
+      "http_status": 200,
+      "final_url": "https://berthalla.io/app.js?v=8",
+      "body_sha256": "3ec6f255fe8e19d27ac70f0d9595e449d9d36e5e6361e912732e37e2eb570dde",
+      "source_locations": {
+        "status_fetch_line": 208,
+        "failed_fetch_keeps_fallback_line": 211,
+        "tournament_render_lines": [
+          194,
+          204
+        ],
+        "expiry_and_status_not_used_for_live_label_in_render": true
+      }
+    },
+    {
+      "url": "https://berthalla.io/studio/",
+      "fetched_at_utc": "2026-09-08T17:32:46.811414+00:00",
+      "http_status": 200,
+      "final_url": "https://berthalla.io/studio/",
+      "body_sha256": "d4adeedb85636631112e29831d86dcdcc15c779d7410a22f19f15197af3d160d",
+      "links": [
+        "https://berthalla.io/"
+      ],
+      "scripts": [
+        "static/studio.js?v=2"
+      ]
+    },
+    {
+      "url": "https://berthalla.io/studio/api/status",
+      "fetched_at_utc": "2026-09-08T17:32:46.966992+00:00",
+      "http_status": 200,
+      "final_url": "https://berthalla.io/studio/api/status",
+      "body_sha256": "d562e4d20d325668586f79ea8e673d952fbd949cc89818bc2da889687f2a8197",
+      "observed_fields": {
+        "remaining": 3,
+        "closed": false
+      }
+    },
+    {
+      "url": "https://berthalla.io/music/",
+      "fetched_at_utc": "2026-09-08T17:32:47.038803+00:00",
+      "http_status": 200,
+      "final_url": "https://berthalla.io/music/",
+      "body_sha256": "ec21ab40c6c40e73404407f29e455bd6cdd709a9976f9b2e7196e73a6f5fbab8",
+      "links": [
+        "/",
+        "https://www.youtube.com/channel/UCnVAs9MhzrY0a7ADi81u6Ag",
+        "https://www.youtube.com/watch?v=8yr_sD_orKo",
+        "https://www.youtube.com/watch?v=4Hd2jUCpZBw",
+        "https://www.youtube.com/watch?v=rL91syL1ls0"
+      ],
+      "scripts": []
+    },
+    {
+      "url": "https://www.bert.global/playground",
+      "fetched_at_utc": "2026-09-08T17:32:47.122758+00:00",
+      "http_status": 200,
+      "final_url": "https://www.bert.global/playground",
+      "body_sha256": "70e76dd38608fc64b56e3e8846cc15b2ac1a3acd989159755544a4a83557af1c",
+      "links": [
+        "https://t.me/FlappyBertOfficialBot",
+        "https://t.me/DrawBert_bot",
+        "https://dexscreener.com/solana/bmsze6tkzyskys1patpkryyazgdxwfxdia4buvlg9agy",
+        "https://www.gate.com/trade/BERT_USDT",
+        "https://phantom.com/tokens/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump",
+        "https://www.mexc.com/exchange/BERT_USDT",
+        "https://drive.google.com/file/d/1l7YxOF1ScMMxWvinyfKyR6fERLUyS25S/view?usp=sharing",
+        "https://x.com/bertcoincto",
+        "https://t.me/BERTCOINCTO",
+        "https://discord.com/invite/bertnft",
+        "https://www.instagram.com/bertiebertthepom/?hl=en"
+      ],
+      "scripts": [
+        "https://www.googletagmanager.com/gtag/js?id=G-DKC3F4VF02",
+        "https://events.framer.com/script?v=2",
+        "https://framerusercontent.com/sites/3oemcGuaNVrSPm6h8kbNHG/script_main.Dp3VC-no.mjs"
+      ],
+      "readiness_labels": {
+        "Farmhalla": "COMING SOON",
+        "Hold The Line": "COMING SOON",
+        "FlappyBert": "Telegram destination advertised",
+        "DrawBert": "Telegram destination advertised"
+      }
+    },
+    {
+      "url": "https://woofhub.com/",
+      "fetched_at_utc": "2026-09-08T17:32:47.383107+00:00",
+      "http_status": 200,
+      "final_url": "https://woofhub.com/",
+      "body_sha256": "77dcf48ef46a634f98c499ec3c3740886e5c9a4fa0fb761563392ff49ad15847",
+      "links": [
+        "/",
+        "/pets",
+        "/missing-pets",
+        "/adopt",
+        "/ai-pet-care-tools",
+        "/speak-to-dog",
+        "/doggify",
+        "/smart-tag",
+        "/login",
+        "/register",
+        "/my-pets",
+        "/create-pet-profile",
+        "https://www.bert.global/",
+        "/dog-trainer",
+        "https://x.com/bertcoincto",
+        "https://instagram.com",
+        "https://tiktok.com",
+        "https://t.me/bertsolanaportal"
+      ],
+      "scripts": [
+        "/_next/static/chunks/fd9d1056-c4a04772d2819e42.js",
+        "/_next/static/chunks/2117-f48e5e149b6895f9.js",
+        "/_next/static/chunks/main-app-b536cb475a9b0221.js",
+        "/_next/static/chunks/605-1edf347aab571709.js",
+        "/_next/static/chunks/9064-9844d3f7ef3b85f3.js",
+        "/_next/static/chunks/6137-03d2cd0024eec2f8.js",
+        "/_next/static/chunks/3145-a27dc04f50a03610.js",
+        "/_next/static/chunks/1834-bfc066f1539c7f0f.js",
+        "/_next/static/chunks/2972-49a58047d2c36bc2.js",
+        "/_next/static/chunks/6593-ee22ffe3474d4664.js",
+        "/_next/static/chunks/5946-6bcc6078916624cd.js",
+        "/_next/static/chunks/879-508746c50e3a1f5f.js",
+        "/_next/static/chunks/2641-45fa127e1474d135.js",
+        "/_next/static/chunks/4751-d65fb903628cd49d.js",
+        "/_next/static/chunks/7909-d5fe6f914b2b7a56.js",
+        "/_next/static/chunks/app/page-da643860a07e2585.js",
+        "/_next/static/chunks/3a91511d-956f6a3509cea150.js",
+        "/_next/static/chunks/2655-00c0681b4f256717.js",
+        "/_next/static/chunks/8793-8bc1e59d33d9b116.js",
+        "/_next/static/chunks/920-87ac88d2dd01e4b1.js",
+        "/_next/static/chunks/app/layout-249ef1d88df64c4f.js",
+        "/_next/static/chunks/app/not-found-833a2c2ee62bab4e.js",
+        "/_next/static/chunks/polyfills-42372ed130431b0a.js",
+        "/_next/static/chunks/webpack-ec5b9b3c3af2e680.js"
+      ]
+    }
+  ]
+}

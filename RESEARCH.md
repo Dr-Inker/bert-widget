@@ -1,5 +1,7 @@
 # BERT phone-widget research
 
+> Current product research: [Making BERT a general app — 2026-09-08](docs/RESEARCH-2026-09-08.md). The July widget-first proposal below is historical; the owner now wants a general BERT app with widgets among its features.
+
 Research date: 2026-07-27
 
 ## Token identity
@@ -157,3 +159,9 @@ The owner clarified that this is a general BERT app, with widgets among its feat
 Keep the mint-pinned quote service and private device storage. The observed-history chart reuses existing validated local observations; do not sell it as exchange candle history. Cost tracking is optional manual entry and does not imply wallet access or execution. Keep source-only iteration documentation distinct from the published v0.4.0 release record.
 
 Follow-up priorities and evidence live in `docs/CRITIQUE-2026-09-08.md`; the next working session starts at `docs/NEXT-SESSION.md`.
+
+### Research follow-up — 2026-09-08
+
+The [general-app research](docs/RESEARCH-2026-09-08.md) compares Nintendo Today!, LEGO Play and Finch patterns, inventories existing BERT experiences, and recommends prototyping Home / Explore / Create / Tools. This navigation is a recommendation, not an implemented or accepted decision.
+
+Public inspection found an existing `https://berthalla.io/status.json` source for Bert's mood, latest dispatch and Flappy tournament; the observed payload has a refresh timestamp but no post ID, publication date, permalink or archive. Web Studio also exposes a read-only status endpoint. Public retrieval does not establish supported native APIs or working user journeys. Use the [timestamped evidence](docs/evidence/2026-09-08/ecosystem-research.json) and the report's readiness distinctions before choosing integrations. No app source or release changed during research.

@@ -8,6 +8,7 @@ This is a **general BERT app**. Widgets are one feature, alongside market tools,
 
 ## Read first
 
+- `docs/RESEARCH-2026-09-08.md`: latest ecosystem findings, proposed navigation, feature priorities and validation plan. Recommendations are not implementation commitments.
 - `docs/CRITIQUE-2026-09-08.md`: baseline defects, fixes, product gaps and evidence.
 - `RESEARCH.md`: incumbent architecture and the September product-direction decision.
 - `android/README.md`: source behavior versus published release.
@@ -32,21 +33,25 @@ On this host, build caches and Android preferences for this pass are under `/opt
 
 ## Next implementation priorities
 
-1. Decide and curate the actual BERT games/experiences for Explore; verify canonical destinations and mobile behavior.
-2. Identify the owner/source for a real updates feed before adding feed UI.
-3. Add favorites/recent activity once discovery has enough content to warrant it.
-4. Validate widget placement and Home/Lock wallpaper application on physical launchers; improve the inherited partial-apply failure path.
-5. Bring iOS to parity only as an explicit separate macOS/Xcode effort.
+Research now recommends prototyping Home / Explore / Create / Tools before the next broad implementation. This is not the current navigation. Start with the report's task-based validation plan.
+
+1. Define the contract and owner for the discovered public `https://berthalla.io/status.json` source: mood, latest dispatch, tournament and refresh timestamp. It is not yet a chronological updates feed or documented native API. Do not scrape stale homepage fallback cards.
+2. Curate direct entry points for Flappy Bert, web drawing, music and Woofhub; verify real phone journeys. Official Playground labels Farmhalla and Hold The Line coming soon; do not present them as playable on that evidence.
+3. Prototype Create with separate art and personalization sections. Native Studio currently means themes; web Studio means generation. Local caption/sticker exports are a proposed native addition, not implemented work.
+4. Add favorites only after confirming repeated discovery use. Explore a non-price widget after the corresponding app content works.
+5. Validate widget placement and Home/Lock wallpaper application on physical launchers; improve the inherited partial-apply failure path. Bring iOS to parity only as an explicit separate macOS/Xcode effort.
+
+Research evidence: `docs/evidence/2026-09-08/ecosystem-research.json`. HTTP retrieval succeeded for listed public sources; authenticated flows, generation, gameplay and mobile behavior remain unverified. No new app gate or release validation was performed during research.
 
 ## Handoff contract
 
 TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SIDE_EFFECTS / RETURN
 
 TO: Next BERT app session
-TASK: Continue the general BERT app direction, starting from the critique and verified state
+TASK: Continue the general BERT app direction, starting from the research, critique and verified state
 CWD: /opt/bert-widget
 BASE: Application source 30007889bd9948142090b8afdf692a9e4ab5626e, followed by documentation/evidence only; read the gate command in the critique
-READ: docs/NEXT-SESSION.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
+READ: docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): No active lease after this session; scope the next change under the owner's authorization
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos
 ACCEPT: Executable development gate at the actual source SHA plus native evidence for visual claims; no unverified release claim
