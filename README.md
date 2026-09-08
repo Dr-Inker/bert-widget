@@ -1,6 +1,6 @@
 # BERT
 
-A native BERT companion app, with market tools, personal holdings, phone themes, and home-screen widgets.
+A native BERT app with ecosystem discovery, market tools, personal holdings, phone themes, and home-screen widgets.
 
 The next Android iteration introduces a BERT home with ecosystem discovery, persistent Home / Market / Holdings / Studio navigation, observed-price chart ranges, and optional local position-cost tracking. These source changes are **not published**; the distributed release described below remains v0.4.0. See [the product critique and roadmap](docs/CRITIQUE-2026-09-08.md) and [session state](docs/NEXT-SESSION.md).
 

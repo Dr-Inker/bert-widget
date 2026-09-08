@@ -24,7 +24,7 @@ This is a **general BERT app**. Widgets are one feature, alongside market tools,
 
 ## Verification
 
-Final command/SHA records and capture results will be recorded in the critique before this pass closes. `tools/check-android.sh` runs Node checks, Android JVM tests, lintDebug and assembleDebug. It is a **development** gate, not the release-signature/publication gate in DEPLOYMENT.md.
+Application source is `30007889bd9948142090b8afdf692a9e4ab5626e`. The development gate passed at that SHA; the exact command and log are recorded in the critique. Native UI verification did **not** pass: the software emulator timed out in package removal before installing the candidate. No candidate UI capture or physical-device verification is available. The next step before release is native QA on a functioning emulator or device. `tools/check-android.sh` runs Node checks, Android JVM tests, lintDebug and assembleDebug. It is a **development** gate, not the release-signature/publication gate in DEPLOYMENT.md.
 
 `tools/qa/android-companion.py` exercises a disposable AVD with labelled quote fixtures and captures native screenshots/UI trees. Read its arguments; never point this workflow at a personal/live device. Fixture market values are not real quotes. This host lacks `/dev/kvm`; software emulation is slow. Run one heavy job at a time.
 
@@ -45,7 +45,7 @@ TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SID
 TO: Next BERT app session
 TASK: Continue the general BERT app direction, starting from the critique and verified state
 CWD: /opt/bert-widget
-BASE: Current committed HEAD; read the gate SHA in the critique before making claims
+BASE: Application source 30007889bd9948142090b8afdf692a9e4ab5626e, followed by documentation/evidence only; read the gate command in the critique
 READ: docs/NEXT-SESSION.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): No active lease after this session; scope the next change under the owner's authorization
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos

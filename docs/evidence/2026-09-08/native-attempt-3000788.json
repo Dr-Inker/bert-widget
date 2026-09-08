@@ -1,0 +1,9 @@
+{
+  "source_sha": "30007889bd9948142090b8afdf692a9e4ab5626e",
+  "fixture": true,
+  "completed": false,
+  "working_tree_dirty": false,
+  "apk_sha256": "a6a14e805fa48722baaa1eaa27ce968605c4af77377a94d280e07328f0f2fd92",
+  "device": "Android 11 / API 30, 360x640 dp, software emulation",
+  "checks": []
+}
