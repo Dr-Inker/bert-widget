@@ -77,11 +77,12 @@ class BERTUiTest {
             measurements.put(measureLabel(label))
         }
         compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertExists()
-        compose.onNodeWithText("24H").performScrollTo()
+        compose.onNode(hasContentDescription("5 observed prices", substring = true)).performScrollTo()
         capture("market-ranges$suffix")
         for (label in listOf("1H", "6H", "24H")) {
-            measurements.put(measureLabel(label))
-            compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp)
+            val target = compose.onNode(hasText(label) and hasClickAction()).fetchSemanticsNode().touchBoundsInRoot
+            val density = compose.activity.resources.displayMetrics.density
+            measurements.put(measureLabel(label).put("touchHeightDp", target.height / density).put("touchWidthDp", target.width / density))
         }
         compose.onNodeWithText("Liquidity").performScrollTo()
         capture("market-metrics$suffix")
@@ -94,9 +95,17 @@ class BERTUiTest {
         capture("holdings-loss$suffix")
         compose.onNodeWithText("-16.00% return on entered cost").assertExists()
         compose.onNodeWithText("Delayed · Updated 42m ago").assertExists()
+        compose.onNodeWithText("Edit holdings").performScrollTo().performClick()
+        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("25000000")
+        compose.onNodeWithText("Total cost in USD (optional)").performScrollTo().performTextReplacement("125000")
+        compose.onNodeWithText("Save holdings").performScrollTo().performClick()
+        compose.onNodeWithText("$105,000.00").performScrollTo()
+        capture("holdings-larger-value$suffix")
+        measurements.put(measureLabel("$105,000.00"))
         File("build/outputs/host-ui/populated-tools$suffix.json").writeText(measurements.toString(2))
         for (index in 0 until measurements.length()) {
             val item = measurements.getJSONObject(index)
+            if (item.has("touchHeightDp")) assertTrue("${item.getString("label")} needs a 48dp touch target", item.getDouble("touchHeightDp") >= 48 && item.getDouble("touchWidthDp") >= 48)
             if (item.getString("label") != "Delayed · Updated 42m ago")
                 assertEquals("${item.getString("label")} must remain an intact label or number", 1, item.getInt("lineCount"))
         }

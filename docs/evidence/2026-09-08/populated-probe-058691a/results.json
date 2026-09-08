@@ -1,0 +1,19 @@
+{
+  "source_sha": "058691a77ca8d326da254428585a794643d95793",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.populatedToolsKeepPricesAndControlsReadable*' --tests 'global.bert.widget.BERTUiTest.marketRangesUseTheirOwnObservationsAndKeepSelection' --tests 'global.bert.widget.BERTUiTest.holdingsEditsValidateCancelSaveAndConfirmRemoval' --console=plain",
+  "exit_code": 1,
+  "tests": 4,
+  "failures": 2,
+  "finding": "Market range selection/restoration and holdings edit/cancel/save/remove pass. Both layout probes stop on visual chip height (32/37.5dp). This measures the wrong attribute for touch-target size; no touch defect is established. The follow-up measures SemanticsNode.touchBoundsInRoot with the chart/range controls scrolled into view.",
+  "fixture_note": "Static review quote, history and manual positions; not current market data. Actual Compose app shell, Robolectric API35, normal and linear2x fonts. No device acceptance.",
+  "evidence_sha256": {
+    "market-ranges.png": "9f9ad9401abbbc875bffec9b79541b264cb54bd482e10a66b8a69179be09ee50",
+    "market-populated-large.png": "ea97bb4264b84ec1212c58fb49b3ac9cde31179064b69b06bc44013cede8f53b",
+    "TEST-global.bert.widget.BERTUiTest.xml": "3e2ff31d32021d89b4aafab624ba1eb904791ec2c728ff0c355a015541c2267c",
+    "market-ranges-large.png": "f82ea4271fcbb870f293821c415db551f00814e651c1b23c6c3096d3105ca100",
+    "market-populated.png": "9f9ad9401abbbc875bffec9b79541b264cb54bd482e10a66b8a69179be09ee50",
+    "market-one-hour.png": "ffbee82f9103e3ddb1921eb2df5b2d164f7c5498b6c99538f67d2e98c4a624d8",
+    "focused-gate.txt": "95b2404ae6265f63b4b115279b0b004be68a4869e4d6f8d47bbf4ac6b5044727"
+  }
+}
