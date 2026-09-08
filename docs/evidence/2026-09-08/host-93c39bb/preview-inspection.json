@@ -1,0 +1,17 @@
+{
+  "result": "PASS",
+  "apk": "android/app/build/outputs/apk/preview/app-preview.apk",
+  "apk_sha256": "a14e221ba0905be73a887ee203694df88e3c8daac1806e2e010fe9f3409b959d",
+  "package": "global.bert.widget.preview",
+  "label": "BERT Preview",
+  "endpoints": [
+    "https://berthalla.io/widget/api/quote",
+    "https://berthalla.io/status.json"
+  ],
+  "caption_authority": "global.bert.widget.preview.captions",
+  "cleartext_allowed": false,
+  "signature_verified": true,
+  "signer": "Android Debug",
+  "build_tools": "/opt/android-sdk/build-tools/36.1.0",
+  "scope": "Artifact inspection only. No installation, device journeys, release approval or publication."
+}

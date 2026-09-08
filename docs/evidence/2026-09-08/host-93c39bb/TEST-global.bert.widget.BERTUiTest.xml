@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.BERTUiTest" tests="20" skipped="0" failures="0" errors="0" timestamp="2026-09-08T19:44:41.221Z" hostname="ubuntu-16gb-hel1-1" time="45.913">
+  <properties/>
+  <testcase name="coldOfflineHomeKeepsAllDestinationsUsable" classname="global.bert.widget.BERTUiTest" time="7.488"/>
+  <testcase name="longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview" classname="global.bert.widget.BERTUiTest" time="1.201"/>
+  <testcase name="savedStateRestoresDestinationSectionAndUnfinishedCaption" classname="global.bert.widget.BERTUiTest" time="0.688"/>
+  <testcase name="populatedToolsKeepPricesAndControlsReadable" classname="global.bert.widget.BERTUiTest" time="1.611"/>
+  <testcase name="captionLimitCountsVisibleCharactersIncludingEmoji" classname="global.bert.widget.BERTUiTest" time="0.79"/>
+  <testcase name="savedCardBackRestoresTheCollectionPositionAtLargeText" classname="global.bert.widget.BERTUiTest" time="4.018"/>
+  <testcase name="oversizedPasteExplainsRejectionAndPreservesTheDraftAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.648"/>
+  <testcase name="fullCollectionAutomaticallyRevealsRecoveryAtLargeText" classname="global.bert.widget.BERTUiTest" time="8.308"/>
+  <testcase name="createSaveOpenAndDeleteIsACompleteOfflineJourney" classname="global.bert.widget.BERTUiTest" time="1.148"/>
+  <testcase name="longDispatchCanBeReadWithoutLosingNavigation" classname="global.bert.widget.BERTUiTest" time="0.197"/>
+  <testcase name="savedCardBackRestoresTheCollectionPosition" classname="global.bert.widget.BERTUiTest" time="4.153"/>
+  <testcase name="populatedToolsKeepPricesAndControlsReadableAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.835"/>
+  <testcase name="marketRangesUseTheirOwnObservationsAndKeepSelection" classname="global.bert.widget.BERTUiTest" time="0.343"/>
+  <testcase name="fullCollectionExplainsTheLimitAndKeepsTheDraftThroughRecovery" classname="global.bert.widget.BERTUiTest" time="11.775"/>
+  <testcase name="captionDraftAndPaletteSurviveSwitchingSections" classname="global.bert.widget.BERTUiTest" time="0.246"/>
+  <testcase name="sectionsStayReachableAfterScrollingAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.341"/>
+  <testcase name="compactScreenAtLargeTextKeepsControlsReadable" classname="global.bert.widget.BERTUiTest" time="0.48"/>
+  <testcase name="activityAndCaptionCreationRender" classname="global.bert.widget.BERTUiTest" time="0.569"/>
+  <testcase name="largeTextHomeRemainsNavigable" classname="global.bert.widget.BERTUiTest" time="0.29"/>
+  <testcase name="holdingsEditsValidateCancelSaveAndConfirmRemoval" classname="global.bert.widget.BERTUiTest" time="0.517"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

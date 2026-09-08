@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.data.BERTActivityTest" tests="8" skipped="0" failures="0" errors="0" timestamp="2026-09-08T19:45:33.234Z" hostname="ubuntu-16gb-hel1-1" time="0.01">
+  <properties/>
+  <testcase name="unbounded or invalid display text is omitted rather than coerced" classname="global.bert.widget.data.BERTActivityTest" time="0.006"/>
+  <testcase name="event expires at its deadline even when the source still says live" classname="global.bert.widget.data.BERTActivityTest" time="0.0"/>
+  <testcase name="saved activity becomes stale at thirty minutes even when a refresh was successful" classname="global.bert.widget.data.BERTActivityTest" time="0.001"/>
+  <testcase name="malformed optional event preserves the dispatch" classname="global.bert.widget.data.BERTActivityTest" time="0.0"/>
+  <testcase name="missing fractional coerced and future source timestamps fail closed" classname="global.bert.widget.data.BERTActivityTest" time="0.001"/>
+  <testcase name="failed refresh and unknown status never claim an open tournament" classname="global.bert.widget.data.BERTActivityTest" time="0.0"/>
+  <testcase name="public shape parses source refresh time and independently dated event" classname="global.bert.widget.data.BERTActivityTest" time="0.0"/>
+  <testcase name="oversized activity documents are rejected before parsing" classname="global.bert.widget.data.BERTActivityTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
