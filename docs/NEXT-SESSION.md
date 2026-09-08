@@ -4,6 +4,8 @@ Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but n
 
 ## Latest implementation — research accepted
 
+Iteration 10 is in progress: the populated Market/Holdings probe at `a6b282014e749b3666504fd042a7ff86cfac246c` reproduces a split currency amount and wrapped Market label at compact font scale 2. The candidate fixes those layouts and adds populated flows; its full gate is pending. See iteration 10 of the critique. The last fully gated source remains the SHA below.
+
 The owner authorized a repeated premium-quality improvement loop. Latest verified source: `afb9003eb1ac5f6a9b97284492940b43e383404e`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. A separately installable BERT Preview APK and packaged-artifact gate now support practical device review. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
 
 Iteration 6 is verified: large-text wallpaper/widget actions stack without splitting their labels at 320 dp; Mayor Purple widget negative-change contrast improves from 4.38:1 to 4.66:1. The strengthened checks failed on the baseline and pass on the fixed source. The audit covers 34 declared text/surface pairs, not every UI state or a physical display.

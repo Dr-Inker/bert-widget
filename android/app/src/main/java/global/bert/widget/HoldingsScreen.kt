@@ -7,8 +7,10 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import global.bert.widget.data.*
@@ -25,7 +27,7 @@ internal fun HoldingsScreen(position: BERTPosition, state: QuoteState, now: Long
         Card(colors = CardDefaults.cardColors(containerColor = PanelStrong), shape = RoundedCornerShape(24.dp)) {
             Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 SectionLabel("ESTIMATED VALUE")
-                Text(formatHoldingsUsd(position.valueUsd(price)), color = Cream, fontSize = 34.sp, fontWeight = FontWeight.ExtraBold)
+                HoldingsValue(formatHoldingsUsd(position.valueUsd(price)))
                 Text("${formatTokenAmount(position.amount)} BERT", color = Cream, fontSize = 17.sp)
                 if (available != null) QuoteFreshness(available, now)
                 else Text("A quote is needed to estimate your position.", color = Amber, fontSize = 13.sp)
@@ -58,6 +60,24 @@ internal fun HoldingsScreen(position: BERTPosition, state: QuoteState, now: Long
             confirmButton = { TextButton(onClick = { save(BERTPosition()); removing = false; editing = true }) { Text("Remove") } },
             dismissButton = { TextButton(onClick = { removing = false }) { Text("Keep holdings") } },
         )
+    }
+}
+
+@Composable
+private fun HoldingsValue(value: String) {
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val style = LocalTextStyle.current.copy(color = Cream, fontWeight = FontWeight.ExtraBold)
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val widthPx = with(density) { maxWidth.toPx() }
+        val fontSize = remember(value, widthPx, density, style, measurer) {
+            (34 downTo 18).firstOrNull { size ->
+                measurer.measure(value, style.copy(fontSize = size.sp), softWrap = false, maxLines = 1).size.width <= widthPx
+            } ?: 18
+        }
+        // Keep ordinary amounts intact. Extremely long values may wrap at the readable
+        // floor; never hide digits with clipping, ellipsis or a compact currency suffix.
+        Text(value, style = style.copy(fontSize = fontSize.sp))
     }
 }
 

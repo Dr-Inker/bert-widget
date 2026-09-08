@@ -14,6 +14,7 @@ import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.text.TextLayoutResult
 import org.junit.Assert.*
@@ -84,6 +85,8 @@ class BERTUiTest {
             val density = compose.activity.resources.displayMetrics.density
             measurements.put(measureLabel(label).put("touchHeightDp", target.height / density).put("touchWidthDp", target.width / density))
         }
+        compose.onNodeWithText("Market cap").performScrollTo()
+        capture("market-metrics-start$suffix")
         compose.onNodeWithText("Liquidity").performScrollTo()
         capture("market-metrics$suffix")
         for (label in listOf("Market cap", "$123.5M", "24h volume", "$2.3M", "Liquidity", "$345.7K")) measurements.put(measureLabel(label))
@@ -102,11 +105,23 @@ class BERTUiTest {
         compose.onNodeWithText("$105,000.00").performScrollTo()
         capture("holdings-larger-value$suffix")
         measurements.put(measureLabel("$105,000.00"))
+        compose.onNodeWithText("Edit holdings").performScrollTo().performClick()
+        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("250000000000000000000")
+        compose.onNodeWithText("Total cost in USD (optional)").performScrollTo().performTextReplacement("")
+        compose.onNodeWithText("Save holdings").performScrollTo().performClick()
+        val extremeValue = "$1,050,000,000,000,000,000.00"
+        compose.onNodeWithText(extremeValue).performScrollTo()
+        capture("holdings-extreme-value$suffix")
+        val extreme = measureLabel(extremeValue)
+        measurements.put(extreme)
         File("build/outputs/host-ui/populated-tools$suffix.json").writeText(measurements.toString(2))
+        assertTrue("Long amounts must retain a readable font", extreme.getDouble("fontSizeSp") >= 18)
+        assertEquals("Every currency digit must be laid out", extremeValue.length, extreme.getInt("lastLineEnd"))
+        assertFalse("Currency digits must never be ellipsized", extreme.getBoolean("ellipsized"))
         for (index in 0 until measurements.length()) {
             val item = measurements.getJSONObject(index)
             if (item.has("touchHeightDp")) assertTrue("${item.getString("label")} needs a 48dp touch target", item.getDouble("touchHeightDp") >= 48 && item.getDouble("touchWidthDp") >= 48)
-            if (item.getString("label") != "Delayed · Updated 42m ago")
+            if (item.getString("label") !in listOf("Delayed · Updated 42m ago", extremeValue))
                 assertEquals("${item.getString("label")} must remain an intact label or number", 1, item.getInt("lineCount"))
         }
     }
@@ -560,6 +575,13 @@ class BERTUiTest {
         }
         return org.json.JSONObject().put("label", label).put("lineCount", result.lineCount)
             .put("widthPx", result.size.width).put("heightPx", result.size.height)
+            .put("density", result.layoutInput.density.density).put("fontScaleSetting", result.layoutInput.density.fontScale)
+            .put("fontSizeSp", result.layoutInput.style.fontSize.value)
+            .put("fontSizePx", with(result.layoutInput.density) { result.layoutInput.style.fontSize.toPx() })
+            .put("reference14spPx", with(result.layoutInput.density) { 14.sp.toPx() })
+            .put("reference38spPx", with(result.layoutInput.density) { 38.sp.toPx() })
+            .put("lastLineEnd", result.getLineEnd(result.lineCount - 1))
+            .put("ellipsized", (0 until result.lineCount).any { result.isLineEllipsized(it) })
             .put("maxLineRightPx", (0 until result.lineCount).maxOf { result.getLineRight(it) })
             .put("lastLineBottomPx", result.getLineBottom(result.lineCount - 1))
     }

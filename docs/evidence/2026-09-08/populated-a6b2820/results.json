@@ -1,0 +1,34 @@
+{
+  "source_sha": "a6b282014e749b3666504fd042a7ff86cfac246c",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.populatedToolsKeepPricesAndControlsReadable*' --tests 'global.bert.widget.BERTUiTest.marketRangesUseTheirOwnObservationsAndKeepSelection' --tests 'global.bert.widget.BERTUiTest.holdingsEditsValidateCancelSaveAndConfirmRemoval' --console=plain",
+  "exit_code": 1,
+  "tests": 4,
+  "failures": 1,
+  "findings": [
+    "Compact font-scale-2 Market cap label wraps to two lines.",
+    "Compact font-scale-2 $105,000.00 wraps to two lines and splits the cents.",
+    "All chart range touch targets are 48dp high; labels fit one line. No chip defect.",
+    "Normal populated layout, chart range selection/restoration and holdings edit/cancel/save/remove pass."
+  ],
+  "fixture_note": "Static review quote, history and entered positions; not current market data or user holdings. Robolectric API35 production Compose shell, font scale settings 1 and 2. Native acceptance remains unverified.",
+  "evidence_sha256": {
+    "TEST-global.bert.widget.BERTUiTest.xml": "ab12f7caced99cf22469311f351e05ccb8f896dc000713d4f2a668015f0bf1df",
+    "focused-gate.txt": "3997fab95c0552a937a5008f0048871bc2eafca3016e23151fc101e5d2d30098",
+    "holdings-larger-value-large.png": "872daa59e470c01f7b21017f45c536fe1cc17350ce39230d9874484e626bbe05",
+    "holdings-larger-value.png": "4e1b7c1fa483536da5caf10ccc5b32433fce5c6912de519cf8174a9e49a4bd9c",
+    "holdings-loss-large.png": "47dd31552e78e293353ae451e195c28e374b26eb7e2c8ce11c9c7ec14335776f",
+    "holdings-loss.png": "50bec9a6c09029283b4116d885802c990b15ecb22aef6025097e99dd64cd0fe2",
+    "holdings-populated-large.png": "68e6982ca8ce6daa4cdcc256033a3a30ea8e524690d7200de4f3ace2679c3130",
+    "holdings-populated.png": "50bec9a6c09029283b4116d885802c990b15ecb22aef6025097e99dd64cd0fe2",
+    "market-metrics-large.png": "911d13a23294744932cdf6c9fa83af24a022b701df174e18bbb5c81f505a2ea5",
+    "market-metrics.png": "dcc0e90a88317729d19629640fbefc2c174ca372513b23ab9c995bcb57ea6e38",
+    "market-one-hour.png": "ffbee82f9103e3ddb1921eb2df5b2d164f7c5498b6c99538f67d2e98c4a624d8",
+    "market-populated-large.png": "ea97bb4264b84ec1212c58fb49b3ac9cde31179064b69b06bc44013cede8f53b",
+    "market-populated.png": "9f9ad9401abbbc875bffec9b79541b264cb54bd482e10a66b8a69179be09ee50",
+    "market-ranges-large.png": "9ffa9dace28ef45ef048c697ab27013d18b56a085c97d82f02ff58d249bcc182",
+    "market-ranges.png": "9f9ad9401abbbc875bffec9b79541b264cb54bd482e10a66b8a69179be09ee50",
+    "populated-tools-large.json": "e96dd1fa05bfa626f119958c563924b7780b6ebb13b807c847da2133a44790a7",
+    "populated-tools.json": "7aac00a84d161c3b56e411387f020a4bc451d1435e342d07dc5a706f8264feb0"
+  }
+}

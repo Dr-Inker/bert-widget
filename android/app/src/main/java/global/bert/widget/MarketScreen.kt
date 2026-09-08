@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -91,9 +92,16 @@ internal fun MarketScreen(state: QuoteState, history: List<BERTPriceSample>, now
 
 @Composable
 private fun MarketMetric(label: String, value: Double?) {
-    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(label, color = Muted, fontSize = 14.sp, modifier = Modifier.weight(1f))
-        Text(formatCompactUsd(value), color = Cream, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+    if (LocalDensity.current.fontScale > 1.3f) {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(label, color = Muted, fontSize = 14.sp)
+            Text(formatCompactUsd(value), color = Cream, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
+    } else {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(label, color = Muted, fontSize = 14.sp, modifier = Modifier.weight(1f))
+            Text(formatCompactUsd(value), color = Cream, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        }
     }
 }
 

@@ -1,0 +1,112 @@
+[
+  {
+    "label": "$0.0042",
+    "lineCount": 1,
+    "widthPx": 294,
+    "heightPx": 90,
+    "maxLineRightPx": 293,
+    "lastLineBottomPx": 90
+  },
+  {
+    "label": "Delayed · Updated 42m ago",
+    "lineCount": 1,
+    "widthPx": 319,
+    "heightPx": 48,
+    "maxLineRightPx": 317.67188,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "1H",
+    "lineCount": 1,
+    "widthPx": 38,
+    "heightPx": 40,
+    "maxLineRightPx": 36.200005,
+    "lastLineBottomPx": 40,
+    "touchHeightDp": 48,
+    "touchWidthDp": 51
+  },
+  {
+    "label": "6H",
+    "lineCount": 1,
+    "widthPx": 38,
+    "heightPx": 40,
+    "maxLineRightPx": 36.200005,
+    "lastLineBottomPx": 40,
+    "touchHeightDp": 48,
+    "touchWidthDp": 51
+  },
+  {
+    "label": "24H",
+    "lineCount": 1,
+    "widthPx": 54,
+    "heightPx": 40,
+    "maxLineRightPx": 52.400005,
+    "lastLineBottomPx": 40,
+    "touchHeightDp": 48,
+    "touchWidthDp": 59
+  },
+  {
+    "label": "Market cap",
+    "lineCount": 1,
+    "widthPx": 410,
+    "heightPx": 48,
+    "maxLineRightPx": 147.72656,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "$123.5M",
+    "lineCount": 1,
+    "widthPx": 134,
+    "heightPx": 48,
+    "maxLineRightPx": 133,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "24h volume",
+    "lineCount": 1,
+    "widthPx": 448,
+    "heightPx": 48,
+    "maxLineRightPx": 154.79688,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "$2.3M",
+    "lineCount": 1,
+    "widthPx": 96,
+    "heightPx": 48,
+    "maxLineRightPx": 95,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "Liquidity",
+    "lineCount": 1,
+    "widthPx": 418,
+    "heightPx": 48,
+    "maxLineRightPx": 113,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "$345.7K",
+    "lineCount": 1,
+    "widthPx": 126,
+    "heightPx": 48,
+    "maxLineRightPx": 125,
+    "lastLineBottomPx": 48
+  },
+  {
+    "label": "$1,050.00",
+    "lineCount": 1,
+    "widthPx": 321,
+    "heightPx": 80,
+    "maxLineRightPx": 320,
+    "lastLineBottomPx": 80
+  },
+  {
+    "label": "$105,000.00",
+    "lineCount": 1,
+    "widthPx": 401,
+    "heightPx": 80,
+    "maxLineRightPx": 400,
+    "lastLineBottomPx": 80
+  }
+]
