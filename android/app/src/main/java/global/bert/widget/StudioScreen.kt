@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -43,6 +44,7 @@ import kotlinx.coroutines.withContext
 @Composable
 internal fun ThemeStudio() {
     val context = LocalContext.current
+    val stackActions = LocalDensity.current.fontScale > 1.3f
     val store = remember { BERTThemeStore(context.applicationContext) }
     val scope = rememberCoroutineScope()
     var selected by remember { mutableStateOf(store.load()) }
@@ -111,7 +113,8 @@ internal fun ThemeStudio() {
                     enabled = selected != preview && !applying,
                     modifier = Modifier.fillMaxWidth(),
                 ) { Text(if (selected == preview) "Widget palette active" else "Use palette on widgets", color = Cream) }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+                    maxItemsInEachRow = if (stackActions) 1 else 2, modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = { applyWallpaper(BERTWallpaperInstaller.BOTH, "${preview.displayName} wallpapers applied") },
                         enabled = !applying,
@@ -174,11 +177,13 @@ private fun ThemePackCard(theme: BERTThemePack, selected: Boolean, onClick: () -
 
 @Composable
 internal fun WidgetSetup(context: Context) {
+    val stackActions = LocalDensity.current.fontScale > 1.3f
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(22.dp)) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionLabel("HOME-SCREEN WIDGETS")
             Text("Choose the quick price view or the full market desk.", color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+                maxItemsInEachRow = if (stackActions) 1 else 2, modifier = Modifier.fillMaxWidth()) {
                 WidgetButton("Compact", "2×2", Modifier.weight(1f)) { pinWidget(context, BERTWidgetReceiver::class.java) }
                 WidgetButton("Market", "4×2", Modifier.weight(1f)) { pinWidget(context, BERTMarketWidgetReceiver::class.java) }
             }

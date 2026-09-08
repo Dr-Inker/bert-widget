@@ -1,0 +1,12 @@
+{
+  "sourceSha": "74f253256ca40f9d66c24b0e7544cf889dc23005",
+  "workingTreeDirtyDuringTest": false,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.compactScreenAtLargeTextKeepsControlsReadable' --tests 'global.bert.widget.BERTContrastTest' --console=plain",
+  "outcome": "FAIL: 2 focused tests, 2 failures. Apply both occupies two lines; Mayor Purple widget negative-change contrast 4.38323913760392 is below 4.5.",
+  "sha256": {
+    "TEST-global.bert.widget.BERTUiTest.xml": "3c93bff6f094bf4b6236785113addc89ef778bc31808179d48267a0533b15332",
+    "readability-before.txt": "8c3913ba7c01822fc45bc5a6ce6c041b64ab53ca6d1e3ec840729e530c209087",
+    "TEST-global.bert.widget.BERTContrastTest.xml": "7c6db988bd45dbf058f8b5320b3cafd204a125059f809621de84e3fae326056c",
+    "contrast-measurements.json": "e85634eb7d39a347a943d1cd786440a96d8b58ab74f98afee25277e92f18d88b"
+  }
+}

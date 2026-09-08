@@ -1,0 +1,240 @@
+[
+  {
+    "pair": "app canvas \/ body",
+    "foregroundArgb": "FFFFF5DF",
+    "backgroundArgb": "FF071A2F",
+    "ratio": 16.17788621598854,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app canvas \/ secondary",
+    "foregroundArgb": "FF9CB0C5",
+    "backgroundArgb": "FF071A2F",
+    "ratio": 7.872476813580127,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app canvas \/ accent",
+    "foregroundArgb": "FFFF9E85",
+    "backgroundArgb": "FF071A2F",
+    "ratio": 8.750285735394582,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app canvas \/ warning",
+    "foregroundArgb": "FFFFC857",
+    "backgroundArgb": "FF071A2F",
+    "ratio": 11.396634022418043,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app card \/ body",
+    "foregroundArgb": "FFFFF5DF",
+    "backgroundArgb": "FF0D2942",
+    "ratio": 13.71485041333649,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app card \/ secondary",
+    "foregroundArgb": "FF9CB0C5",
+    "backgroundArgb": "FF0D2942",
+    "ratio": 6.6739152717000305,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app card \/ accent",
+    "foregroundArgb": "FFFF9E85",
+    "backgroundArgb": "FF0D2942",
+    "ratio": 7.418080355657621,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app card \/ warning",
+    "foregroundArgb": "FFFFC857",
+    "backgroundArgb": "FF0D2942",
+    "ratio": 9.661529865288028,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app strong card \/ body",
+    "foregroundArgb": "FFFFF5DF",
+    "backgroundArgb": "FF123957",
+    "ratio": 11.082331939945021,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app strong card \/ secondary",
+    "foregroundArgb": "FF9CB0C5",
+    "backgroundArgb": "FF123957",
+    "ratio": 5.392880137294535,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app strong card \/ accent",
+    "foregroundArgb": "FFFF9E85",
+    "backgroundArgb": "FF123957",
+    "ratio": 5.994205287039916,
+    "minimum": 4.5
+  },
+  {
+    "pair": "app strong card \/ warning",
+    "foregroundArgb": "FFFFC857",
+    "backgroundArgb": "FF123957",
+    "ratio": 7.807032361847404,
+    "minimum": 4.5
+  },
+  {
+    "pair": "market negative change, 17sp bold",
+    "foregroundArgb": "FFFF6B7A",
+    "backgroundArgb": "FF0D2942",
+    "ratio": 5.404341036298812,
+    "minimum": 4.5
+  },
+  {
+    "pair": "holdings loss, 18sp bold",
+    "foregroundArgb": "FFFF6B7A",
+    "backgroundArgb": "FF123957",
+    "ratio": 4.366996319747643,
+    "minimum": 3
+  },
+  {
+    "pair": "retry action",
+    "foregroundArgb": "FF071A2F",
+    "backgroundArgb": "FFF25836",
+    "ratio": 5.196529759305768,
+    "minimum": 4.5
+  },
+  {
+    "pair": "status mood",
+    "foregroundArgb": "FFFF9E85",
+    "backgroundArgb": "FF2F455D",
+    "ratio": 4.920448031796556,
+    "minimum": 4.5
+  },
+  {
+    "pair": "status event open",
+    "foregroundArgb": "FF45E09A",
+    "backgroundArgb": "FF143F4D",
+    "ratio": 6.700494987987883,
+    "minimum": 4.5
+  },
+  {
+    "pair": "status event unconfirmed or ended",
+    "foregroundArgb": "FF9CB0C5",
+    "backgroundArgb": "FF1E3952",
+    "ratio": 5.350957695697352,
+    "minimum": 4.5
+  },
+  {
+    "pair": "status quote delayed",
+    "foregroundArgb": "FFFFC857",
+    "backgroundArgb": "FF2A3C45",
+    "ratio": 7.45678819780919,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget mayor-purple \/ negative change",
+    "foregroundArgb": "FFFF6B7A",
+    "backgroundArgb": "FF4D0B8C",
+    "ratio": 4.38323913760392,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget mayor-purple \/ body",
+    "foregroundArgb": "FFFFFFFF",
+    "backgroundArgb": "FF4D0B8C",
+    "ratio": 12.054314054170215,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget mayor-purple \/ secondary",
+    "foregroundArgb": "FFEABFFF",
+    "backgroundArgb": "FF4D0B8C",
+    "ratio": 7.688818794497909,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget mayor-purple \/ panel body",
+    "foregroundArgb": "FFFFFFFF",
+    "backgroundArgb": "FF6E23B7",
+    "ratio": 8.116909762594887,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget mayor-purple \/ panel secondary",
+    "foregroundArgb": "FFEABFFF",
+    "backgroundArgb": "FF6E23B7",
+    "ratio": 5.177353771888201,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget woofhub-night \/ negative change",
+    "foregroundArgb": "FFFF6B7A",
+    "backgroundArgb": "FF0C0712",
+    "ratio": 7.239672050610129,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget woofhub-night \/ body",
+    "foregroundArgb": "FFFFFFFF",
+    "backgroundArgb": "FF0C0712",
+    "ratio": 19.909769421104038,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget woofhub-night \/ secondary",
+    "foregroundArgb": "FFCAB5D6",
+    "backgroundArgb": "FF0C0712",
+    "ratio": 10.516026044668155,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget woofhub-night \/ panel body",
+    "foregroundArgb": "FFFFFFFF",
+    "backgroundArgb": "FF2A143A",
+    "ratio": 16.67185164899033,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget woofhub-night \/ panel secondary",
+    "foregroundArgb": "FFCAB5D6",
+    "backgroundArgb": "FF2A143A",
+    "ratio": 8.805808969730604,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget berthalla-nights \/ negative change",
+    "foregroundArgb": "FFFF6B7A",
+    "backgroundArgb": "FF061126",
+    "ratio": 6.84293333747623,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget berthalla-nights \/ body",
+    "foregroundArgb": "FFFFFFFF",
+    "backgroundArgb": "FF061126",
+    "ratio": 18.81870117330188,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget berthalla-nights \/ secondary",
+    "foregroundArgb": "FFAFC1D8",
+    "backgroundArgb": "FF061126",
+    "ratio": 10.253818532839757,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget berthalla-nights \/ panel body",
+    "foregroundArgb": "FFFFFFFF",
+    "backgroundArgb": "FF15314F",
+    "ratio": 13.256624858441644,
+    "minimum": 4.5
+  },
+  {
+    "pair": "widget berthalla-nights \/ panel secondary",
+    "foregroundArgb": "FFAFC1D8",
+    "backgroundArgb": "FF15314F",
+    "ratio": 7.223188487058752,
+    "minimum": 4.5
+  }
+]

@@ -207,7 +207,9 @@ class BERTUiTest {
         compose.onNodeWithText("Personalize", useUnmergedTree = true).performClick()
         for (label in listOf("Apply both", "Home only", "Lock screen only", "Compact", "Market")) {
             compose.onNodeWithText(label).performScrollTo().assertIsDisplayed()
+            compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
             measurements.put(measureLabel(label, singleLine = label != "Lock screen only"))
+            if (label == "Lock screen only") capture("compact-wallpaper-large")
         }
         capture("compact-widgets-large")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()

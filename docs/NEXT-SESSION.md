@@ -6,6 +6,8 @@ Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but n
 
 The owner authorized a repeated premium-quality improvement loop. Latest verified source: `7a54a0500037f4b320d59200bb9d56e5a6e5b425`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. A separately installable BERT Preview APK and packaged-artifact gate now support practical device review. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
 
+Iteration 6 is in progress: compact-screen captures exposed word-splitting widget/action labels, and the Mayor Purple widget negative-change text measured 4.38:1. The strengthened tests fail on the baseline; larger-text actions now stack and the widget red is lighter. Full committed-source verification is pending.
+
 ## Owner direction
 
 This is a **general BERT app**. Widgets are one feature, alongside market tools, personal holdings, themes, and future BERT experiences. The current work is Android source development. Published v0.4.0 and the unshipped iOS scaffold retain their existing status.

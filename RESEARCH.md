@@ -174,3 +174,6 @@ The owner accepted the direction after research. The next Android source iterati
 ### Premium-quality loop — 2026-09-08
 
 The owner authorized repeated critique, improvement and verification. The subsequent implementation adds persistent private saved cards, native creation before external drawing, measured large-text navigation, persistent section access, saved-state restoration checks and accurate partial wallpaper results. A separately installable preview makes device review practical. Latest verified source, exact commands, captures and unresolved acceptance work live in `docs/NEXT-SESSION.md`; the source implementation remains unpublished. S tier is not established by feature count or host-only tests.
+
+
+The subsequent readability audit found a specific 4.38:1 small-text contrast failure in the Mayor Purple widget and split action labels at 320 dp / 2x text. The fixes and reproducible failing checks are tracked in iteration 6 of the critique. Use fixed contrast and readable-label criteria; clipping-only checks can pass visibly broken word wrapping. Device acceptance remains separate.
