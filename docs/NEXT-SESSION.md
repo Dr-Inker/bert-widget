@@ -4,7 +4,7 @@ Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but n
 
 ## Latest implementation — research accepted
 
-The owner accepted the research direction. The first implementation is committed as `086d8e5d0af2a40dd3ba40fcd965f0081706f297`, following research base `24a8cc30b880ff835e25e0a320f76fe9b21bc498`. No edit lease remains active. No live deployment or external-service mutation occurred.
+The owner accepted the research direction. The first implementation is committed as `086d8e5d0af2a40dd3ba40fcd965f0081706f297`, following research base `24a8cc30b880ff835e25e0a320f76fe9b21bc498`. Active loop authorized by the owner: improve the Android app toward premium quality. Current lease covers Android source, host UI verification, QA tools and repo ledgers. Base d30ecf5; no other agent leases. Start with host Compose captures, then fix measured usability defects and complete the native creation journey. No live deployment or external-service mutation occurred.
 
 ## Owner direction
 

@@ -56,3 +56,11 @@ internal fun StatusPill(text: String, color: Color) {
 internal fun SectionLabel(text: String) {
     Text(text, color = AccentText, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
 }
+
+@Composable
+internal fun BERTTheme(content: @Composable () -> Unit) {
+    MaterialTheme(colorScheme = darkColorScheme(
+        primary = AccentText, onPrimary = Navy, background = Navy, surface = Panel,
+        onBackground = Cream, onSurface = Cream, secondary = Green, error = Red,
+    ), content = content)
+}

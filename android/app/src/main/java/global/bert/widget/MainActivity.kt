@@ -40,10 +40,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(0), navigationBarStyle = SystemBarStyle.dark(0))
         setContent {
-            MaterialTheme(colorScheme = darkColorScheme(
-                primary = AccentText, onPrimary = Navy, background = Navy, surface = Panel,
-                onBackground = Cream, onSurface = Cream, secondary = Green, error = Red,
-            )) { BERTScreen(lifecycle) }
+            BERTTheme { BERTScreen(lifecycle) }
         }
     }
 }
@@ -63,10 +60,6 @@ private fun BERTScreen(lifecycle: Lifecycle) {
     var activityState by remember { mutableStateOf<ActivityState>(activityRepository.load()?.let { ActivityState.Available(it) } ?: ActivityState.Loading) }
     var activityRefreshing by remember { mutableStateOf(false) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    var destination by rememberSaveable { mutableStateOf(BERTDestination.HOME) }
-    var toolsTab by rememberSaveable { mutableStateOf("Market") }
-    var createTab by rememberSaveable { mutableStateOf("Art") }
-    val savedScreens = rememberSaveableStateHolder()
 
     suspend fun updateWidgets() {
         try { updateAllBERTWidgets(context) }
@@ -114,6 +107,28 @@ private fun BERTScreen(lifecycle: Lifecycle) {
             while (true) { refresh(); delay(60_000) }
         }
     }
+    BERTApp(state, activityState, history, position, now, refreshing, activityRefreshing,
+        refresh = { scope.launch { refresh() } },
+        refreshActivity = { scope.launch { refreshActivity() } },
+        savePosition = {
+            holdingsStore.savePosition(it)
+            position = it
+            scope.launch { updateWidgets() }
+        },
+    )
+}
+
+@Composable
+internal fun BERTApp(
+    state: QuoteState, activityState: ActivityState, history: List<BERTPriceSample>,
+    position: BERTPosition, now: Long, refreshing: Boolean, activityRefreshing: Boolean,
+    refresh: () -> Unit, refreshActivity: () -> Unit, savePosition: (BERTPosition) -> Unit,
+) {
+    var destination by rememberSaveable { mutableStateOf(BERTDestination.HOME) }
+    var toolsTab by rememberSaveable { mutableStateOf("Market") }
+    var createTab by rememberSaveable { mutableStateOf("Art") }
+    val savedScreens = rememberSaveableStateHolder()
+
     BackHandler(destination != BERTDestination.HOME) { destination = BERTDestination.HOME }
 
     Scaffold(
@@ -149,16 +164,12 @@ private fun BERTScreen(lifecycle: Lifecycle) {
             ) {
                 AppHeader(destination)
                 when (destination) {
-                    BERTDestination.HOME -> HomeScreen(activityState, now, activityRefreshing, { scope.launch { refreshActivity() } }) { destination = it }
+                    BERTDestination.HOME -> HomeScreen(activityState, now, activityRefreshing, refreshActivity) { destination = it }
                     BERTDestination.EXPLORE -> ExploreScreen()
                     BERTDestination.CREATE -> CreateScreen(createTab) { createTab = it }
                     BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, toolsTab, { toolsTab = it },
-                        refresh = { scope.launch { refresh() } },
-                        savePosition = {
-                            holdingsStore.savePosition(it)
-                            position = it
-                            scope.launch { updateWidgets() }
-                        },
+                        refresh = refresh,
+                        savePosition = savePosition,
                     )
                 }
                 Text("BERT · v${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
