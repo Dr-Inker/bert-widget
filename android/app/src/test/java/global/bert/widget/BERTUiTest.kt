@@ -53,7 +53,7 @@ class BERTUiTest {
         capture("create")
         File("build/outputs/host-ui/create-measurements.json").writeText(org.json.JSONObject()
             .put("previewTopDp", preview.top.value).put("previewBottomDp", preview.bottom.value)
-            .put("previewHeightDp", preview.height.value).put("navigationTopDp", navigation.top.value).toString(2))
+            .put("previewHeightDp", (preview.bottom - preview.top).value).put("navigationTopDp", navigation.top.value).toString(2))
         compose.onNodeWithText("Share caption card").performScrollTo().assertIsEnabled()
         capture("caption")
     }
