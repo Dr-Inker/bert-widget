@@ -180,3 +180,6 @@ The subsequent readability audit found a specific 4.38:1 small-text contrast fai
 
 
 The caption-input pass replaces silent rejection with editable over-limit drafts and visible guidance. Android logical-character boundaries align the 96-character editor limit with saved-card validation; bounded metadata and exact PNG preservation remain. The tests cover Unicode sequences and correction/recreation, while actual clipboard, IME and older Android rendering remain device checks. See iteration 7 and the latest verification in `docs/NEXT-SESSION.md`.
+
+
+The collection-capacity pass verifies that the 41st save preserves every existing file and exposes a direct recovery action. A count before the list makes capacity visible; explicit deletion frees a slot while the unfinished caption/palette stay intact. Compact large-text measurements require the complete feedback in the actual scrolling viewport. See iteration 8 for baseline failure, final command/SHA and the host/device distinction.

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.CaptionLibraryTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-08T19:20:21.580Z" hostname="ubuntu-16gb-hel1-1" time="3.613">
+  <properties/>
+  <testcase name="shareIntentGrantsOnlyReadAccessToExactPreviewPng" classname="global.bert.widget.CaptionLibraryTest" time="0.314"/>
+  <testcase name="savedCardSurvivesStoreRecreationWithExactPixelsAndMetadata" classname="global.bert.widget.CaptionLibraryTest" time="0.257"/>
+  <testcase name="incompleteSaveIsInvisibleAndInvalidSaveDoesNotEraseExistingCard" classname="global.bert.widget.CaptionLibraryTest" time="0.239"/>
+  <testcase name="fullCollectionPreservesEveryFileAndRecoversAfterExplicitDeletion" classname="global.bert.widget.CaptionLibraryTest" time="1.873"/>
+  <testcase name="deletingOneCardPreservesOtherWorkAndRejectsPathTraversal" classname="global.bert.widget.CaptionLibraryTest" time="0.439"/>
+  <testcase name="joinedEmojiCaptionsReopenWithoutErasingOlderCards" classname="global.bert.widget.CaptionLibraryTest" time="0.486"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

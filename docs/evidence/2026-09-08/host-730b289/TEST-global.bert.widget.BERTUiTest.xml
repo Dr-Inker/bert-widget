@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.BERTUiTest" tests="14" skipped="0" failures="0" errors="0" timestamp="2026-09-08T19:19:44.052Z" hostname="ubuntu-16gb-hel1-1" time="35.082">
+  <properties/>
+  <testcase name="coldOfflineHomeKeepsAllDestinationsUsable" classname="global.bert.widget.BERTUiTest" time="7.495"/>
+  <testcase name="longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview" classname="global.bert.widget.BERTUiTest" time="1.616"/>
+  <testcase name="savedStateRestoresDestinationSectionAndUnfinishedCaption" classname="global.bert.widget.BERTUiTest" time="0.663"/>
+  <testcase name="captionLimitCountsVisibleCharactersIncludingEmoji" classname="global.bert.widget.BERTUiTest" time="0.941"/>
+  <testcase name="oversizedPasteExplainsRejectionAndPreservesTheDraftAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.62"/>
+  <testcase name="fullCollectionAutomaticallyRevealsRecoveryAtLargeText" classname="global.bert.widget.BERTUiTest" time="8.122"/>
+  <testcase name="createSaveOpenAndDeleteIsACompleteOfflineJourney" classname="global.bert.widget.BERTUiTest" time="1.382"/>
+  <testcase name="longDispatchCanBeReadWithoutLosingNavigation" classname="global.bert.widget.BERTUiTest" time="0.202"/>
+  <testcase name="fullCollectionExplainsTheLimitAndKeepsTheDraftThroughRecovery" classname="global.bert.widget.BERTUiTest" time="11.274"/>
+  <testcase name="captionDraftAndPaletteSurviveSwitchingSections" classname="global.bert.widget.BERTUiTest" time="0.384"/>
+  <testcase name="sectionsStayReachableAfterScrollingAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.502"/>
+  <testcase name="compactScreenAtLargeTextKeepsControlsReadable" classname="global.bert.widget.BERTUiTest" time="0.658"/>
+  <testcase name="activityAndCaptionCreationRender" classname="global.bert.widget.BERTUiTest" time="0.502"/>
+  <testcase name="largeTextHomeRemainsNavigable" classname="global.bert.widget.BERTUiTest" time="0.431"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

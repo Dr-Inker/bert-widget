@@ -4,13 +4,13 @@ Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but n
 
 ## Latest implementation — research accepted
 
-The owner authorized a repeated premium-quality improvement loop. Latest verified source: `e56060495166b4ce9df5933da489c5adc9715dc9`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. A separately installable BERT Preview APK and packaged-artifact gate now support practical device review. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
+The owner authorized a repeated premium-quality improvement loop. Latest verified source: `730b2894bcd5f79ecc07798e0d8fd6e574a1452d`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. A separately installable BERT Preview APK and packaged-artifact gate now support practical device review. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
 
 Iteration 6 is verified: large-text wallpaper/widget actions stack without splitting their labels at 320 dp; Mayor Purple widget negative-change contrast improves from 4.38:1 to 4.66:1. The strengthened checks failed on the baseline and pass on the fixed source. The audit covers 34 declared text/surface pairs, not every UI state or a physical display.
 
-Iteration 7 is verified: ordinary over-limit captions remain editable with clear shortening guidance, Unicode character counting agrees with saved-card validation, and oversized pastes receive visible feedback without losing the draft. The notice fits y=370–498 dp inside a y=217–498 dp viewport at 320×640 dp / 2x text. An earlier attempt ended with exit 143 after tests; the final full gate passed at the source above.
+Iteration 7 is verified: ordinary over-limit captions remain editable with clear shortening guidance, Unicode character counting agrees with saved-card validation, and oversized pastes receive visible feedback without losing the draft. The notice fits y=370–498 dp inside a y=217–498 dp viewport at 320×640 dp / 2x text. An earlier attempt ended with exit 143 after tests; the final full gate passed at `e56060495166b4ce9df5933da489c5adc9715dc9`.
 
-Iteration 8 candidate is in progress: baseline `2f8e976` reproduces missing specific collection-full feedback while storage preservation passes. The candidate adds direct recovery, a count above the collection and compact feedback visibility checks. No new full gate is claimed yet.
+Iteration 8 is verified at the latest source: a full collection automatically reveals its 40-card limit and Manage collection action. Cancelling deletion keeps all cards; deleting one then returning to Art preserves the draft and palette and allows saving. Rejection preserves all 80 files byte-for-byte. At 320×640 dp / 2x text, message and action labels fit y=254.5–490 dp inside the y=217–498 dp viewport without another scroll.
 
 ## Owner direction
 
@@ -37,7 +37,7 @@ This is a **general BERT app**. Widgets are one feature, alongside market tools,
 
 ## Verification
 
-**Development and preview gates passed at `e56060495166b4ce9df5933da489c5adc9715dc9`:**
+**Development and preview gates passed at `730b2894bcd5f79ecc07798e0d8fd6e574a1452d`:**
 
 ```bash
 GRADLE_USER_HOME=/opt/bert-widget-qa/gradle \
@@ -46,9 +46,9 @@ JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa \
 tools/check-android-preview.sh
 ```
 
-8 Node tests, 50 Android JVM tests (12 Compose UI + 3 caption-text + 1 contrast audit + 5 library/PNG/provider + 6 wallpaper-result tests), no failures. LintDebug and lintPreview: 35 warnings each, zero errors. AssembleDebug, assemblePreview and packaged APK inspection passed. [Output](evidence/2026-09-08/host-e560604/preview-gate.txt), [results and capture hashes](evidence/2026-09-08/host-e560604/results.json). The follow-up commit contains documentation/evidence only.
+8 Node tests, 53 Android JVM tests (14 Compose UI + 3 caption-text + 1 contrast audit + 6 library/PNG/provider + 6 wallpaper-result tests), no failures. LintDebug and lintPreview: 35 warnings each, zero errors. AssembleDebug, assemblePreview and packaged APK inspection passed. [Output](evidence/2026-09-08/host-730b289/preview-gate.txt), [results and capture hashes](evidence/2026-09-08/host-730b289/results.json). The follow-up commit contains documentation/evidence only.
 
-**Host UI evidence now exists.** Twenty actual Compose app-shell captures at 360×800 dp and 320×640 dp include offline Home, Explore, Create, collection, reopened card and normal/2x text. The full creation preview fits y=211–531 dp above navigation at 720 dp. Navigation labels fit one line at 2x text with >=48 dp targets; saved/shared PNGs preserve exact pixels. Draft switching, long-update expansion and offline save/open/keep/delete are exercised. This is narrower than a device test.
+**Host UI evidence now exists.** Twenty-four actual Compose app-shell captures at 360×800 dp and 320×640 dp include offline Home, Explore, Create, collection, reopened card and normal/2x text. The full creation preview fits y=211–531 dp above navigation at 720 dp. Navigation labels fit one line at 2x text with >=48 dp targets; saved/shared PNGs preserve exact pixels. Draft switching, long-update expansion, offline save/open/keep/delete and full-collection recovery are exercised. Capacity screenshots use seeded cards. This is narrower than a device test.
 
 **Device journeys remain unverified.** The API 30 software-AVD attempt installed the earlier `7a54a05` preview and rendered Home, but Android displayed a blocking “System UI isn’t responding” dialog. No app navigation journey passed. [Attempt results](evidence/2026-09-08/native-preview-7d5939a/results.json), [actual native capture](evidence/2026-09-08/native-preview-7d5939a/startup-observation.png), [observation/provenance](evidence/2026-09-08/native-preview-7d5939a/observation.json). Boot took 208.82 s and installation 106.22 s. The previous 90 s install allowance was insufficient, but increasing it did not produce a usable native test environment. Runner and emulator are terminal; do not treat old locks or logs as live processes. Do not infer real recipient delivery, OS process-death restoration, TalkBack, API 36 system bars, launcher/wallpaper success or physical performance from these results. No release-signature/publication gate was run.
 
@@ -61,7 +61,7 @@ On this host, build caches and Android preferences for this pass are under `/opt
 ## Review artifacts
 
 - [Interactive visual review](evidence/2026-09-08/review.html): current screens, before/after creation, exact source and measurement links. Host renders, not phone screenshots.
-- Stable local APK: `android/app/build/outputs/review/BERT-preview-e560604.apk` (ignored build artifact). SHA-256 `5185263a10521fd00423e88fc4b2b65a1d0f7272e0956364f148f49fefd705df`.
+- Stable local APK: `android/app/build/outputs/review/BERT-preview-730b289.apk` (ignored build artifact). SHA-256 `ade6b9a753dc36c9288d02cdfb8496eadbca9cf0ccac3221236165672ab2f095`.
 - Package `global.bert.widget.preview`, Android debug signature, labels BERT Preview, independent app/provider identity. It uses public HTTPS endpoints; emulator fixtures remain debug-only. Installation of this updated APK is unverified. Only the earlier `7a54a05` preview installed on the API 30 test AVD. Coexistence with the published app and real-device journeys remain unverified.
 - [Device review contract](DEVICE-REVIEW.md). The owner was asked asynchronously for the primary phone model/Android version; no answer was available when this handoff was written. The supported range remains API 26–36; do not invent a tested device.
 
@@ -69,7 +69,7 @@ On this host, build caches and Android preferences for this pass are under `/opt
 
 The owner accepted the research and the first implementation now uses Home / Explore / Create / Tools. Start validation from the report's user tasks and current native QA script.
 
-1. Continue the premium-quality loop from the critique and host captures. Iteration 6 fixes measured compact-action and widget-contrast defects. Iteration 5 installed/rendered an earlier APK but hit a System UI ANR. A functioning device/AVD is needed for the native contract. Iteration 7 completes the focused caption-input review with an actionable limit, Unicode counting, bounded storage and measured error visibility. A next bounded host review can verify the collection’s 40-card capacity/recovery contract: all existing work must survive a rejected 41st save and saving must resume after an explicit deletion. The code checks capacity, but the current tests do not exercise that full boundary. Device acceptance remains the main unresolved requirement. Do not turn host checks into a native pass or add features just to keep the loop moving.
+1. Continue the premium-quality loop from the critique and host captures. Iteration 6 fixes measured compact-action and widget-contrast defects. Iteration 5 installed/rendered an earlier APK but hit a System UI ANR. A functioning device/AVD is needed for the native contract. Iteration 7 completes the focused caption-input review with an actionable limit, Unicode counting, bounded storage and measured error visibility. Iteration 8 verifies the 40-card boundary and fixes the missing visible recovery. A next bounded host audit can inspect opening an older card from a scrolled collection and returning to the same place, including Back behavior. First reproduce and measure the journey; do not assume a defect from source inspection alone. Device acceptance remains the main unresolved requirement. Do not turn host checks into a native pass or add features just to keep the loop moving.
 2. Confirm long-term source ownership for `https://berthalla.io/status.json`. The adapter handles its current shape but it is not a chronological feed or documented native API. Do not scrape stale homepage fallback cards.
 3. Verify external phone journeys for Flappy Bert, web drawing, music and Woofhub. Official Playground labels Farmhalla and Hold The Line coming soon; they are excluded from the playable catalog. Custom Tabs are a possible follow-up; persistent saved creations are implemented in iteration 2.
 4. Add favorites only after confirming repeated discovery use. Explore a non-price widget after the corresponding app content works.
@@ -84,7 +84,7 @@ TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SID
 TO: Next BERT app session
 TASK: Continue the general BERT app direction, starting from the research, critique and verified state
 CWD: /opt/bert-widget
-BASE: Fully gated source e56060495166b4ce9df5933da489c5adc9715dc9; follow-up changes are evidence/documentation only. Native attempt runner 7d5939a072f409c5c756bcdaca43dfb6eb97dec5 failed at a blocking System UI ANR; no app journey gate passed.
+BASE: Fully gated source 730b2894bcd5f79ecc07798e0d8fd6e574a1452d; follow-up changes are evidence/documentation only. Native attempt runner 7d5939a072f409c5c756bcdaca43dfb6eb97dec5 failed at a blocking System UI ANR; no app journey gate passed.
 READ: docs/DEVICE-REVIEW.md, docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): Root Android source, QA and repo ledgers under the owner's ongoing loop authorization; no other agents
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos
