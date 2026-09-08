@@ -65,6 +65,50 @@ class BERTUiTest {
 
     @Test
     @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun compactPinnedNavigationKeepsQuoteAgeVisible() {
+        app(fontScale = 2f, quote = marketFixture(), history = marketHistoryFixture())
+        val measurements = org.json.JSONObject()
+        fun recordSection(name: String, labels: List<String>, content: SemanticsMatcher) {
+            val viewport = compose.onNode(content).onAncestors().filter(hasScrollAction()).onFirst().getBoundsInRoot()
+            val tabs = org.json.JSONArray()
+            for (label in labels) {
+                val node = compose.onNode(hasText(label) and hasClickAction())
+                node.assertIsDisplayed()
+                val bounds = node.fetchSemanticsNode().touchBoundsInRoot
+                val density = compose.activity.resources.displayMetrics.density
+                val text = measureLabel(label, singleLine = true)
+                assertEquals("Section labels must retain their 16sp size", 16.0, text.getDouble("fontSizeSp"), 0.01)
+                assertTrue("Section tabs need 48dp targets", bounds.height / density >= 48 && bounds.width / density >= 48)
+                assertTrue("The full section target must fit above content", bounds.top / density >= 0 && bounds.bottom / density <= viewport.top.value)
+                assertTrue("Section targets must fit across the screen", bounds.left / density >= 0 && bounds.right / density <= 320)
+                tabs.put(text.put("touchTopDp", bounds.top / density).put("touchBottomDp", bounds.bottom / density)
+                    .put("touchLeftDp", bounds.left / density).put("touchRightDp", bounds.right / density))
+            }
+            measurements.put(name, org.json.JSONObject().put("viewportTopDp", viewport.top.value)
+                .put("viewportBottomDp", viewport.bottom.value).put("viewportHeightDp", viewport.height.value).put("tabs", tabs))
+        }
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        waitForPreview()
+        recordSection("create", listOf("Art", "Saved", "Personalize"), hasContentDescription("Caption card preview:", substring = true))
+        capture("pinned-create-large")
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        val freshness = "Delayed · Updated 42m ago"
+        recordSection("tools", listOf("Market", "Holdings"), hasText(freshness))
+        val viewport = compose.onNodeWithText(freshness).onAncestors().filter(hasScrollAction()).onFirst().getBoundsInRoot()
+        for (label in listOf("$0.0042", freshness)) {
+            val bounds = compose.onNodeWithText(label, useUnmergedTree = true).getUnclippedBoundsInRoot()
+            measurements.put(label, measureLabel(label).put("topDp", bounds.top.value).put("bottomDp", bounds.bottom.value))
+        }
+        capture("pinned-market-large")
+        File("build/outputs/host-ui/pinned-navigation.json").writeText(measurements.toString(2))
+        for (label in listOf("$0.0042", freshness)) {
+            val bounds = measurements.getJSONObject(label)
+            assertTrue("Price and complete quote age must be visible together on first entry", bounds.getDouble("topDp") >= viewport.top.value && bounds.getDouble("bottomDp") <= viewport.bottom.value)
+        }
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
     fun populatedToolsKeepPricesAndControlsReadableAtLargeText() = checkPopulatedTools(fontScale = 2f)
 
     private fun checkPopulatedTools(fontScale: Float = 1f) {
