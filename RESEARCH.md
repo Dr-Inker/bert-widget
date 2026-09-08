@@ -148,3 +148,12 @@ The landing page deliberately separates product demonstration from market report
 - [Android: App widgets overview](https://developer.android.com/develop/ui/views/appwidgets/overview)
 - [Android: Create an app widget with Glance](https://developer.android.com/develop/ui/compose/glance/create-app-widget)
 - [Android: Manage and update GlanceAppWidget](https://developer.android.com/develop/ui/compose/glance/glance-app-widget)
+
+
+## Product direction — 2026-09-08
+
+The owner clarified that this is a general BERT app, with widgets among its features. The Android source now separates a BERT home, Market, Holdings and Studio. The home introduces native features and curated external ecosystem destinations. It is not an in-app social network or native integration of those external sites.
+
+Keep the mint-pinned quote service and private device storage. The observed-history chart reuses existing validated local observations; do not sell it as exchange candle history. Cost tracking is optional manual entry and does not imply wallet access or execution. Keep source-only iteration documentation distinct from the published v0.4.0 release record.
+
+Follow-up priorities and evidence live in `docs/CRITIQUE-2026-09-08.md`; the next working session starts at `docs/NEXT-SESSION.md`.

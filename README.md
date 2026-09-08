@@ -1,6 +1,8 @@
-# BERT Widget
+# BERT
 
-Native home-screen widgets for tracking **Bertram The Pomeranian ($BERT)** on Solana.
+A native BERT companion app, with market tools, personal holdings, phone themes, and home-screen widgets.
+
+The next Android iteration introduces a BERT home with ecosystem discovery, persistent Home / Market / Holdings / Studio navigation, observed-price chart ranges, and optional local position-cost tracking. These source changes are **not published**; the distributed release described below remains v0.4.0. See [the product critique and roadmap](docs/CRITIQUE-2026-09-08.md) and [session state](docs/NEXT-SESSION.md).
 
 The signed Android v0.4.0 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
 

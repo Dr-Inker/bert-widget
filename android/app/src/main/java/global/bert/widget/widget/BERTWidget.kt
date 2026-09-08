@@ -202,9 +202,9 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
         )
         Spacer(GlanceModifier.defaultWeight())
         Text(
-            if (quote?.isStale == true) "● DELAYED" else "● ${if (compact) "LIVE" else "MARKET LIVE"}",
+            when { quote == null -> "● NO QUOTE"; quote.isStale -> "● DELAYED"; else -> "● UPDATED" },
             style = TextStyle(
-                color = ColorProvider(if (quote?.isStale == true) Amber else Green),
+                color = ColorProvider(if (quote == null || quote.isStale) Amber else Green),
                 fontSize = if (compact) 8.sp else 9.sp,
                 fontWeight = FontWeight.Bold,
             ),

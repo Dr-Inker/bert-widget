@@ -1,6 +1,16 @@
 # Android app and widget
 
-Native Android companion app and Jetpack Glance home-screen widget.
+Native Android BERT app and Jetpack Glance home-screen widgets.
+
+## Next iteration (source only; unpublished)
+
+The app opens at a BERT home with feature entry points and external ecosystem destinations. Home, Market, Holdings, and Studio have persistent navigation; Android Back returns to Home. Studio contains widget installation and phone themes.
+
+Market displays selectable 1H/6H/24H windows of actual on-device observations. It labels collection gaps and incomplete history, with no invented samples. Quotes refresh on foreground entry and about every minute while visible; a failed refresh preserves the saved price and shows a delayed state. Cached quotes age out of fresh status after 30 minutes.
+
+Holdings are accessible without a network connection. The existing stored amount remains compatible with installed widgets; an optional total cost enables estimated unrealized gain/loss. Amounts and cost stay on the device. Theme browsing previews a pack; applying its widget palette now requires a separate action.
+
+The release metadata below still describes the published v0.4.0 APK. No version bump or signed release has been produced for this iteration.
 
 The development `local.properties` points at `/opt/android-sdk` on this server and is ignored by Git. Other machines should create it with their Android SDK location.
 

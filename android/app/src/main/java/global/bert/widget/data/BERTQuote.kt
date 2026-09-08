@@ -12,7 +12,15 @@ data class BERTQuote(
     val dex: String,
     val pairUrl: String,
 ) {
-    val isStale: Boolean get() = freshness != "fresh"
+    val isStale: Boolean get() = isStaleAt(System.currentTimeMillis())
+
+    fun isStaleAt(nowEpochMillis: Long): Boolean =
+        freshness != "fresh" || nowEpochMillis - observedAtEpochMillis >= STALE_AFTER_MILLIS ||
+            observedAtEpochMillis > nowEpochMillis + 60_000L
+
+    companion object {
+        const val STALE_AFTER_MILLIS = 30L * 60L * 1_000L
+    }
 }
 
 sealed interface QuoteState {
