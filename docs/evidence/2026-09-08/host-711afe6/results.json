@@ -1,0 +1,55 @@
+{
+  "source_sha": "711afe67fa86e11e195b801b9e6357a021d08b53",
+  "working_tree_dirty_during_gate": false,
+  "development_gate": "PASS",
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android.sh",
+  "node_tests": 8,
+  "android_tests": {
+    "tests": 33,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "Warning": 36
+  },
+  "lint_issues": {
+    "OldTargetApi": 1,
+    "UnusedAttribute": 6,
+    "VectorRaster": 1,
+    "AndroidGradlePluginVersion": 1,
+    "GradleDependency": 3,
+    "NewerVersionAvailable": 1,
+    "ModifierParameter": 1,
+    "Overdraw": 1,
+    "UnusedResources": 2,
+    "IconLauncherShape": 1,
+    "IconLocation": 2,
+    "SmallSp": 1,
+    "UseKtx": 12,
+    "HardcodedText": 3
+  },
+  "apk_sha256": "d50462bddd6336dfdf688ebe978a897c60c36fd8f773958ef37a37c296f6637a",
+  "host_environment": "Robolectric 4.16.1 / API 35, 360x800 dp at xhdpi, actual Compose app shell, normal and linear 2x font scale. No physical device or emulator.",
+  "captures": {
+    "home-offline.png": "b17436e130e9bc569814dcb95be5da650c55add6dc8a8e2842617f189a550706",
+    "saved-collection.png": "9931c2544f9ebc9e66c6a9e1ffc2a351f76a8efa3600e8b440b6982eadd83eed",
+    "caption.png": "527804c8c5689f84b64430fa0f90f1bcf64205368f4efe0957c4e4867bc934ad",
+    "create-large.png": "4db7c4eb0f327aad58cfd067cb8dbcc2b56a6696d6c38e3d5b926a00daea18fa",
+    "home-activity.png": "02c205258ed526699916f37af9fd7c6f9f24949a718c7690dbbc2b2d52d43fb2",
+    "home-large.png": "75bb1ae8362e73a57b3411b374155dcab731a7ee8f568680891ad779b84e61c7",
+    "create.png": "24de8b093f5474651f854c9159e1be877afcf9334670d50aaa6e9128592f4647",
+    "explore.png": "b1065717dac9b438c6b2df441e96bd9a56523a4687cb04af8f36397bb88930be",
+    "saved-card.png": "11bd76f731e21b67ad71bd2fdc6d25d97f412b2735ea2a545d98eb553c2d1625",
+    "holdings.png": "73f0738b7487ac980215860c93d78676f6cbe132ac2ff9ed840a366d9d737381"
+  },
+  "unverified": [
+    "share recipient delivery",
+    "OS process death and restoration",
+    "launcher placement",
+    "wallpaper application",
+    "TalkBack",
+    "API 36 system bars",
+    "physical device performance"
+  ]
+}
