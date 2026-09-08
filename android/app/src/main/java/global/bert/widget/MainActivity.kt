@@ -28,6 +28,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -149,12 +150,16 @@ internal fun BERTApp(
             else -> destination.name
         }
         val hasSections = destination == BERTDestination.CREATE || destination == BERTDestination.TOOLS
+        val largeText = LocalDensity.current.fontScale > 1.3f
         Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding()) {
             if (hasSections) {
                 Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    AppHeader(destination)
-                    if (destination == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalize"), createTab) { createTab = it }
-                    else SectionTabs(listOf("Market", "Holdings"), toolsTab) { toolsTab = it }
+                    // The selected bottom destination already names the section. At larger
+                    // text sizes, prioritize its content over a repeated pinned heading.
+                    if (!largeText) AppHeader(destination)
+                    val tabPadding = if (largeText) 12.dp else 16.dp
+                    if (destination == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalize"), createTab, tabPadding) { createTab = it }
+                    else SectionTabs(listOf("Market", "Holdings"), toolsTab, tabPadding) { toolsTab = it }
                 }
             }
             savedScreens.SaveableStateProvider(screenKey) {
@@ -198,13 +203,13 @@ private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, posit
 }
 
 @Composable
-internal fun SectionTabs(tabs: List<String>, selected: String, select: (String) -> Unit) {
+internal fun SectionTabs(tabs: List<String>, selected: String, horizontalPadding: Dp = 16.dp, select: (String) -> Unit) {
     FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         tabs.forEach { tab ->
             Surface(color = if (tab == selected) PanelStrong else Navy, shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(1.dp, if (tab == selected) AccentText else Muted.copy(alpha = 0.35f))) {
                 Box(Modifier.selectable(tab == selected, onClick = { select(tab) }, role = Role.Tab)
-                    .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 12.dp), contentAlignment = Alignment.Center) {
+                    .heightIn(min = 48.dp).padding(horizontal = horizontalPadding, vertical = 12.dp), contentAlignment = Alignment.Center) {
                     Text(tab, color = if (tab == selected) Cream else Muted, fontWeight = FontWeight.SemiBold)
                 }
             }

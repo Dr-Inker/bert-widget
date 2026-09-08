@@ -1,0 +1,17 @@
+{
+  "source_sha": "cabc2bd0434f9e446ff2d8e844a2bf6f06c55dc4",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.compactPinnedNavigationKeepsQuoteAgeVisible' --console=plain",
+  "exit_code": 1,
+  "tests": 1,
+  "failures": 1,
+  "finding": "First-entry quote age extends to556.5dp beyond the content viewport bottom498dp. Create and Tools both have281dp content height (217-498). All section labels already fit one line at16sp and all touch targets exceed48dp. No existing target-size defect is claimed.",
+  "host_environment": "Robolectric API35,320x640dp,xhdpi,font-scale setting2 (nonlinear). Actual Compose shell; deterministic quote/history fixtures, not current market data or user holdings. No device acceptance.",
+  "evidence_sha256": {
+    "TEST-global.bert.widget.BERTUiTest.xml": "3aeeaf90d42eba8c070830fb373944d09cacd4687877f1e00d929a94c0344d56",
+    "focused-gate.txt": "1acff22be7c310eede62b318dcb145a23a74533a4f06cc9e2c414d5a288f18b5",
+    "pinned-create-large.png": "cf6ed7bb9a467d90819f1b0791a71f899a229a0b93972625358091c8852817b9",
+    "pinned-market-large.png": "ea97bb4264b84ec1212c58fb49b3ac9cde31179064b69b06bc44013cede8f53b",
+    "pinned-navigation.json": "e1b5f66ce4a36cd2df88a74ea0d11e1645aff5ff869d35e7e92d5e0e93e6a997"
+  }
+}

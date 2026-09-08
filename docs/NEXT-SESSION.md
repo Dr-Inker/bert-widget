@@ -4,6 +4,8 @@ Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but n
 
 ## Latest implementation — research accepted
 
+Iteration 11 is in progress. A measured first-entry failure at `cabc2bd` hides the end of the delayed quote age below the compact viewport. The candidate removes the repeated pinned destination heading at larger text sizes and reduces only pinned-tab horizontal padding; label sizes and bottom navigation stay intact. Its full gate is pending; the last fully gated source remains below.
+
 Iteration 10 is verified: Market labels stack at larger text settings, and the holdings headline keeps the tested $105,000.00 amount on one line. Extremely long values retain every digit at a readable floor. Populated layout, range selection/restoration and local holdings edit flows now have host evidence. The former “linear 2x” description is corrected below: the actual host font scaling is nonlinear.
 
 The owner authorized a repeated premium-quality improvement loop. Latest verified source: `93c39bb3e26d220b87f076d81f356775f1ba862a`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. A separately installable BERT Preview APK and packaged-artifact gate now support practical device review. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
