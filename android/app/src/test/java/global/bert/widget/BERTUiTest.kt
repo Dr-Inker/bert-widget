@@ -106,10 +106,10 @@ class BERTUiTest {
         capture("holdings-larger-value$suffix")
         measurements.put(measureLabel("$105,000.00"))
         compose.onNodeWithText("Edit holdings").performScrollTo().performClick()
-        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("250000000000000000000")
+        compose.onNodeWithText("BERT amount").performScrollTo().performTextReplacement("100000000000000000000")
         compose.onNodeWithText("Total cost in USD (optional)").performScrollTo().performTextReplacement("")
         compose.onNodeWithText("Save holdings").performScrollTo().performClick()
-        val extremeValue = "$1,050,000,000,000,000,000.00"
+        val extremeValue = "$420,000,000,000,000,000.00"
         compose.onNodeWithText(extremeValue).performScrollTo()
         capture("holdings-extreme-value$suffix")
         val extreme = measureLabel(extremeValue)

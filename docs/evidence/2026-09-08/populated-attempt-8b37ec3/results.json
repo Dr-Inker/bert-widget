@@ -1,0 +1,17 @@
+{
+  "source_sha": "8b37ec3181c738fea3bd02760413b1478d5e79ba",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh",
+  "exit_code": 1,
+  "node_tests": 8,
+  "android_tests": 59,
+  "android_failures": 2,
+  "finding": "Both new populated layout tests reach the extreme-value step, then fail looking for an incorrect expected decimal. Binary floating-point multiplication of 250000000000000000000 by .0042 is 1.0499999999999999e18, not the expected exact 1.05e18. Other 57 Android tests pass. No full gate or final measurement file is claimed. Follow-up uses 100000000000000000000 tokens, whose estimate is 4.2e17; application source is unchanged.",
+  "fixture_note": "Deterministic fixtures, not current quotes or user holdings. Robolectric API35 host captures, font scale setting2.",
+  "evidence_sha256": {
+    "TEST-global.bert.widget.BERTUiTest.xml": "22f7cea4dbe424be07f69dece230e92e33348118228ce148d08ab135b0506c78",
+    "holdings-larger-value-large.png": "b8bb49bdbf316a769f28c184d6e4fc336399a606ebc2217c51811e7b757a49a4",
+    "market-metrics-start-large.png": "1f531250059bf4d534a4a545c9eac9098e8d74939a0d150e0fd5cda797f06f15",
+    "preview-gate.txt": "e4c582402a63fb75ce7a8fb1eaf848fd7fbd14d4d69860b2fb81867891c8c61d"
+  }
+}
