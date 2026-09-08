@@ -27,7 +27,7 @@
   <div class="eyebrow">BERT · LOCAL APP REVIEW · 8 SEPTEMBER 2026</div>
   <h1>A BERT app with room for the whole pack.</h1>
   <p class="muted">Four improvement passes: a general Home / Explore / Create / Tools structure, useful offline creation, a private saved collection, readable navigation and honest feedback when actions fail.</p>
-  <div class="status"><strong>Device review is still open.</strong> These are actual Compose screens rendered on the host with deterministic fixtures. They establish layout and interaction evidence; they do not establish phone performance, TalkBack, launcher behavior or delivery to a share recipient.</div>
+  <div class="status"><strong>Device review is still open.</strong> The screen gallery uses actual Compose host renders with deterministic fixtures. The native attempt below installed the app but encountered a System UI ANR. Phone performance, TalkBack, launcher behavior and delivery to a share recipient remain unverified.</div>
   <div class="metrics">
     <div class="metric"><strong>41 + 8</strong>Android and service tests passed</div>
     <div class="metric"><strong>211–531 dp</strong>Full creation preview in the first viewport</div>
@@ -57,6 +57,13 @@
     <div class="compare">
       <figure><h3>Before · preview starts at 659 dp</h3><img src="host-baseline-5c1083d/create-before.png" alt="Earlier Create screen with the native caption preview mostly below the first viewport" width="720" height="1600" loading="lazy"><figcaption>Source 5c1083d. Host UI tests passed; that attempt's full gate was interrupted during lint.</figcaption></figure>
       <figure><h3>Current · preview starts at 211 dp</h3><img src="host-7a54a05/create.png" alt="Current Create screen showing the complete native preview and caption field" width="720" height="1600" loading="lazy"><figcaption>Source 7a54a05. Full development and preview gate passed; phone journeys remain open.</figcaption></figure>
+    </div>
+  </section>
+  <section aria-labelledby="native-heading">
+    <h2 id="native-heading">Native attempt: installation passed, journeys blocked</h2>
+    <div class="stage">
+      <figure><img src="native-preview-7d5939a/startup-observation.png" alt="Actual Android 11 screen: BERT Home is visible behind a System UI isn't responding dialog" width="720" height="1280" loading="lazy"><figcaption>Actual API 30 software emulator · 360×640 dp · preview APK from 7a54a05</figcaption></figure>
+      <div class="details"><p>Android booted in 208.82 seconds and installed the preview in 106.22 seconds. Empty private storage and disabled network settings were confirmed.</p><p>A blocking System UI ANR prevented the navigation checks. This capture shows that BERT rendered, but it is not a passing app journey or proof of physical-device performance.</p><p><a href="native-preview-7d5939a/results.json">Native results</a> · <a href="native-preview-7d5939a/observation.json">Capture provenance and limits</a></p></div>
     </div>
   </section>
   <section class="checks" aria-labelledby="open-heading">

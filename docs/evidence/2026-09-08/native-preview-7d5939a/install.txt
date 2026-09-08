@@ -1,0 +1,3 @@
+android/app/build/outputs/review/BERT-preview-7a54a05.apk: 1 file pushed, 0 skipped. 36.8 MB/s (33565894 bytes in 0.869s)
+Performing Push Install
+Success

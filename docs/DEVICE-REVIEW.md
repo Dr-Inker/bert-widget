@@ -4,6 +4,8 @@ The preview is a local review artifact, not the published release. Build from a 
 
 Host evidence covers layout, saved state, private storage, PNG/provider access and operation contracts. All device rows below start **UNVERIFIED**. A passing build cannot change their status.
 
+Latest native attempt: the API 30 software AVD installed the preview, then a System UI ANR blocked the journeys. [Result and exact provenance](evidence/2026-09-08/native-preview-7d5939a/observation.json). Installation success is recorded separately from the unverified journey rows below.
+
 | Journey | Observable acceptance and evidence |
 | --- | --- |
 | Cold start and public data | Record model, Android version, display/font settings and network. Capture first useful frame and elapsed time; Home offers Explore/Create without a quote. Activity and quote update independently. Record source timestamps, without treating them as dispatch publication dates. |

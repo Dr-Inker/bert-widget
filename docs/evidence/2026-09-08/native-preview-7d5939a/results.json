@@ -1,0 +1,47 @@
+{
+  "runner_sha": "7d5939a072f409c5c756bcdaca43dfb6eb97dec5",
+  "runner_dirty_at_start": false,
+  "apk_source_sha": "7a54a0500037f4b320d59200bb9d56e5a6e5b425",
+  "apk_sha256": "ac9dd09991439c0a73a38c7f832fc948d051d13086a235905a8736c9bf38ffe4",
+  "avd": "bert-general-review",
+  "overlay": "read-only; guest changes discarded on exit",
+  "acceleration": false,
+  "cores": 1,
+  "ram_mb": 2048,
+  "network": "disabled before first app launch",
+  "completed": false,
+  "checks": [
+    {
+      "name": "Preview APK installed",
+      "passed": true
+    },
+    {
+      "name": "Preview starts with empty private storage",
+      "passed": true
+    },
+    {
+      "name": "Wi-Fi and mobile data disabled",
+      "passed": true
+    }
+  ],
+  "timings_seconds": {
+    "boot": 208.82,
+    "install": 106.22
+  },
+  "scope": "Native offline smoke only; no API 36, sharing, launcher, wallpaper, TalkBack or physical-performance claim.",
+  "emulator_pid": 36,
+  "android_sdk": "30",
+  "android_release": "11",
+  "build_fingerprint": "Android/sdk_phone_x86_64/generic_x86_64:11/RSR1.210722.013.A2/10067904:userdebug/test-keys",
+  "display": {
+    "size": "Physical size: 720x1280",
+    "density": "Physical density: 320"
+  },
+  "radio_settings": {
+    "wifi_on": "0",
+    "mobile_data": "0"
+  },
+  "failure": "Native UI did not expose: Bert\u2019s update couldn\u2019t load.",
+  "elapsed_seconds": 458.46,
+  "emulator_exit_code": -10
+}

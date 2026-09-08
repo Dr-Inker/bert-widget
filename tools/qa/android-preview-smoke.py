@@ -11,6 +11,9 @@ import sys
 import time
 import xml.etree.ElementTree as ET
 
+# Keep uncaught failures in the requested evidence output, not the host's /var/crash hook.
+sys.excepthook = sys.__excepthook__
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -19,20 +22,24 @@ def main():
     parser.add_argument('--apk-source-sha', required=True)
     parser.add_argument('--output', type=Path, required=True)
     parser.add_argument('--sdk', type=Path, default=Path('/opt/android-sdk'))
+    parser.add_argument('--accel', choices=['auto', 'on', 'off'], default='auto', help='Use off only for a deliberate software-emulation diagnostic')
     parser.add_argument('--boot-timeout', type=int, default=480)
     parser.add_argument('--install-timeout', type=int, default=300)
     parser.add_argument('--total-timeout', type=int, default=1200)
     args = parser.parse_args()
     out = args.output.resolve()
     out.mkdir(parents=True, exist_ok=True)
+    scratch = out / 'tmp'
+    scratch.mkdir(exist_ok=True)
+    tool_env = dict(os.environ, TMPDIR=str(scratch))
     # Reject the release/debug app before any device mutation.
-    subprocess.run([sys.executable, str(Path(__file__).with_name('check-preview-apk.py')), str(args.apk)], check=True)
+    subprocess.run([sys.executable, str(Path(__file__).with_name('check-preview-apk.py')), str(args.apk)], check=True, env=tool_env)
     report = {
         'runner_sha': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
         'runner_dirty_at_start': bool(subprocess.check_output(['git', 'status', '--porcelain']).strip()),
         'apk_source_sha': args.apk_source_sha, 'apk_sha256': hashlib.sha256(args.apk.read_bytes()).hexdigest(),
         'avd': args.avd, 'overlay': 'read-only; guest changes discarded on exit',
-        'acceleration': False, 'cores': 1, 'ram_mb': 2048,
+        'requested_acceleration_mode': args.accel, 'cores': 1, 'ram_mb': 2048,
         'network': 'disabled before first app launch', 'completed': False, 'checks': [], 'timings_seconds': {},
         'scope': 'Native offline smoke only; no API 36, sharing, launcher, wallpaper, TalkBack or physical-performance claim.'
     }
@@ -45,7 +52,7 @@ def main():
         remaining = deadline - time.monotonic()
         if remaining <= 0:
             raise TimeoutError('Overall native smoke budget exhausted')
-        return subprocess.check_output(command, stderr=subprocess.STDOUT, timeout=min(timeout, remaining))
+        return subprocess.check_output(command, stderr=subprocess.STDOUT, timeout=min(timeout, remaining), env=tool_env)
 
     def shell(*command, timeout=90):
         return run(adb + ['shell', *command], timeout=timeout).decode().strip()
@@ -53,6 +60,7 @@ def main():
     def tree():
         shell('uiautomator', 'dump', '/sdcard/bert-preview-window.xml')
         raw = run(adb + ['exec-out', 'cat', '/sdcard/bert-preview-window.xml'])
+        (out / 'last-window.xml').write_bytes(raw)
         return ET.fromstring(raw), raw
 
     def wait_text(text, timeout=100):
@@ -91,10 +99,10 @@ def main():
     emulator = None
     with (out / 'emulator.log').open('w') as log:
         try:
-            env = dict(os.environ, ANDROID_ADB_SERVER_PORT='5041')
+            env = dict(tool_env, ANDROID_ADB_SERVER_PORT='5041')
             emulator = subprocess.Popen([
                 str(args.sdk / 'emulator/emulator'), '-avd', args.avd, '-read-only', '-no-snapshot',
-                '-accel', 'off', '-cores', '1', '-memory', '2048', '-no-window', '-no-audio', '-no-boot-anim',
+                '-accel', args.accel, '-cores', '1', '-memory', '2048', '-no-window', '-no-audio', '-no-boot-anim',
                 '-gpu', 'swiftshader_indirect', '-port', '5582', '-no-metrics',
             ], stdout=log, stderr=subprocess.STDOUT, env=env)
             report['emulator_pid'] = emulator.pid
@@ -163,6 +171,19 @@ def main():
             report['failure'] = str(error)
             if isinstance(error, subprocess.CalledProcessError):
                 (out / 'failed-command.txt').write_bytes(error.output or b'')
+            # Capture a blocking dialog even when it hides the expected app semantics.
+            # These have a separate short allowance after the journey's timeout.
+            if emulator is not None and emulator.poll() is None:
+                for name, command in [
+                    ('failure-screen.png', adb + ['exec-out', 'screencap', '-p']),
+                    ('failure-logcat.txt', adb + ['logcat', '-d', '-t', '200', 'AndroidRuntime:E', 'ActivityManager:I', '*:S']),
+                ]:
+                    try:
+                        result = subprocess.run(command, capture_output=True, timeout=15, env=tool_env)
+                        if result.returncode == 0:
+                            (out / name).write_bytes(result.stdout)
+                    except subprocess.SubprocessError:
+                        pass
             raise
         finally:
             report['elapsed_seconds'] = round(time.monotonic()-started, 2)

@@ -44,9 +44,11 @@ tools/check-android-preview.sh
 
 **Host UI evidence now exists.** Eleven actual Compose app-shell captures at 360×800 dp include offline Home, Explore, Create, collection, reopened card and normal/2x text. The full creation preview fits y=211–531 dp above navigation at 720 dp. Navigation labels fit one line at 2x text with >=48 dp targets; saved/shared PNGs preserve exact pixels. Draft switching, long-update expansion and offline save/open/keep/delete are exercised. This is narrower than a device test.
 
-**Device behavior remains unverified.** Previous software AVD attempts never reached app checks ([record](evidence/2026-09-08/native-attempt-086d8e5.json)). Do not infer real recipient delivery, OS process-death restoration, TalkBack, API 36 system bars, launcher/wallpaper success or physical performance from the host tests. No release-signature/publication gate was run.
+**Device journeys remain unverified.** The newest API 30 software-AVD attempt installed the preview and rendered Home, but Android displayed a blocking “System UI isn’t responding” dialog. No app navigation journey passed. [Attempt results](evidence/2026-09-08/native-preview-7d5939a/results.json), [actual native capture](evidence/2026-09-08/native-preview-7d5939a/startup-observation.png), [observation/provenance](evidence/2026-09-08/native-preview-7d5939a/observation.json). Boot took 208.82 s and installation 106.22 s. The previous 90 s install allowance was insufficient, but increasing it did not produce a usable native test environment. Runner and emulator are terminal; do not treat old locks or logs as live processes. Do not infer real recipient delivery, OS process-death restoration, TalkBack, API 36 system bars, launcher/wallpaper success or physical performance from these results. No release-signature/publication gate was run.
 
 `tools/qa/android-companion.py` exercises a disposable AVD with labelled quote fixtures and captures native screenshots/UI trees. Read its arguments; never point this workflow at a personal/live device. Fixture market values are not real quotes. This host lacks `/dev/kvm`; software emulation is slow. Run one heavy job at a time.
+
+`tools/qa/android-preview-smoke.py` exercises the isolated preview in a read-only AVD overlay. It records runner SHA separately from APK source/hash, uses a 300 s install allowance and disables Wi-Fi/mobile data before first launch. Its follow-up diagnostics preserve the last UI tree, capture a failure screen/logcat, keep tool temp files under the chosen output path and disable the host `/var/crash` exception hook. It now defaults to automatic acceleration; `--accel off` is an explicit software-emulation diagnostic, not the default for a functioning test host. Those diagnostic changes have not been exercised in another native run. Do not repeat an identical failing emulator attempt; the next native pass needs a functioning environment or a specific new diagnostic hypothesis.
 
 On this host, build caches and Android preferences for this pass are under `/opt/bert-widget-qa`, keeping tool writes out of `/root`. No production signing material is copied into that directory.
 
@@ -54,7 +56,7 @@ On this host, build caches and Android preferences for this pass are under `/opt
 
 - [Interactive visual review](evidence/2026-09-08/review.html): current screens, before/after creation, exact source and measurement links. Host renders, not phone screenshots.
 - Stable local APK: `android/app/build/outputs/review/BERT-preview-7a54a05.apk` (ignored build artifact). SHA-256 `ac9dd09991439c0a73a38c7f832fc948d051d13086a235905a8736c9bf38ffe4`.
-- Package `global.bert.widget.preview`, Android debug signature, labels BERT Preview, independent app/provider identity. It uses public HTTPS endpoints; emulator fixtures remain debug-only. Actual on-device installation/coexistence is unverified.
+- Package `global.bert.widget.preview`, Android debug signature, labels BERT Preview, independent app/provider identity. It uses public HTTPS endpoints; emulator fixtures remain debug-only. Installation on the API 30 test AVD succeeded. Coexistence with the published app and real-device journeys remain unverified.
 - [Device review contract](DEVICE-REVIEW.md). The owner was asked asynchronously for the primary phone model/Android version; no answer was available when this handoff was written. The supported range remains API 26–36; do not invent a tested device.
 
 ## Next implementation priorities
@@ -76,7 +78,7 @@ TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SID
 TO: Next BERT app session
 TASK: Continue the general BERT app direction, starting from the research, critique and verified state
 CWD: /opt/bert-widget
-BASE: Verified source 7a54a0500037f4b320d59200bb9d56e5a6e5b425 followed by documentation/evidence only; read the exact gate command above
+BASE: Fully gated source 7a54a0500037f4b320d59200bb9d56e5a6e5b425; later changes are QA/documentation only. Native attempt runner 7d5939a072f409c5c756bcdaca43dfb6eb97dec5 failed at a blocking System UI ANR; no app journey gate passed.
 READ: docs/DEVICE-REVIEW.md, docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): Root Android source, QA and repo ledgers under the owner's ongoing loop authorization; no other agents
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos

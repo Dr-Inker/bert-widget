@@ -1,0 +1,67 @@
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+{
+  "result": "PASS",
+  "apk": "android/app/build/outputs/review/BERT-preview-7a54a05.apk",
+  "apk_sha256": "ac9dd09991439c0a73a38c7f832fc948d051d13086a235905a8736c9bf38ffe4",
+  "package": "global.bert.widget.preview",
+  "label": "BERT Preview",
+  "endpoints": [
+    "https://berthalla.io/widget/api/quote",
+    "https://berthalla.io/status.json"
+  ],
+  "caption_authority": "global.bert.widget.preview.captions",
+  "cleartext_allowed": false,
+  "signature_verified": true,
+  "signer": "Android Debug",
+  "build_tools": "/opt/android-sdk/build-tools/36.1.0",
+  "scope": "Artifact inspection only. No installation, device journeys, release approval or publication."
+}
+Booting Android: 0s
+Booting Android: 10s
+Booting Android: 20s
+Booting Android: 30s
+Booting Android: 40s
+Booting Android: 52s
+Booting Android: 63s
+Booting Android: 75s
+Booting Android: 86s
+Booting Android: 96s
+Booting Android: 107s
+Booting Android: 118s
+Booting Android: 133s
+Booting Android: 144s
+Booting Android: 155s
+Booting Android: 169s
+Booting Android: 183s
+Booting Android: 196s
+Android booted; installing verified preview APK.
+PASS Preview APK installed
+PASS Preview starts with empty private storage
+PASS Wi-Fi and mobile data disabled
+Traceback (most recent call last):
+  File "/opt/bert-widget/tools/qa/android-preview-smoke.py", line 181, in <module>
+    main()
+  File "/opt/bert-widget/tools/qa/android-preview-smoke.py", line 139, in main
+    wait_text('Bert’s update couldn’t load.')
+  File "/opt/bert-widget/tools/qa/android-preview-smoke.py", line 65, in wait_text
+    raise AssertionError('Native UI did not expose: ' + text)
+AssertionError: Native UI did not expose: Bert’s update couldn’t load.
+Error in sys.excepthook:
+Traceback (most recent call last):
+  File "/usr/lib/python3/dist-packages/apport_python_hook.py", line 228, in partial_apport_excepthook
+    return apport_excepthook(binary, exc_type, exc_obj, exc_tb)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3/dist-packages/apport_python_hook.py", line 144, in apport_excepthook
+    os.open(pr_filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o640), "wb"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+OSError: [Errno 30] Read-only file system: '/var/crash/_opt_bert-widget_tools_qa_android-preview-smoke.py.0.crash'
+
+Original exception was:
+Traceback (most recent call last):
+  File "/opt/bert-widget/tools/qa/android-preview-smoke.py", line 181, in <module>
+    main()
+  File "/opt/bert-widget/tools/qa/android-preview-smoke.py", line 139, in main
+    wait_text('Bert’s update couldn’t load.')
+  File "/opt/bert-widget/tools/qa/android-preview-smoke.py", line 65, in wait_text
+    raise AssertionError('Native UI did not expose: ' + text)
+AssertionError: Native UI did not expose: Bert’s update couldn’t load.

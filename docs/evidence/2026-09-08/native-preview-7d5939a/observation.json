@@ -1,0 +1,16 @@
+{
+  "runner_sha": "7d5939a072f409c5c756bcdaca43dfb6eb97dec5",
+  "apk_source_sha": "7a54a0500037f4b320d59200bb9d56e5a6e5b425",
+  "capture_command": "/opt/android-sdk/platform-tools/adb -P 5041 -s emulator-5582 exec-out screencap -p",
+  "capture": "startup-observation.png",
+  "sha256": "3d9bf69876654892bb0382fe6859c61a4dd215aaaac72efc5b7344f8eb88da9d",
+  "pixel_dimensions": [
+    720,
+    1280
+  ],
+  "observed": "BERT Home rendered behind an Android System UI is not responding dialog. The dialog blocks navigation verification.",
+  "interpretation": "System-level failure prevents a passing app journey. This alone neither proves an app startup defect nor establishes physical-device performance.",
+  "terminal_evidence": "Runner process exit 1; emulator exit -10; console/ADB emulator ports 5582 and 5583 observed closed after cleanup.",
+  "diagnostic_limits": "Failure-window XML and runtime logcat were not retained by this runner revision. Screenshot was captured through a separate read-only observation while the runner was live.",
+  "host_diagnostics": "Emulator reported /tmp/android-root/emu-crash-36.6.11.db. Host Python crash hook attempted /var/crash and failed read-only; the crash report file does not exist. The follow-up runner redirects TMPDIR into its output directory and disables the host exception hook."
+}

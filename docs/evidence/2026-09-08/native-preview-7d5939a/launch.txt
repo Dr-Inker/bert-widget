@@ -1,0 +1,6 @@
+Starting: Intent { cmp=global.bert.widget.preview/global.bert.widget.MainActivity }
+Status: timeout
+LaunchState: UNKNOWN (-1)
+Activity: global.bert.widget.preview/global.bert.widget.MainActivity
+WaitTime: 11530
+Complete
