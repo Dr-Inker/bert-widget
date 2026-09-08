@@ -141,6 +141,36 @@ class BERTUiTest {
         waitForPreview("Keep my unfinished idea")
     }
 
+    @Test fun longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview() {
+        val longCaption = "Bert brought his hat, a snack, and enough confidence to run this entire town before his afternoon nap."
+        app()
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        waitForPreview()
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement(longCaption)
+        capture("caption-limit")
+        compose.onNodeWithText("Your caption").assertTextContains(longCaption)
+        compose.onNodeWithText("Save card").performScrollTo().assertIsNotEnabled()
+        compose.onNodeWithText("Share caption card").assertIsNotEnabled()
+        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Your caption").assertTextContains(longCaption)
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("Hat. Snack. Nap. 🐾")
+        waitForPreview("Hat. Snack. Nap. 🐾")
+        compose.onNodeWithText("Save card").performScrollTo().assertIsEnabled()
+    }
+
+    @Test fun captionLimitCountsVisibleCharactersIncludingEmoji() {
+        val caption = "🐾".repeat(96)
+        app()
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement(caption)
+        compose.onNodeWithText("Your caption").assertTextContains(caption)
+        waitForPreview(caption)
+        compose.onNodeWithText("Save card").performScrollTo().assertIsEnabled().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("View collection").fetchSemanticsNodes().isNotEmpty() }
+        assertEquals(caption, CaptionLibrary(compose.activity).list().single().caption)
+    }
+
     @Test fun longDispatchCanBeReadWithoutLosingNavigation() {
         val dispatch = "A long dispatch for the pack. ".repeat(20)
         app(ActivityState.Available(BERTActivity(1_789_000_000_000, dispatch, null, null)))
