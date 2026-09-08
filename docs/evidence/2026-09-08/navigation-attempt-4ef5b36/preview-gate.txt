@@ -1,0 +1,120 @@
+Checking source SHA: 4ef5b365699b83f9144632818e8396169a071c69
+npm notice run bert-widget@0.1.0 check
+npm notice run node --check src/server.js && node --check tools/verify-release.mjs && node --test
+TAP version 13
+# Subtest: selects the most liquid valid pool
+ok 1 - selects the most liquid valid pool
+  ---
+  duration_ms: 1.074829
+  type: 'test'
+  ...
+# Subtest: rejects a pool where BERT is only the quote token
+ok 2 - rejects a pool where BERT is only the quote token
+  ---
+  duration_ms: 0.479424
+  type: 'test'
+  ...
+# Subtest: normalizes numeric strings and missing optional fields
+ok 3 - normalizes numeric strings and missing optional fields
+  ---
+  duration_ms: 0.880747
+  type: 'test'
+  ...
+# Subtest: accepts only HTTPS DEX Screener Solana pair URLs
+ok 4 - accepts only HTTPS DEX Screener Solana pair URLs
+  ---
+  duration_ms: 1.619774
+  type: 'test'
+  ...
+# Subtest: caches a fresh quote
+ok 5 - caches a fresh quote
+  ---
+  duration_ms: 31.661806
+  type: 'test'
+  ...
+# Subtest: returns cached data as stale when refresh fails
+ok 6 - returns cached data as stale when refresh fails
+  ---
+  duration_ms: 0.726326
+  type: 'test'
+  ...
+# Subtest: rejects oversized upstream bodies even without Content-Length
+ok 7 - rejects oversized upstream bodies even without Content-Length
+  ---
+  duration_ms: 1.398752
+  type: 'test'
+  ...
+# Subtest: rejects an oversized declared Content-Length before reading
+ok 8 - rejects an oversized declared Content-Length before reading
+  ---
+  duration_ms: 0.549084
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 596.213053
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:compileDebugKotlin
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:testDebugUnitTest
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+
+BERTUiTest > fullCollectionExplainsTheLimitAndKeepsTheDraftThroughRecovery FAILED
+    java.lang.AssertionError at BERTUiTest.kt:240
+
+55 tests completed, 1 failed
+
+> Task :app:testDebugUnitTest FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task ':app:testDebugUnitTest'.
+> There were failing tests. See the report at: file:///opt/bert-widget/android/app/build/reports/tests/testDebugUnitTest/index.html
+
+* Try:
+> Run with --scan to get full insights from a Build Scan (powered by Develocity).
+
+BUILD FAILED in 1m 15s
+30 actionable tasks: 5 executed, 25 up-to-date

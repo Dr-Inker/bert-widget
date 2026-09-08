@@ -1,0 +1,29 @@
+{
+  "source_sha": "4ef5b365699b83f9144632818e8396169a071c69",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh",
+  "exit_code": 1,
+  "android_tests": {
+    "tests": 55,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0
+  },
+  "node_tests": 8,
+  "full_gate": "FAIL",
+  "finding": "Both new navigation/restoration checks pass. Full-collection recovery test attempts Delete before the asynchronous card load completes; no Delete node exists yet. The full gate stops at tests.",
+  "evidence_sha256": {
+    "collection-detail-open-large.png": "fa29e6b41cb314d51380e6f3759fafa06326bcfe107d7208a290c7c3cd665d7f",
+    "collection-position-before-large.png": "869c92aab46423f13ec3318ed9218ed9b1de1aa9318b1130ffd704729a61d5a2",
+    "collection-position-return-large.png": "869c92aab46423f13ec3318ed9218ed9b1de1aa9318b1130ffd704729a61d5a2",
+    "collection-position-before.png": "8b009a97033895eb3f0f03fa345b52235a8614c375a97a580c152561b1932798",
+    "collection-detail-restored.png": "e075100e89fd443acfeb243fc71faefcbfafdcc6710ad27664aa80eed653150e",
+    "TEST-global.bert.widget.BERTUiTest.xml": "6494d4dad32f522ee75c4dbfcc699c3fd2d6bb77730ad25aac60967be0002cd0",
+    "preview-gate.txt": "73c0037e4e1fa91a94b332b3289305faeb0663ed38e99323bc285befcd6ec3f9",
+    "collection-navigation-large.json": "32108f38cfe8bf5fe3ccc1accac131f3564d08f3617834b77797ff10852e9ca6",
+    "collection-navigation.json": "bba8c03d29e878c971adf90021b216698efdddb895c2afbdf563f8363c0de3d7",
+    "collection-detail-restored-large.png": "a78866a79c4ce83e403a38cc4074961bf6423eda1300e7c7c0c9ab81b351dbac",
+    "collection-detail-open.png": "d7ec49c1d4a729627a40903a375eb8989923c4518a43516f66b22c3d2d71a53a",
+    "collection-position-return.png": "8b009a97033895eb3f0f03fa345b52235a8614c375a97a580c152561b1932798"
+  }
+}

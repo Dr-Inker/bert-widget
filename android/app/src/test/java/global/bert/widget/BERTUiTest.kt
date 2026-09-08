@@ -237,6 +237,7 @@ class BERTUiTest {
         compose.waitUntil(15_000) { compose.onAllNodesWithTag("saved-card-thumbnail", useUnmergedTree = true).fetchSemanticsNodes().size == 40 }
         capture("collection-at-capacity")
         compose.onNodeWithText("Saved card 1").performScrollTo().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Saved card 1").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Delete card").performScrollTo().performClick()
         compose.onNodeWithText("Keep card").performClick()
         assertEquals(40, store.list().size)
