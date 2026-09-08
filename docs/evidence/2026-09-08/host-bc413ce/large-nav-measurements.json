@@ -1,0 +1,38 @@
+[
+  {
+    "label": "Home",
+    "lineCount": 1,
+    "textBoxWidthPx": 148,
+    "lineLeftPx": 0,
+    "lineRightPx": 147,
+    "textBoxHeightPx": 90,
+    "lineBottomPx": 90
+  },
+  {
+    "label": "Explore",
+    "lineCount": 1,
+    "textBoxWidthPx": 187,
+    "lineLeftPx": 0,
+    "lineRightPx": 185.51953,
+    "textBoxHeightPx": 90,
+    "lineBottomPx": 90
+  },
+  {
+    "label": "Create",
+    "lineCount": 1,
+    "textBoxWidthPx": 164,
+    "lineLeftPx": 0,
+    "lineRightPx": 162.51953,
+    "textBoxHeightPx": 90,
+    "lineBottomPx": 90
+  },
+  {
+    "label": "Tools",
+    "lineCount": 1,
+    "textBoxWidthPx": 138,
+    "lineLeftPx": 0,
+    "lineRightPx": 136.48828,
+    "textBoxHeightPx": 90,
+    "lineBottomPx": 90
+  }
+]

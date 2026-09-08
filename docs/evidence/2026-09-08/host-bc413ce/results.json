@@ -1,0 +1,91 @@
+{
+  "source_sha": "bc413ce0942f2d7416e5928131edd7ea0b0dc34e",
+  "working_tree_dirty_during_gate": false,
+  "development_gate": "PASS",
+  "preview_gate": "PASS",
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh",
+  "node_tests": 8,
+  "android_tests": {
+    "tests": 43,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": {
+    "debug": {
+      "severity": {
+        "Warning": 35
+      },
+      "issues": {
+        "OldTargetApi": 1,
+        "UnusedAttribute": 6,
+        "VectorRaster": 1,
+        "AndroidGradlePluginVersion": 1,
+        "GradleDependency": 3,
+        "NewerVersionAvailable": 1,
+        "ModifierParameter": 1,
+        "Overdraw": 1,
+        "UnusedResources": 1,
+        "IconLauncherShape": 1,
+        "IconLocation": 2,
+        "SmallSp": 1,
+        "UseKtx": 12,
+        "HardcodedText": 3
+      }
+    },
+    "preview": {
+      "severity": {
+        "Warning": 35
+      },
+      "issues": {
+        "OldTargetApi": 1,
+        "UnusedAttribute": 6,
+        "VectorRaster": 1,
+        "AndroidGradlePluginVersion": 1,
+        "GradleDependency": 3,
+        "NewerVersionAvailable": 1,
+        "ModifierParameter": 1,
+        "Overdraw": 1,
+        "UnusedResources": 1,
+        "IconLauncherShape": 1,
+        "IconLocation": 2,
+        "SmallSp": 1,
+        "UseKtx": 12,
+        "HardcodedText": 3
+      }
+    }
+  },
+  "debug_apk_sha256": "8d58459de66edeb7758afbbae915f05d3136acc7b2c3efc641d83a7238a9df37",
+  "preview_apk_sha256": "7be22d2a6bf0406b6cb06595bce0b4e92172d0a1525a39281cbb23a67553e427",
+  "local_review_apk": "android/app/build/outputs/review/BERT-preview-bc413ce.apk",
+  "host_environment": "Robolectric 4.16.1 / API35; 360x800dp and 320x640dp; xhdpi; actual Compose app shell with fixtures, normal and linear 2x font scale. No physical device or emulator.",
+  "contrast_scope": "34 declared text/surface pairs; fixed 4.5 threshold for normal text and 3.0 for 18sp bold holdings loss. Not every UI state, raster artwork or physical display.",
+  "captures": {
+    "home-offline.png": "b17436e130e9bc569814dcb95be5da650c55add6dc8a8e2842617f189a550706",
+    "home-activity.png": "02c205258ed526699916f37af9fd7c6f9f24949a718c7690dbbc2b2d52d43fb2",
+    "home-large.png": "75bb1ae8362e73a57b3411b374155dcab731a7ee8f568680891ad779b84e61c7",
+    "explore.png": "b1065717dac9b438c6b2df441e96bd9a56523a4687cb04af8f36397bb88930be",
+    "create.png": "c059c70d7b58fa0e23012f8290a65e95e545654d5a76c2968a3cc6ade007d7cf",
+    "create-large.png": "0949462b718d41b7b1fb280b4f6c0f1ede789b1da60f880dbaeafb54955f4941",
+    "caption.png": "15829f966659870c292bb0c1352d66e9bf8e7ece1a2499d4401b631e360c9699",
+    "holdings.png": "ecb08633f7134ad7d05319c0f034081de31a3909d4b8fdd36425f8838e7f5acb",
+    "saved-collection.png": "e1deaae9aa79264f7997e11302b1124e3685dcdc6385618e08b28e6e7ed71df2",
+    "saved-card.png": "21f50a3c2423cbbd77ffa75e440692ccf78682b5a278761c5e749e1917f0bd27",
+    "personalize-large-scrolled.png": "6ed81d0e46e79faee4164715fa8f89104eae07027d03d398af62568443380d36",
+    "compact-home-large.png": "744167fb9fd24610986737bd29e44b7154478a39a745131e9c19186092b73f5d",
+    "compact-create-large.png": "1e78972703e93ac08935650d519fd41f3acf3d76f9438b7f6a438641c9957503",
+    "compact-widgets-large.png": "9a70d10ef955c059ee0cb9132b42874f3820bac1a322082d31aedea435c6281c",
+    "compact-wallpaper-large.png": "49656d3daa4c569278bccb6f340d02455da1ed39c449f33215c9d31d8a38edd3",
+    "compact-holdings-large.png": "46e71103d824ada7fc3ce18071b1a4f5d5553235b29350124cfb4e1c3de9137c"
+  },
+  "unverified": [
+    "installation or coexistence of this APK on device",
+    "share recipient delivery",
+    "OS process death and restoration",
+    "launcher placement and text layout",
+    "actual wallpaper application",
+    "TalkBack",
+    "API36 system bars",
+    "physical device performance"
+  ]
+}
