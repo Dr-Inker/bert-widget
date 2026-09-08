@@ -183,3 +183,6 @@ The caption-input pass replaces silent rejection with editable over-limit drafts
 
 
 The collection-capacity pass verifies that the 41st save preserves every existing file and exposes a direct recovery action. A count before the list makes capacity visible; explicit deletion frees a slot while the unfinished caption/palette stay intact. Compact large-text measurements require the complete feedback in the actual scrolling viewport. See iteration 8 for baseline failure, final command/SHA and the host/device distinction.
+
+
+The collection navigation audit reproduces lost list position through both Back paths and fixes it with independent list/detail scroll state. Restored state is attached only after content loads, avoiding clamping against a short placeholder. Position and selected ID are small saved UI values, consistent with [Android state-saving guidance](https://developer.android.com/develop/ui/compose/state-saving); card images remain persisted files. Iteration 9 includes exact return/restoration measurements. Populated Market/Holdings visual states are the next unmeasured host area; use labelled fixtures and keep native acceptance separate.

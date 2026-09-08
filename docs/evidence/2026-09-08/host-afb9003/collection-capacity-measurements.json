@@ -1,0 +1,38 @@
+[
+  {
+    "label": "Collection full · 40 cards",
+    "lineCount": 2,
+    "widthPx": 560,
+    "heightPx": 168,
+    "maxLineRightPx": 497,
+    "lastLineBottomPx": 168,
+    "topDp": 254.5,
+    "bottomDp": 338.5,
+    "viewportTopDp": 217,
+    "viewportBottomDp": 498
+  },
+  {
+    "label": "Remove one saved card to make room.",
+    "lineCount": 2,
+    "widthPx": 560,
+    "heightPx": 180,
+    "maxLineRightPx": 485.9961,
+    "lastLineBottomPx": 180,
+    "topDp": 346.5,
+    "bottomDp": 436.5,
+    "viewportTopDp": 217,
+    "viewportBottomDp": 498
+  },
+  {
+    "label": "Manage collection",
+    "lineCount": 1,
+    "widthPx": 436,
+    "heightPx": 75,
+    "maxLineRightPx": 434.39996,
+    "lastLineBottomPx": 75,
+    "topDp": 452.5,
+    "bottomDp": 490,
+    "viewportTopDp": 217,
+    "viewportBottomDp": 498
+  }
+]
