@@ -12,6 +12,7 @@ import org.robolectric.RuntimeEnvironment
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
+import java.security.MessageDigest
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class)
@@ -84,5 +85,30 @@ class CaptionLibraryTest {
         }
         assertEquals(setOf(older.id, saved.id), CaptionLibrary(context).list().map { it.id }.toSet())
         assertEquals("Keep my first card.", store.open(older.id).caption)
+    }
+
+    @Test fun fullCollectionPreservesEveryFileAndRecoversAfterExplicitDeletion() {
+        val store = CaptionLibrary(context)
+        val bitmap = android.graphics.Bitmap.createBitmap(1080, 1080, android.graphics.Bitmap.Config.ARGB_8888)
+        bitmap.eraseColor(android.graphics.Color.BLUE)
+        val existing = (1..40).map { store.save(RenderedCaption("Saved card $it", 0, bitmap)) }
+        val root = File(context.filesDir, "caption-library")
+        fun snapshot() = root.walkTopDown().filter { it.isFile }.associate {
+            it.relativeTo(root).path to MessageDigest.getInstance("SHA-256").digest(it.readBytes()).toList()
+        }
+        val before = snapshot()
+        assertEquals(80, before.size)
+        val next = RenderedCaption("Keep my new draft", 0, bitmap)
+        assertThrows(IllegalStateException::class.java) { store.save(next) }
+        assertEquals(before, snapshot())
+        assertEquals(existing.toSet(), CaptionLibrary(context).list().toSet())
+        store.delete(existing.first().id)
+        val added = store.save(next)
+        assertEquals(existing.drop(1).toSet() + added, CaptionLibrary(context).list().toSet())
+        val preserved = before.filterKeys { !it.startsWith(existing.first().id + "/") }
+        assertEquals(preserved, snapshot().filterKeys { !it.startsWith(added.id + "/") })
+        assertEquals("Keep my new draft", store.open(added.id).caption)
+        assertTrue(root.listFiles().orEmpty().none { it.name.startsWith(".pending-") })
+        bitmap.recycle()
     }
 }

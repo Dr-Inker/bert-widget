@@ -141,6 +141,47 @@ class BERTUiTest {
         waitForPreview("Keep my unfinished idea")
     }
 
+    @Test fun fullCollectionExplainsTheLimitAndKeepsTheDraftThroughRecovery() {
+        val store = CaptionLibrary(compose.activity)
+        val existing = (1..40).map { index ->
+            val card = renderCaption(compose.activity, "Saved card $index", index % 3)
+            try { store.save(card) } finally { card.bitmap.recycle() }
+        }
+        app()
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("A new memory for the pack.")
+        compose.onNodeWithText("Lilac", useUnmergedTree = true).performScrollTo().performClick()
+        waitForPreview("A new memory for the pack.")
+        compose.onNodeWithText("Save card").performScrollTo().performClick()
+        compose.waitUntil(15_000) {
+            compose.onAllNodes(hasText("Collection full", substring = true) or hasText("couldn’t be saved", substring = true)).fetchSemanticsNodes().isNotEmpty()
+        }
+        capture("collection-full")
+        compose.onNodeWithText("Collection full · 40 cards").assertIsDisplayed()
+        assertEquals(existing.toSet(), CaptionLibrary(compose.activity).list().toSet())
+        compose.onNodeWithText("Share caption card").performScrollTo().assertIsEnabled()
+        compose.onNodeWithText("Manage collection").performScrollTo().performClick()
+        compose.waitUntil(20_000) { compose.onAllNodesWithText("Saved card 1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Saved card 1").performScrollTo().performClick()
+        compose.onNodeWithText("Delete card").performScrollTo().performClick()
+        compose.onNodeWithText("Keep card").performClick()
+        assertEquals(40, store.list().size)
+        compose.onNodeWithText("Delete card").performScrollTo().performClick()
+        compose.onNodeWithText("Delete", useUnmergedTree = true).performClick()
+        compose.waitUntil(15_000) { store.list().size == 39 }
+        compose.onNodeWithText("Art", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Your caption").assertTextContains("A new memory for the pack.")
+        compose.onNodeWithText("Lilac").assertIsSelected()
+        waitForPreview("A new memory for the pack.")
+        compose.onNodeWithText("Save card").performScrollTo().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("View collection").fetchSemanticsNodes().isNotEmpty() }
+        capture("collection-recovered")
+        val cards = store.list()
+        assertEquals(40, cards.size)
+        assertEquals(existing.drop(1).toSet(), cards.filter { it.caption != "A new memory for the pack." }.toSet())
+        assertEquals(2, cards.single { it.caption == "A new memory for the pack." }.palette)
+    }
+
     @Test fun longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview() {
         val longCaption = "Bert brought his hat, a snack, and enough confidence to run this entire town before his afternoon nap."
         val restoration = StateRestorationTester(compose)
