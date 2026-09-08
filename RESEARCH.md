@@ -177,3 +177,6 @@ The owner authorized repeated critique, improvement and verification. The subseq
 
 
 The subsequent readability audit found a specific 4.38:1 small-text contrast failure in the Mayor Purple widget and split action labels at 320 dp / 2x text. The fixes and reproducible failing checks are tracked in iteration 6 of the critique. Use fixed contrast and readable-label criteria; clipping-only checks can pass visibly broken word wrapping. Device acceptance remains separate.
+
+
+The caption-input pass replaces silent rejection with editable over-limit drafts and visible guidance. Android logical-character boundaries align the 96-character editor limit with saved-card validation; bounded metadata and exact PNG preservation remain. The tests cover Unicode sequences and correction/recreation, while actual clipboard, IME and older Android rendering remain device checks. See iteration 7 and the latest verification in `docs/NEXT-SESSION.md`.

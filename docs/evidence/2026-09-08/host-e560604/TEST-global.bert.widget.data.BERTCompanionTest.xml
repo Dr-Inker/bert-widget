@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.data.BERTCompanionTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-08T19:10:08.247Z" hostname="ubuntu-16gb-hel1-1" time="0.005">
+  <properties/>
+  <testcase name="upstream stale and implausibly future observations cannot be fresh" classname="global.bert.widget.data.BERTCompanionTest" time="0.001"/>
+  <testcase name="position reports a known gain and a known loss" classname="global.bert.widget.data.BERTCompanionTest" time="0.0"/>
+  <testcase name="chart preserves gaps and never fabricates samples" classname="global.bert.widget.data.BERTCompanionTest" time="0.002"/>
+  <testcase name="ambiguous and malformed amounts are rejected instead of silently changed" classname="global.bert.widget.data.BERTCompanionTest" time="0.001"/>
+  <testcase name="saved fresh quote becomes delayed at 30 minutes" classname="global.bert.widget.data.BERTCompanionTest" time="0.0"/>
+  <testcase name="invalid quotes and overflow do not produce an estimate" classname="global.bert.widget.data.BERTCompanionTest" time="0.0"/>
+  <testcase name="one hour window is relative to now not the last stale sample" classname="global.bert.widget.data.BERTCompanionTest" time="0.0"/>
+  <testcase name="missing price or cost never implies zero gains" classname="global.bert.widget.data.BERTCompanionTest" time="0.0"/>
+  <testcase name="number input accepts explicit decimal and grouped thousands" classname="global.bert.widget.data.BERTCompanionTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
