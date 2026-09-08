@@ -62,5 +62,10 @@ internal fun BERTTheme(content: @Composable () -> Unit) {
     MaterialTheme(colorScheme = darkColorScheme(
         primary = AccentText, onPrimary = Navy, background = Navy, surface = Panel,
         onBackground = Cream, onSurface = Cream, secondary = Green, error = Red,
+        primaryContainer = PanelStrong, onPrimaryContainer = Cream,
+        secondaryContainer = PanelStrong, onSecondaryContainer = Cream,
+        surfaceVariant = PanelStrong, onSurfaceVariant = Muted, outline = Muted,
+        surfaceContainer = Panel, surfaceContainerHigh = PanelStrong,
+        surfaceContainerHighest = PanelStrong, surfaceContainerLow = Navy,
     ), content = content)
 }

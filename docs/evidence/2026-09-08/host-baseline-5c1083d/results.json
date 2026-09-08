@@ -1,0 +1,25 @@
+{
+  "source_sha": "5c1083d5e12eaad92c0482e72f7851051a804c93",
+  "environment": "Robolectric 4.16.1, API 35, 360x800 dp, 2x density; host draw, not emulator/device",
+  "ui_tests": {
+    "name": "global.bert.widget.BERTUiTest",
+    "tests": "3",
+    "skipped": "0",
+    "failures": "0",
+    "errors": "0",
+    "timestamp": "2026-09-08T18:03:57.900Z",
+    "hostname": "ubuntu-16gb-hel1-1",
+    "time": "8.657"
+  },
+  "captures": {
+    "caption-before.png": "9e31dfdd57eccb806c31444a7d2f938f6be2bdad257ca942ce39a2dfc6dec05b",
+    "holdings-before.png": "ae10df390d71f51b7e5c744384397d3c94e32241177e451ed6319e6c181d0cff",
+    "home-activity-before.png": "050e94c3798a0f9889b2169d10ff054d10272d13d906a4d1afc5236da4017a7a",
+    "create-before.png": "323fae2451117ac07716b36c9aa56e0d922fef7b5bd8b8939e346a22481a2101",
+    "home-offline-before.png": "20e0afca5ad214d4ac21434b2f25a3552f9408bfd196db9b40f5a6126c6dd986",
+    "explore-before.png": "edc6493946639ede8b7220556672042a5b07a3956648d2e96b345e1f89b48148",
+    "create-large-before.png": "5a97cfcb82d8b9061485751b782f3b2e4b4e5dc2961d0e9715b4fa8b3add8ad9",
+    "home-large-before.png": "8e394b4b8650cdfc0dbd19ed8c30be462b6d006d8c8c43ebb458a39ee23e2b37"
+  },
+  "development_gate": "Not complete: process ended with SIGTERM / exit 143 during lint; host tests completed. No green gate claim."
+}

@@ -7,6 +7,10 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -31,8 +35,8 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
-internal enum class BERTDestination(val label: String, val icon: String) {
-    HOME("Home", "⌂"), EXPLORE("Explore", "↗"), CREATE("Create", "✦"), TOOLS("Tools", "◎")
+internal enum class BERTDestination(val label: String, val icon: BERTSymbol) {
+    HOME("Home", BERTSymbol.HOME), EXPLORE("Explore", BERTSymbol.EXPLORE), CREATE("Create", BERTSymbol.CREATE), TOOLS("Tools", BERTSymbol.TOOLS)
 }
 
 class MainActivity : ComponentActivity() {
@@ -134,22 +138,7 @@ internal fun BERTApp(
     Scaffold(
         containerColor = Navy,
         contentWindowInsets = WindowInsets.safeDrawing,
-        bottomBar = {
-            NavigationBar(containerColor = Navy, contentColor = Cream) {
-                BERTDestination.entries.forEach { item ->
-                    NavigationBarItem(
-                        selected = destination == item,
-                        onClick = { destination = item },
-                        icon = { Text(item.icon, fontSize = 23.sp) },
-                        label = { Text(item.label, fontSize = 12.sp) },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Orange, selectedTextColor = Cream,
-                            unselectedIconColor = Muted, unselectedTextColor = Muted, indicatorColor = PanelStrong,
-                        ),
-                    )
-                }
-            }
-        },
+        bottomBar = { BERTNavigation(destination) { destination = it } },
     ) { padding ->
         val screenKey = when (destination) {
             BERTDestination.TOOLS -> "TOOLS-$toolsTab"
@@ -189,10 +178,15 @@ private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, posit
 
 @Composable
 internal fun SectionTabs(tabs: List<String>, selected: String, select: (String) -> Unit) {
-    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
-        tabs.forEachIndexed { index, tab ->
-            SegmentedButton(selected = tab == selected, onClick = { select(tab) },
-                shape = SegmentedButtonDefaults.itemShape(index, tabs.size)) { Text(tab) }
+    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        tabs.forEach { tab ->
+            Surface(color = if (tab == selected) PanelStrong else Navy, shape = RoundedCornerShape(14.dp),
+                border = BorderStroke(1.dp, if (tab == selected) AccentText else Muted.copy(alpha = 0.35f))) {
+                Box(Modifier.selectable(tab == selected, onClick = { select(tab) }, role = Role.Tab)
+                    .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 12.dp), contentAlignment = Alignment.Center) {
+                    Text(tab, color = if (tab == selected) Cream else Muted, fontWeight = FontWeight.SemiBold)
+                }
+            }
         }
     }
 }
@@ -204,6 +198,40 @@ private fun AppHeader(destination: BERTDestination) {
         Column {
             Text("BERT", color = Cream, fontSize = 20.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 1.sp)
             Text(if (destination == BERTDestination.HOME) "GOOD DOG. BIG WORLD." else destination.label.uppercase(), color = Muted, fontSize = 11.sp, letterSpacing = 0.8.sp)
+        }
+    }
+}
+
+@Composable
+private fun BERTNavigation(destination: BERTDestination, select: (BERTDestination) -> Unit) {
+    if (LocalDensity.current.fontScale > 1.3f) {
+        Surface(color = Navy) {
+            Column(Modifier.windowInsetsPadding(NavigationBarDefaults.windowInsets).padding(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                BERTDestination.entries.chunked(2).forEach { pair ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        pair.forEach { item ->
+                            Surface(color = if (item == destination) PanelStrong else Navy, shape = RoundedCornerShape(16.dp), modifier = Modifier.weight(1f)) {
+                                Row(Modifier.selectable(item == destination, onClick = { select(item) }, role = Role.Tab)
+                                    .heightIn(min = 56.dp).padding(horizontal = 10.dp, vertical = 8.dp),
+                                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    BERTIcon(item.icon, if (item == destination) AccentText else Muted)
+                                    Text(item.label, color = if (item == destination) Cream else Muted, fontSize = 14.sp)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        NavigationBar(containerColor = Navy, contentColor = Cream) {
+            BERTDestination.entries.forEach { item ->
+                NavigationBarItem(selected = destination == item, onClick = { select(item) },
+                    icon = { BERTIcon(item.icon, if (item == destination) AccentText else Muted) },
+                    label = { Text(item.label, fontSize = 12.sp) },
+                    colors = NavigationBarItemDefaults.colors(selectedTextColor = Cream,
+                        unselectedTextColor = Muted, indicatorColor = PanelStrong))
+            }
         }
     }
 }

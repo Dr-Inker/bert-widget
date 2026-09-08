@@ -59,6 +59,9 @@ android {
         unitTests.all {
             it.maxHeapSize = "1024m"
             it.maxParallelForks = 1
+            val scratch = layout.buildDirectory.dir("tmp/host-tests").get().asFile
+            it.systemProperty("java.io.tmpdir", scratch.absolutePath)
+            it.doFirst { scratch.mkdirs() }
             it.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
             it.jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
         }

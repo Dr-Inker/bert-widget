@@ -1,27 +1,60 @@
 package global.bert.widget
 
-import androidx.compose.material3.Text
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 @Composable
 internal fun ExploreScreen() {
-    Text("Small dog. Big world.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
-    Text("Pick something that makes your day a little more BERT.", color = Muted, fontSize = 15.sp, lineHeight = 22.sp)
-    SectionLabel("PLAY & LISTEN")
-    ExperienceLink("Flappy Bert", "Tap your way through the arcade. Scores and tournaments live in the game.", "↗", BERTLink.FLAPPY)
-    ExperienceLink("Bert Music", "Three community tracks. Find your town soundtrack.", "♫", BERTLink.MUSIC)
+    Text("Follow your nose.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+    Text("A game, a soundtrack, a whole pack to meet.", color = Muted, fontSize = 15.sp, lineHeight = 22.sp)
+    FeaturedExperience("Flappy Bert", "One more flap?", "Arcade runs and community tournaments.", BERTSymbol.PLAY, Green, BERTLink.FLAPPY)
+    FeaturedExperience("Bert Music", "Soundtrack your day.", "Music from the BERT community.", BERTSymbol.MUSIC, Color(0xFFD2B5FF), BERTLink.MUSIC)
     SectionLabel("AROUND THE PACK")
-    ExperienceLink("Bert’s dispatches", "Character updates, daily puzzles and municipal opinions.", "☀", BERTLink.DISPATCHES)
-    ExperienceLink("Meet the community", "Catch up with the BERT pack on Telegram.", "◎", BERTLink.COMMUNITY)
-    ExperienceLink("Woofhub", "Explore dog adoption and care, or visit your dog’s profile.", "♡", BERTLink.WOOFHUB)
-    ExperienceLink("Meet Bertram", "The story behind the small dog in the big hat.", "⌂", BERTLink.STORY)
+    ExperienceLink("Bert’s dispatches", "Town updates and municipal opinions.", BERTSymbol.STORY, BERTLink.DISPATCHES)
+    ExperienceLink("Meet the community", "Catch up with the pack.", BERTSymbol.PACK, BERTLink.COMMUNITY)
+    ExperienceLink("Woofhub", "Dog adoption, care and profiles.", BERTSymbol.HEART, BERTLink.WOOFHUB)
+    ExperienceLink("Meet Bertram", "The dog behind the hat.", BERTSymbol.HOME, BERTLink.STORY)
 }
 
 @Composable
-internal fun ExperienceLink(title: String, description: String, symbol: String, link: BERTLink) {
+private fun FeaturedExperience(title: String, invitation: String, description: String, symbol: BERTSymbol, accent: Color, link: BERTLink) {
     val context = LocalContext.current
-    FeatureLink(title, "$description\n${link.launchLabel} ↗", symbol) { openBERTLink(context, link) }
+    Card(onClick = { openBERTLink(context, link) }, colors = CardDefaults.cardColors(containerColor = accent.copy(alpha = 0.09f)),
+        shape = RoundedCornerShape(24.dp), border = BorderStroke(1.dp, accent.copy(alpha = 0.3f))) {
+        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                BERTIcon(symbol, accent)
+                Text(title, color = accent, fontSize = 15.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                BERTIcon(BERTSymbol.ARROW, accent)
+            }
+            Text(invitation, color = Cream, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            Text(description, color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
+            Text(link.launchLabel, color = accent, fontSize = 13.sp, fontWeight = FontWeight.SemiBold)
+        }
+    }
+}
+
+@Composable
+internal fun ExperienceLink(title: String, description: String, symbol: BERTSymbol, link: BERTLink) {
+    val context = LocalContext.current
+    Card(onClick = { openBERTLink(context, link) }, colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp)) {
+        Row(Modifier.fillMaxWidth().padding(18.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            BERTIcon(symbol)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                Text(title, color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+                Text(description, color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
+                Text(link.launchLabel, color = AccentText, fontSize = 12.sp)
+            }
+        }
+    }
 }

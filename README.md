@@ -2,7 +2,7 @@
 
 A native BERT app with ecosystem discovery, market tools, personal holdings, phone themes, and home-screen widgets.
 
-The next Android iteration introduces Home / Explore / Create / Tools navigation, Bert's latest dispatch and tournament status, direct ecosystem links, and a local caption-card creator. Market charts, private holdings, widgets and wallpapers remain available within the broader app. These source changes are **not published**; the distributed release described below remains v0.4.0. See [the product research](docs/RESEARCH-2026-09-08.md), [critique](docs/CRITIQUE-2026-09-08.md) and [session state](docs/NEXT-SESSION.md).
+The next Android iteration introduces Home / Explore / Create / Tools navigation, Bert's latest dispatch and tournament status, direct ecosystem links, and a local caption-card creator with a private saved collection. Market charts, private holdings, widgets and wallpapers remain available within the broader app. These source changes are **not published**; the distributed release described below remains v0.4.0. See [the product research](docs/RESEARCH-2026-09-08.md), [critique](docs/CRITIQUE-2026-09-08.md) and [session state](docs/NEXT-SESSION.md).
 
 The signed Android v0.4.0 release is live at [berthalla.io/widget](https://berthalla.io/widget/). This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase.
 

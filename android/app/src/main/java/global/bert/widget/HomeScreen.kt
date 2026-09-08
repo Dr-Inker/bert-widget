@@ -5,7 +5,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -26,11 +28,19 @@ internal fun HomeScreen(state: ActivityState, now: Long, refreshing: Boolean, re
     val context = LocalContext.current
     Card(colors = CardDefaults.cardColors(containerColor = PanelStrong), shape = RoundedCornerShape(26.dp)) {
         Column(Modifier.fillMaxWidth().padding(22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Image(painterResource(R.drawable.bert_icon), null, Modifier.size(76.dp).clip(RoundedCornerShape(22.dp)))
-                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    SectionLabel("THE MAYOR IS IN")
-                    Text("Woofmornin.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+            if (LocalDensity.current.fontScale > 1.3f) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Image(painterResource(R.drawable.bert_icon), null, Modifier.size(64.dp).clip(RoundedCornerShape(20.dp)))
+                    Column(Modifier.weight(1f)) { SectionLabel("THE MAYOR IS IN") }
+                }
+                Text("Hey, pack.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+            } else {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Image(painterResource(R.drawable.bert_icon), null, Modifier.size(76.dp).clip(RoundedCornerShape(22.dp)))
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        SectionLabel("THE MAYOR IS IN")
+                        Text("Hey, pack.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
+                    }
                 }
             }
             when (state) {
@@ -44,7 +54,16 @@ internal fun HomeScreen(state: ActivityState, now: Long, refreshing: Boolean, re
                 }
                 is ActivityState.Available -> {
                     state.activity.mood?.let { StatusPill("BERT’S MOOD · ${it.uppercase()}", AccentText) }
-                    state.activity.dispatch?.let { Text(it, color = Cream, fontSize = 19.sp, lineHeight = 28.sp, maxLines = 5, overflow = TextOverflow.Ellipsis) }
+                    state.activity.dispatch?.let { dispatch ->
+                        var expanded by rememberSaveable(dispatch) { mutableStateOf(false) }
+                        var overflowed by remember(dispatch) { mutableStateOf(false) }
+                        Text(dispatch, color = Cream, fontSize = 19.sp, lineHeight = 28.sp,
+                            maxLines = if (expanded) Int.MAX_VALUE else 4, overflow = TextOverflow.Ellipsis,
+                            onTextLayout = { if (!expanded) overflowed = it.hasVisualOverflow })
+                        if (overflowed || expanded) TextButton(onClick = { expanded = !expanded }) {
+                            Text(if (expanded) "Read less" else "Read full update")
+                        }
+                    }
                     val age = ((now - state.activity.updatedAtEpochMillis).coerceAtLeast(0) / 60_000)
                     val ageText = when {
                         age < 1 -> "just now"
@@ -57,7 +76,7 @@ internal fun HomeScreen(state: ActivityState, now: Long, refreshing: Boolean, re
                     Text("Latest from Berthalla", color = Muted, fontSize = 12.sp)
                 }
             }
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 TextButton(onClick = retry, enabled = !refreshing) { Text(if (refreshing) "Refreshing…" else "Refresh") }
                 TextButton(onClick = { openBERTLink(context, BERTLink.DISPATCHES) }) { Text("Bert on X ↗") }
             }
@@ -65,8 +84,8 @@ internal fun HomeScreen(state: ActivityState, now: Long, refreshing: Boolean, re
     }
 
     SectionLabel("A LITTLE BERT IN YOUR DAY")
-    FeatureLink("Make something BERT", "Create a caption card, draw a scene or personalize your phone.", "✦") { navigate(BERTDestination.CREATE) }
-    FeatureLink("Find your next adventure", "Games, music and the rest of Bert’s world.", "↗") { navigate(BERTDestination.EXPLORE) }
+    FeatureLink("Make something BERT", "Create a caption card, draw a scene or personalize your phone.", BERTSymbol.CREATE) { navigate(BERTDestination.CREATE) }
+    FeatureLink("Find your next adventure", "Games, music and the rest of Bert’s world.", BERTSymbol.EXPLORE) { navigate(BERTDestination.EXPLORE) }
 
     if (state is ActivityState.Available) {
         state.activity.event?.let { event ->
@@ -85,14 +104,14 @@ internal fun HomeScreen(state: ActivityState, now: Long, refreshing: Boolean, re
             }
         }
     }
-    FeatureLink("Your BERT tools", "Market data and your private holdings record.", "◎") { navigate(BERTDestination.TOOLS) }
+    FeatureLink("Your BERT tools", "Market data and your private holdings record.", BERTSymbol.TOOLS) { navigate(BERTDestination.TOOLS) }
 }
 
 @Composable
-internal fun FeatureLink(title: String, description: String, symbol: String, onClick: () -> Unit) {
+internal fun FeatureLink(title: String, description: String, symbol: BERTSymbol, onClick: () -> Unit) {
     Card(onClick = onClick, colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp), border = BorderStroke(1.dp, Cream.copy(alpha = 0.1f))) {
         Row(Modifier.fillMaxWidth().padding(18.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text(symbol, color = AccentText, fontSize = 23.sp)
+            BERTIcon(symbol)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 Text(title, color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                 Text(description, color = Muted, fontSize = 14.sp, lineHeight = 21.sp)

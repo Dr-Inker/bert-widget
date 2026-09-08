@@ -20,10 +20,10 @@ This is a **general BERT app**. Widgets are one feature, alongside market tools,
 
 ## Current implementation
 
-- Home / Explore / Create / Tools navigation, saved state per section, Android Back to Home.
+- Home / Explore / Create / Tools navigation, adaptive large-text layout, saved state per section, Android Back to Home. Expanded updates and a consistent native icon/color system.
 - BERT home with cached dispatch/mood/event data and independent quote/activity refresh.
 - Direct curated ecosystem entry points with explicit browser/Telegram/X labels.
-- Create / Art includes web drawing and local caption cards; Personalize contains existing widget/theme setup.
+- Create / Art leads with local caption cards; Saved adds a private PNG collection with reopen, share and confirmed deletion. Web drawing is secondary; Personalize contains existing widget/theme setup.
 - Real observed-price chart ranges; honest collection and gap states.
 - Offline-accessible holdings editing, optional total cost and estimated gain/loss.
 - Age-aware quote freshness, foreground/resume refresh and cancellation handling.
@@ -42,7 +42,7 @@ tools/check-android.sh
 
 8 Node tests, 23 Android JVM tests, lintDebug (35 warnings, zero errors), assembleDebug. [Output](evidence/2026-09-08/development-gate-086d8e5.txt). This is a **development** gate, not the release-signature/publication gate in DEPLOYMENT.md.
 
-**Native UI remains unverified.** The existing AVD was locked; a fresh disposable `bert-general-review` booted, but candidate installation timed out after 90 seconds. No native app checks ran and no candidate UI captures exist. [Attempt record](evidence/2026-09-08/native-attempt-086d8e5.json). The exact command and limitations are in the critique's general-app verification section. Do not claim verified caption export, state restoration, visual quality, large-text behavior or physical wallpaper/widget placement from the development gate. Both native attempts recorded a clean source tree and the same APK digest.
+**Native UI remains unverified.** The existing AVD was locked; a fresh disposable `bert-general-review` booted, but candidate installation timed out after 90 seconds. No emulator app checks ran. Host-rendered Compose captures and interactions are now available; they are narrower evidence and do not replace the device checks. [Attempt record](evidence/2026-09-08/native-attempt-086d8e5.json). The exact command and limitations are in the critique's general-app verification section. Host tests now exercise caption PNG preservation, sharing intent permissions, tab draft state, offline creation and large-text layout. Do not infer recipient delivery, process-death restoration, TalkBack, API 36 system bars or physical wallpaper/widget placement from them. Both native attempts recorded a clean source tree and the same APK digest.
 
 `tools/qa/android-companion.py` exercises a disposable AVD with labelled quote fixtures and captures native screenshots/UI trees. Read its arguments; never point this workflow at a personal/live device. Fixture market values are not real quotes. This host lacks `/dev/kvm`; software emulation is slow. Run one heavy job at a time.
 
@@ -52,9 +52,9 @@ On this host, build caches and Android preferences for this pass are under `/opt
 
 The owner accepted the research and the first implementation now uses Home / Explore / Create / Tools. Start validation from the report's user tasks and current native QA script.
 
-1. Validate the current implementation on a functioning native device/AVD, especially state restoration, caption preview/export and unavailable activity. No visual score without captures.
+1. Continue the premium-quality loop from the critique and host captures. Complete the committed-source gate for iteration 2, then improve section navigation and the partial wallpaper-apply failure path. Validate process restoration, actual sharing, launcher behavior, TalkBack and API 36 insets on a functioning device/AVD.
 2. Confirm long-term source ownership for `https://berthalla.io/status.json`. The adapter handles its current shape but it is not a chronological feed or documented native API. Do not scrape stale homepage fallback cards.
-3. Verify external phone journeys for Flappy Bert, web drawing, music and Woofhub. Official Playground labels Farmhalla and Hold The Line coming soon; they are excluded from the playable catalog. Custom Tabs and persistent saved creations are possible follow-ups.
+3. Verify external phone journeys for Flappy Bert, web drawing, music and Woofhub. Official Playground labels Farmhalla and Hold The Line coming soon; they are excluded from the playable catalog. Custom Tabs are a possible follow-up; persistent saved creations are implemented in iteration 2.
 4. Add favorites only after confirming repeated discovery use. Explore a non-price widget after the corresponding app content works.
 5. Validate widget placement and Home/Lock wallpaper application on physical launchers; improve the inherited partial-apply failure path. Bring iOS to parity only as an explicit separate macOS/Xcode effort.
 
