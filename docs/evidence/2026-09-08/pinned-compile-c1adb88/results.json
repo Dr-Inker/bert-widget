@@ -1,0 +1,11 @@
+{
+  "source_sha": "c1adb888dd79eeabf4a69e16ee64de5009600312",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.compactPinnedNavigationKeepsQuoteAgeVisible' --console=plain",
+  "exit_code": 1,
+  "tests_executed": 0,
+  "finding": "The new probe does not compile: DpRect has no height property in this test API. Use bottom minus top. No baseline layout result is established. Application source is unchanged.",
+  "evidence_sha256": {
+    "focused-gate.txt": "8abd4f3446706cd46436c64c4523064a395f8f2750272c92e3675066f34c456e"
+  }
+}

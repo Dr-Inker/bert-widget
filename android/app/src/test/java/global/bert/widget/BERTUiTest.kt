@@ -85,7 +85,7 @@ class BERTUiTest {
                     .put("touchLeftDp", bounds.left / density).put("touchRightDp", bounds.right / density))
             }
             measurements.put(name, org.json.JSONObject().put("viewportTopDp", viewport.top.value)
-                .put("viewportBottomDp", viewport.bottom.value).put("viewportHeightDp", viewport.height.value).put("tabs", tabs))
+                .put("viewportBottomDp", viewport.bottom.value).put("viewportHeightDp", (viewport.bottom - viewport.top).value).put("tabs", tabs))
         }
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         waitForPreview()
