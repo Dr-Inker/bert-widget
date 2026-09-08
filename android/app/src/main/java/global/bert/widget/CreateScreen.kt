@@ -31,9 +31,7 @@ internal fun CreateScreen(tab: String, selectTab: (String) -> Unit) {
         CaptionCardCreator { selectTab("Saved") }
         SectionLabel("KEEP CREATING")
         ExperienceLink("Draw Bert", "Describe a scene in Bert’s web Studio.", BERTSymbol.CREATE, BERTLink.DRAW)
-    } else if (tab == "Saved") {
-        SavedCardsScreen { selectTab("Art") }
-    } else {
+    } else if (tab == "Personalize") {
         Text("A little BERT. Everywhere.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Text("Widgets for a quick glance. Wallpapers for the rest of your day.", color = Muted, fontSize = 14.sp)
         WidgetSetup(context)

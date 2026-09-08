@@ -3,6 +3,7 @@ package global.bert.widget
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,7 +27,7 @@ import java.text.DateFormat
 import java.util.Date
 
 @Composable
-internal fun SavedCardsScreen(makeCard: () -> Unit) {
+internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Unit) {
     val context = LocalContext.current
     val library = remember { CaptionLibrary(context.applicationContext) }
     val scope = rememberCoroutineScope()
@@ -35,23 +36,31 @@ internal fun SavedCardsScreen(makeCard: () -> Unit) {
     var error by remember { mutableStateOf<String?>(null) }
     var removing by remember { mutableStateOf(false) }
     var busy by remember { mutableStateOf(false) }
+    val collectionScroll = rememberScrollState()
+    val detailScroll = key(selectedId) { rememberScrollState() }
     val entries by produceState<List<SavedCaption>?>(null, revision) {
         value = null
         try { value = withContext(Dispatchers.IO) { library.list() } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { error = "Your collection couldn’t load. Try again." }
     }
-    BackHandler(selectedId != null) { if (!busy) selectedId = null }
+    val card by produceState<RenderedCaption?>(null, selectedId) {
+        value = null
+        val id = selectedId ?: return@produceState
+        try { value = withContext(Dispatchers.IO) { library.open(id) } }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { error = "This saved image couldn’t load. Your other cards are still available." }
+    }
+    val backToCollection = { if (!busy) { selectedId = null; error = null } }
+    BackHandler(selectedId != null, onBack = backToCollection)
+    // Do not attach a restored scroll state to a short loading placeholder: that would clamp it to zero.
+    val loading = error == null && if (selectedId == null) entries == null else card == null
+    if (loading) {
+        Box(modifier.padding(20.dp)) { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+    } else BERTScreenContent(modifier, if (selectedId == null) collectionScroll else detailScroll) {
     Text(if (selectedId == null) "Your collection" else "Made by you.", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.Bold)
     if (selectedId != null) {
-        TextButton(onClick = { selectedId = null; error = null }, enabled = !busy) { Text("Back to collection") }
-        val card by produceState<RenderedCaption?>(null, selectedId) {
-            value = null
-            val id = selectedId ?: return@produceState
-            try { value = withContext(Dispatchers.IO) { library.open(id) } }
-            catch (cancelled: CancellationException) { throw cancelled }
-            catch (_: Exception) { error = "This saved image couldn’t load. Your other cards are still available." }
-        }
+        TextButton(onClick = backToCollection, enabled = !busy) { Text("Back to collection") }
         card?.let { ready ->
             Image(ready.bitmap.asImageBitmap(), "Saved caption card: ${ready.caption}", Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(20.dp)))
             Text(ready.caption, color = Cream, fontSize = 17.sp, lineHeight = 24.sp)
@@ -109,6 +118,7 @@ internal fun SavedCardsScreen(makeCard: () -> Unit) {
     error?.let { message ->
         Text(message, color = Amber)
         if (selectedId == null) TextButton(onClick = { error = null; revision++ }) { Text("Try again") }
+    }
     }
     if (removing) AlertDialog(onDismissRequest = { if (!busy) removing = false },
         title = { Text("Delete this card?") }, text = { Text("It will be removed from this device. Copies you shared will stay where you sent them.") },

@@ -15,6 +15,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -157,11 +158,10 @@ internal fun BERTApp(
                 }
             }
             savedScreens.SaveableStateProvider(screenKey) {
-                Column(
-                    modifier = Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState())
-                        .padding(horizontal = 20.dp, vertical = 16.dp),
-                    verticalArrangement = Arrangement.spacedBy(18.dp),
-                ) {
+                val body = Modifier.weight(1f).fillMaxWidth()
+                if (destination == BERTDestination.CREATE && createTab == "Saved") {
+                    SavedCardsScreen(body) { createTab = "Art" }
+                } else BERTScreenContent(body) {
                     if (!hasSections) AppHeader(destination)
                     when (destination) {
                         BERTDestination.HOME -> HomeScreen(activityState, now, activityRefreshing, refreshActivity) { destination = it }
@@ -170,10 +170,22 @@ internal fun BERTApp(
                         BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, toolsTab,
                             refresh = refresh, savePosition = savePosition)
                     }
-                    Text("BERT · v${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
                 }
             }
         }
+    }
+}
+
+@Composable
+internal fun BERTScreenContent(
+    modifier: Modifier = Modifier,
+    scrollState: ScrollState = rememberScrollState(),
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier.verticalScroll(scrollState).padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        content()
+        Text("BERT · v${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
     }
 }
 

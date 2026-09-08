@@ -153,7 +153,8 @@ class BERTUiTest {
             val card = renderCaption(compose.activity, "Pack memory ${index + 1}", index % 3)
             try { store.save(card) } finally { card.bitmap.recycle() }
         }
-        app(fontScale = fontScale)
+        val restoration = StateRestorationTester(compose)
+        app(fontScale = fontScale, restoration = restoration)
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Saved", useUnmergedTree = true).performClick()
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
@@ -172,8 +173,21 @@ class BERTUiTest {
         compose.waitUntil(15_000) { compose.onAllNodesWithText("Your collection").fetchSemanticsNodes().isNotEmpty() }
         capture("collection-position-return$suffix")
         val afterButton = compose.onNodeWithText("Pack memory 2", useUnmergedTree = true).getUnclippedBoundsInRoot()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        val afterListRestoration = compose.onNodeWithText("Pack memory 2", useUnmergedTree = true).getUnclippedBoundsInRoot()
         compose.onNodeWithText("Pack memory 2").performScrollTo().performClick()
         compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("Delete card").performScrollTo()
+        val detailBeforeRestoration = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2").getUnclippedBoundsInRoot()
+        restoration.emulateSavedInstanceStateRestore()
+        compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        val detailAfterRestoration = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2").getUnclippedBoundsInRoot()
+        capture("collection-detail-restored$suffix")
+        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
+        val detailAfterTabSwitch = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2").getUnclippedBoundsInRoot()
         compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("Saved").assertIsSelected()
         compose.onNodeWithText("Your collection").assertExists()
@@ -181,6 +195,10 @@ class BERTUiTest {
         val measurements = org.json.JSONObject().put("fontScale", fontScale)
             .put("anchorBeforeTopDp", before.top.value).put("anchorAfterButtonTopDp", afterButton.top.value)
             .put("anchorAfterBackTopDp", afterBack.top.value).put("detailTitleTopDp", title.top.value)
+            .put("anchorAfterListRestorationTopDp", afterListRestoration.top.value)
+            .put("scrolledDetailBeforeRestorationTopDp", detailBeforeRestoration.top.value)
+            .put("scrolledDetailAfterRestorationTopDp", detailAfterRestoration.top.value)
+            .put("scrolledDetailAfterTabSwitchTopDp", detailAfterTabSwitch.top.value)
             .put("artworkTopDp", picture.top.value).put("artworkBottomDp", picture.bottom.value)
             .put("viewportTopDp", viewport.top.value).put("viewportBottomDp", viewport.bottom.value)
         File("build/outputs/host-ui/collection-navigation$suffix.json").writeText(measurements.toString(2))
@@ -188,6 +206,9 @@ class BERTUiTest {
         if (fontScale == 1f) assertTrue("The complete artwork must fit on first open", picture.top >= viewport.top && picture.bottom <= viewport.bottom)
         assertEquals("Back to collection must preserve the same card position", before.top.value, afterButton.top.value, 0.5f)
         assertEquals("Android Back must preserve the same card position", before.top.value, afterBack.top.value, 0.5f)
+        assertEquals("Recreating the collection must preserve its position", before.top.value, afterListRestoration.top.value, 0.5f)
+        assertEquals("Recreating a scrolled detail must preserve its position", detailBeforeRestoration.top.value, detailAfterRestoration.top.value, 0.5f)
+        assertEquals("Switching tabs must preserve detail position", detailBeforeRestoration.top.value, detailAfterTabSwitch.top.value, 0.5f)
         assertEquals(12, store.list().size)
     }
 

@@ -1,0 +1,22 @@
+{
+  "source_sha": "047a33bc4fc3e6e3fa743a51626ba46ad8ac4052",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.savedCardBackRestoresTheCollectionPosition' --tests 'global.bert.widget.BERTUiTest.savedCardBackRestoresTheCollectionPositionAtLargeText' --console=plain",
+  "exit_code": 1,
+  "tests": 2,
+  "failures": 2,
+  "finding": "Both back paths reset collection position; normal anchor y618 to1571dp; 2x anchor y289.5 to2808dp. At 2x the detail title text box starts 3dp above its viewport.",
+  "environment": "Production Compose shell under Robolectric API35. 360x800dp/font1 and320x640dp/linear font2. Twelve seeded cards. Captures may show pending thumbnails; thumbnail loading does not change row dimensions. Not OS navigation gestures or process-death verification.",
+  "evidence_sha256": {
+    "collection-detail-open-large.png": "a3dd4fe79ed1decdb2cbf35f83a337e78b07f933e69a91fd1f63630be9cd3f80",
+    "collection-position-before-large.png": "5a7dca79979eaeaa3114004aa9faf53b242f51144337d70a4c591d6887d8d7c8",
+    "collection-position-return-large.png": "7ebd8c7c5f91e286265de60fc3a0b2f0b2fe32363aadb9c1c46b32e7df2d10cb",
+    "collection-position-before.png": "8b009a97033895eb3f0f03fa345b52235a8614c375a97a580c152561b1932798",
+    "TEST-global.bert.widget.BERTUiTest.xml": "131c2aa74a0d7e1bc5288166ea4bd354c5e0472ab0cb10a5254a4b93da4156e6",
+    "collection-navigation-large.json": "0eb4d0318e7cec3095b2c6494fdb40a4c55839fd20547a8e58fd40cb831f43c2",
+    "collection-navigation.json": "8b5d9417b8fb43f3706b761cb4287ed99afee3be100d5a56a142ce172c5ffeb9",
+    "collection-detail-open.png": "d7ec49c1d4a729627a40903a375eb8989923c4518a43516f66b22c3d2d71a53a",
+    "collection-position-return.png": "9f209e24ec2c8531d37b4d99fed72f06ab2dbb52225cfe827ffa28b4e22e72c9",
+    "focused-gate.txt": "c88045f92553ed3cbdc405606ce374cdcef15101db0c59f3c260967a2113b109"
+  }
+}

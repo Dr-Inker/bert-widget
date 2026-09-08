@@ -12,6 +12,8 @@ Iteration 7 is verified: ordinary over-limit captions remain editable with clear
 
 Iteration 8 is verified at the latest source: a full collection automatically reveals its 40-card limit and Manage collection action. Cancelling deletion keeps all cards; deleting one then returning to Art preserves the draft and palette and allows saving. Rejection preserves all 80 files byte-for-byte. At 320×640 dp / 2x text, message and action labels fit y=254.5–490 dp inside the y=217–498 dp viewport without another scroll.
 
+Iteration 9 is in progress: baseline `047a33b` reproduces lost collection position through both Back paths. A candidate separates list/detail scroll state and adds restoration checks. Latest fully gated source remains `730b289` until this candidate passes.
+
 ## Owner direction
 
 This is a **general BERT app**. Widgets are one feature, alongside market tools, personal holdings, themes, and future BERT experiences. The current work is Android source development. Published v0.4.0 and the unshipped iOS scaffold retain their existing status.
