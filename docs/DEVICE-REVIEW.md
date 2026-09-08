@@ -6,6 +6,8 @@ Host evidence covers layout, saved state, private storage, PNG/provider access a
 
 Latest native attempt: the API 30 software AVD installed the preview, then a System UI ANR blocked the journeys. [Result and exact provenance](evidence/2026-09-08/native-preview-7d5939a/observation.json). Installation success is recorded separately from the unverified journey rows below.
 
+Current access audit at `a2ca8e0a9b22971bc206b752c02ffbc6cb28d0bf`, command `python3 docs/evidence/2026-09-08/acceptance-audit/verify.py`: ADB lists no device; the acceleration check exits 3 and `/dev/kvm` is absent. [Exact diagnostics and evidence-integrity checks](evidence/2026-09-08/acceptance-audit/results.json). This does not execute any row below. Use the current `BERT-preview-f62c961.apk` linked in the next-session ledger when functioning test access is available; the older installed APK does not verify this artifact.
+
 | Journey | Observable acceptance and evidence |
 | --- | --- |
 | Cold start and public data | Record model, Android version, display/font settings and network. Capture first useful frame and elapsed time; Home offers Explore/Create without a quote. Activity and quote update independently. Record source timestamps, without treating them as dispatch publication dates. |
