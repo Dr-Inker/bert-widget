@@ -8,6 +8,8 @@ The owner authorized a repeated premium-quality improvement loop. Latest verifie
 
 Iteration 6 is verified: large-text wallpaper/widget actions stack without splitting their labels at 320 dp; Mayor Purple widget negative-change contrast improves from 4.38:1 to 4.66:1. The strengthened checks failed on the baseline and pass on the fixed source. The audit covers 34 declared text/surface pairs, not every UI state or a physical display.
 
+Iteration 7 is in progress: two focused tests reproduced discarded long/emoji captions. The candidate retains editable over-limit drafts, shows an actionable count, uses Android logical-character boundaries and keeps saved metadata bounded. Full committed-source verification is pending.
+
 ## Owner direction
 
 This is a **general BERT app**. Widgets are one feature, alongside market tools, personal holdings, themes, and future BERT experiences. The current work is Android source development. Published v0.4.0 and the unshipped iOS scaffold retain their existing status.

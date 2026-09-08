@@ -10,6 +10,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -46,11 +49,17 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
     var sharing by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
+    var inputNotice by rememberSaveable { mutableStateOf<String?>(null) }
+    val characterCount = remember(caption) { captionCharacterCount(caption) }
+    val overLimit = characterCount > CAPTION_CHARACTER_LIMIT
     val text = caption.trim()
+    val canRender = !overLimit && text.isNotEmpty()
     var saved by remember(text, palette) { mutableStateOf(false) }
     var previewError by remember { mutableStateOf(false) }
-    val rendered by produceState<RenderedCaption?>(null, text, palette) {
+    val rendered by produceState<RenderedCaption?>(null, text, palette, canRender) {
         previewError = false
+        value = null
+        if (!canRender) return@produceState
         delay(200)
         try {
             value = withContext(Dispatchers.Default) { renderCaption(context.applicationContext, text, palette) }
@@ -60,7 +69,7 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
             previewError = true
         }
     }
-    val ready = rendered?.takeIf { it.caption == text && it.palette == palette }
+    val ready = rendered?.takeIf { canRender && it.caption == text && it.palette == palette }
 
     Text("Your words. Bert’s face.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     Text("Make a card for the pack. No account needed.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
@@ -69,18 +78,35 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
     } else {
         Surface(color = Panel, modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(20.dp))) {
             Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
-                Text(if (previewError) "Preview unavailable. Edit the caption to try again." else "Updating preview…", color = Muted, modifier = Modifier.padding(20.dp))
+                val message = when {
+                    overLimit -> "Shorten your caption to see the preview."
+                    text.isEmpty() -> "Your caption will appear here."
+                    previewError -> "Preview unavailable. Edit the caption to try again."
+                    else -> "Updating preview…"
+                }
+                Text(message, color = Muted, modifier = Modifier.padding(20.dp))
             }
         }
     }
     OutlinedTextField(
         value = caption,
         onValueChange = {
-            val input = it.replace(Regex("[\\r\\n\\t]+"), " ").filterNot { char -> char.isISOControl() }
-            if (input.length <= 96) { caption = input; error = null }
+            if (it.length > MAX_CAPTION_DRAFT_UNITS) {
+                inputNotice = "That passage is too long. Paste a shorter part. Your current caption is unchanged."
+            } else {
+                caption = normalizeCaption(it)
+                inputNotice = null
+                error = null
+            }
         },
         label = { Text("Your caption") },
-        supportingText = { Text("${caption.length}/96") },
+        isError = overLimit || inputNotice != null,
+        supportingText = {
+            val remaining = characterCount - CAPTION_CHARACTER_LIMIT
+            Text(inputNotice ?: if (overLimit) "$characterCount/$CAPTION_CHARACTER_LIMIT · Remove $remaining ${if (remaining == 1) "character" else "characters"} to preview, save or share."
+                else "$characterCount/$CAPTION_CHARACTER_LIMIT",
+                modifier = Modifier.semantics { if (overLimit || inputNotice != null) liveRegion = LiveRegionMode.Polite })
+        },
         minLines = 2, maxLines = 4,
         modifier = Modifier.fillMaxWidth(),
     )

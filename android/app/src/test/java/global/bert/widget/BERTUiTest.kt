@@ -143,20 +143,26 @@ class BERTUiTest {
 
     @Test fun longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview() {
         val longCaption = "Bert brought his hat, a snack, and enough confidence to run this entire town before his afternoon nap."
-        app()
+        val restoration = StateRestorationTester(compose)
+        app(restoration = restoration)
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         waitForPreview()
         compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement(longCaption)
         capture("caption-limit")
         compose.onNodeWithText("Your caption").assertTextContains(longCaption)
+        compose.onNodeWithText("102/96 · Remove 6 characters to preview, save or share.").assertExists()
         compose.onNodeWithText("Save card").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithText("Share caption card").assertIsNotEnabled()
         compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Your caption").assertTextContains(longCaption)
+        restoration.emulateSavedInstanceStateRestore()
+        compose.onNodeWithText("Your caption").assertTextContains(longCaption)
+        compose.onNodeWithText("Save card").assertIsNotEnabled()
         compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("Hat. Snack. Nap. 🐾")
         waitForPreview("Hat. Snack. Nap. 🐾")
         compose.onNodeWithText("Save card").performScrollTo().assertIsEnabled()
+        capture("caption-corrected")
     }
 
     @Test fun captionLimitCountsVisibleCharactersIncludingEmoji() {
@@ -165,10 +171,30 @@ class BERTUiTest {
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement(caption)
         compose.onNodeWithText("Your caption").assertTextContains(caption)
+        compose.onNodeWithText("96/96").assertExists()
         waitForPreview(caption)
+        capture("caption-emoji")
         compose.onNodeWithText("Save card").performScrollTo().assertIsEnabled().performClick()
         compose.waitUntil(15_000) { compose.onAllNodesWithText("View collection").fetchSemanticsNodes().isNotEmpty() }
         assertEquals(caption, CaptionLibrary(compose.activity).list().single().caption)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun oversizedPasteExplainsRejectionAndPreservesTheDraftAtLargeText() {
+        app(fontScale = 2f)
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("Keep this idea 🐾")
+        compose.onNodeWithText("Your caption").performTextReplacement("A".repeat(4097))
+        compose.onNodeWithText("Your caption").assertTextContains("Keep this idea 🐾")
+        val notice = "That passage is too long. Paste a shorter part. Your current caption is unchanged."
+        compose.onNodeWithText(notice).performScrollTo().assertIsDisplayed()
+        measureLabel(notice)
+        capture("caption-paste-large")
+        compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("good\r\n\tboy 🐾")
+        compose.onNodeWithText(notice).assertDoesNotExist()
+        compose.onNodeWithText("Your caption").assertTextContains("good boy 🐾")
+        waitForPreview("good boy 🐾")
     }
 
     @Test fun longDispatchCanBeReadWithoutLosingNavigation() {

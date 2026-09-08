@@ -1,0 +1,12 @@
+{
+  "source_sha": "bb880f9a9ff4d246105aa2a33be3158dacf2d604",
+  "working_tree_dirty_during_test": false,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview' --tests 'global.bert.widget.BERTUiTest.captionLimitCountsVisibleCharactersIncludingEmoji' --console=plain",
+  "outcome": "FAIL: both tests find the unchanged default caption after attempted replacement. The first replacement is 102 ASCII characters; the second is 96 paw emoji, 192 UTF-16 units.",
+  "environment": "Robolectric API35 / 360x800dp / xhdpi / normal font; Compose text replacement, not the OS clipboard or IME.",
+  "sha256": {
+    "caption-input-before.txt": "2e3ea1da0b52f1149e611f137ce60170f689b508282b8dabc4bd72e8f100f113",
+    "TEST-global.bert.widget.BERTUiTest.xml": "31ace53b94011f6f7d995bed8815c1494a4d49112afd21a9454a16a8a456066c",
+    "caption-limit.png": "9a269fa4d6ba4e96dd9ec2f5028b84be5b96ab3364a29777686f3241e2deaa8e"
+  }
+}

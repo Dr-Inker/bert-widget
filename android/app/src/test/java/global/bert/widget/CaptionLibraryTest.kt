@@ -70,4 +70,19 @@ class CaptionLibraryTest {
             assertTrue(rendered.bitmap.sameAs(png))
         }
     }
+
+    @Test fun joinedEmojiCaptionsReopenWithoutErasingOlderCards() {
+        val store = CaptionLibrary(context)
+        val older = store.save(renderCaption(context, "Keep my first card.", 0))
+        val original = renderCaption(context, "👨‍👩‍👧‍👦".repeat(96), 2)
+        val saved = store.save(original)
+        val reopened = CaptionLibrary(context).open(saved.id)
+        assertEquals(original.caption, reopened.caption)
+        assertTrue(original.bitmap.sameAs(reopened.bitmap))
+        assertThrows(IllegalArgumentException::class.java) {
+            store.save(RenderedCaption("🐾".repeat(97), 2, original.bitmap))
+        }
+        assertEquals(setOf(older.id, saved.id), CaptionLibrary(context).list().map { it.id }.toSet())
+        assertEquals("Keep my first card.", store.open(older.id).caption)
+    }
 }

@@ -18,12 +18,12 @@ internal class CaptionLibrary(context: Context) {
             if (!directory.isDirectory || !validId.matches(directory.name)) return@mapNotNull null
             runCatching {
                 val metadata = File(directory, "card.json")
-                require(metadata.length() in 1..4096)
+                require(metadata.length() in 1..MAX_METADATA_BYTES)
                 val json = JSONObject(metadata.readText())
                 val caption = json.getString("caption")
                 val palette = json.getInt("palette")
                 val savedAt = json.getLong("savedAt")
-                require(json.getInt("version") == 1 && caption.isNotBlank() && caption.length <= 96 && palette in 0..2 && savedAt > 0)
+                require(json.getInt("version") == 1 && isValidSavedCaption(caption) && palette in 0..2 && savedAt > 0)
                 require(File(directory, "card.png").length() in 1..MAX_IMAGE_BYTES)
                 SavedCaption(directory.name, caption, palette, savedAt)
             }.getOrNull()
@@ -31,7 +31,7 @@ internal class CaptionLibrary(context: Context) {
     }
 
     fun save(card: RenderedCaption): SavedCaption = synchronized(lock) {
-        require(card.caption.isNotBlank() && card.caption.length <= 96 && card.palette in 0..2)
+        require(isValidSavedCaption(card.caption) && card.palette in 0..2)
         require(card.bitmap.width == 1080 && card.bitmap.height == 1080)
         check(root.mkdirs() || root.isDirectory)
         // A full collection never silently evicts someone's work.
@@ -81,6 +81,7 @@ internal class CaptionLibrary(context: Context) {
 
     companion object {
         const val LIMIT = 40
+        private const val MAX_METADATA_BYTES = 32 * 1024L
         private const val MAX_IMAGE_BYTES = 8 * 1024 * 1024L
         private val validId = Regex("[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}")
         private val lock = Any()
