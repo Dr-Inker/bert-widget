@@ -189,3 +189,6 @@ The collection navigation audit reproduces lost list position through both Back 
 
 
 Iteration 10 measures populated tools and fixes split currency/metric text at compact font scale 2. Bounded headline sizing preserves the full currency string, including a wrapping fallback for extreme values. Range selection and local holdings edits now have executable host checks. Measured font conversions also correct the earlier “linear 2x” description: the Compose/API35 host uses nonlinear scaling, consistent with [Android’s scaling guidance](https://developer.android.com/develop/ui/compose/accessibility/scalable-content). Historical evidence is retained with a provenance correction in the critique.
+
+
+Iteration 11 reduces the cost of pinned navigation at larger text sizes: secondary tabs remain visible, while the selected bottom destination supplies the section name. Measured first-entry price and quote age fit together without shrinking 16 sp labels or reducing touch targets below 48 dp. Create and Tools gain 53 and 127 dp of content height respectively at the compact setting. The next pass should audit campaign acceptance and usable native test access, rather than expanding features to substitute for missing device evidence.

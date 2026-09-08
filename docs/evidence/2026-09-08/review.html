@@ -29,7 +29,7 @@
   <p class="muted">The app now has a general Home / Explore / Create / Tools structure, useful offline creation, a private saved collection, readable navigation and honest feedback when actions fail.</p>
   <div class="status"><strong>Device review is still open.</strong> The screen gallery uses actual Compose host renders with deterministic fixtures. The native attempt below installed an earlier preview but encountered a System UI ANR. Phone performance, TalkBack, launcher behavior and delivery to a share recipient remain unverified.</div>
   <div class="metrics">
-    <div class="metric"><strong>59 + 8</strong>Android and service tests passed</div>
+    <div class="metric"><strong>60 + 8</strong>Android and service tests passed</div>
     <div class="metric"><strong>211–531 dp</strong>Full creation preview in the first viewport</div>
     <div class="metric"><strong>2× text</strong>Navigation labels fit measured bounds</div>
   </div>
@@ -45,6 +45,7 @@
       <button aria-pressed="false" data-screen="collection-full">Full collection</button>
       <button aria-pressed="false" data-screen="collection-position-return">Return position</button>
       <button aria-pressed="false" data-screen="market-populated">Market</button>
+      <button aria-pressed="false" data-screen="pinned-market-large">More reading space</button>
       <button aria-pressed="false" data-screen="holdings-populated">Holdings</button>
       <button aria-pressed="false" data-screen="holdings-larger-value-large">Large amount</button>
       <button aria-pressed="false" data-screen="holdings">Offline holdings</button>
@@ -53,8 +54,8 @@
       <button aria-pressed="false" data-screen="personalize-large-scrolled">Scrolled sections</button>
     </div>
     <div class="stage">
-      <figure><img id="screen-image" src="host-93c39bb/create.png" alt="Create: full Bert caption preview and caption field above bottom navigation" width="720" height="1600"><figcaption id="screen-caption">360×800 dp · xhdpi · Robolectric / API 35 · source 93c39bb</figcaption></figure>
-      <div class="details" aria-live="polite"><h2 id="screen-title">Native creation leads.</h2><p id="screen-note">The whole 320 dp artwork preview fits above navigation on arrival. The caption is editable, three palettes are available, and an explicit save keeps the original PNG privately.</p><p class="muted">Normal-size captures use font scale 1. Large-text captures use font-scale setting 2. Measured scaling is nonlinear: 14 sp becomes 52 px and 38 sp becomes 90.17 px at density 2. Older “linear 2×” labels were inaccurate. Actual keyboard and other Android versions remain device checks.</p><p><a href="host-93c39bb/results.json">Exact results and capture hashes</a> · <a href="host-93c39bb/large-nav-measurements.json">Navigation measurements</a></p></div>
+      <figure><img id="screen-image" src="host-f62c961/create.png" alt="Create: full Bert caption preview and caption field above bottom navigation" width="720" height="1600"><figcaption id="screen-caption">360×800 dp · xhdpi · Robolectric / API 35 · source f62c961</figcaption></figure>
+      <div class="details" aria-live="polite"><h2 id="screen-title">Native creation leads.</h2><p id="screen-note">The whole 320 dp artwork preview fits above navigation on arrival. The caption is editable, three palettes are available, and an explicit save keeps the original PNG privately.</p><p class="muted">Normal-size captures use font scale 1. Large-text captures use font-scale setting 2. Measured scaling is nonlinear: 14 sp becomes 52 px and 38 sp becomes 90.17 px at density 2. Older “linear 2×” labels were inaccurate. Actual keyboard and other Android versions remain device checks.</p><p><a href="host-f62c961/results.json">Exact results and capture hashes</a> · <a href="host-f62c961/large-nav-measurements.json">Navigation measurements</a></p></div>
     </div>
   </section>
   <section aria-labelledby="comparison-heading">
@@ -62,7 +63,7 @@
     <p class="muted">Originally, Create led with an external web tool and pushed its native preview below most of the first viewport. The current layout puts the user's artwork first and keeps section navigation available while scrolling.</p>
     <div class="compare">
       <figure><h3>Before · preview starts at 659 dp</h3><img src="host-baseline-5c1083d/create-before.png" alt="Earlier Create screen with the native caption preview mostly below the first viewport" width="720" height="1600" loading="lazy"><figcaption>Source 5c1083d. Host UI tests passed; that attempt's full gate was interrupted during lint.</figcaption></figure>
-      <figure><h3>Current · preview starts at 211 dp</h3><img src="host-93c39bb/create.png" alt="Current Create screen showing the complete native preview and caption field" width="720" height="1600" loading="lazy"><figcaption>Source 93c39bb. Full development and preview gate passed; phone journeys remain open.</figcaption></figure>
+      <figure><h3>Current · preview starts at 211 dp</h3><img src="host-f62c961/create.png" alt="Current Create screen showing the complete native preview and caption field" width="720" height="1600" loading="lazy"><figcaption>Source f62c961. Full development and preview gate passed; phone journeys remain open.</figcaption></figure>
     </div>
   </section>
   <section aria-labelledby="compact-heading">
@@ -70,19 +71,19 @@
     <p class="muted">320×640 dp at font-scale setting 2. “Compact” and “Market” previously split inside words. Larger-text actions now stack across the available width. Both names, “Apply both” and “Home only” fit on one line; all measured action targets are at least 48 dp.</p>
     <div class="compare">
       <figure><h3>Before · words split</h3><img src="compact-c8d418d/compact-widgets-large.png" alt="Baseline compact screen: Compact wraps as Com pact and Market as Mark et" width="640" height="1280" loading="lazy"><figcaption>Source c8d418d. A clipping-only test passed; the capture exposed the inadequate criterion.</figcaption></figure>
-      <figure><h3>Current · labels stay intact</h3><img src="host-93c39bb/compact-widgets-large.png" alt="Improved compact screen: full-width Compact and Market buttons with intact labels" width="640" height="1280" loading="lazy"><figcaption>Source 93c39bb. Stronger single-line and target-size assertions pass.</figcaption></figure>
+      <figure><h3>Current · labels stay intact</h3><img src="host-f62c961/compact-widgets-large.png" alt="Improved compact screen: full-width Compact and Market buttons with intact labels" width="640" height="1280" loading="lazy"><figcaption>Source f62c961. Stronger single-line and target-size assertions pass.</figcaption></figure>
     </div>
-    <p><a href="host-93c39bb/compact-measurements.json">Compact measurements</a> · <a href="host-93c39bb/compact-wallpaper-large.png">Wallpaper actions at 2× text</a></p>
-    <p>Mayor Purple’s small negative-change widget text improves from <strong>4.38:1 to 4.66:1</strong>. The color check covers 34 declared text/surface pairs against fixed contrast thresholds; it does not certify every state, artwork or physical display. <a href="host-93c39bb/contrast-measurements.json">Exact color measurements</a> · <a href="readability-74f2532/results.json">Reproduced baseline failures</a></p>
+    <p><a href="host-f62c961/compact-measurements.json">Compact measurements</a> · <a href="host-f62c961/compact-wallpaper-large.png">Wallpaper actions at 2× text</a></p>
+    <p>Mayor Purple’s small negative-change widget text improves from <strong>4.38:1 to 4.66:1</strong>. The color check covers 34 declared text/surface pairs against fixed contrast thresholds; it does not certify every state, artwork or physical display. <a href="host-f62c961/contrast-measurements.json">Exact color measurements</a> · <a href="readability-74f2532/results.json">Reproduced baseline failures</a></p>
   </section>
   <section aria-labelledby="caption-heading">
     <h2 id="caption-heading">A paste should not silently disappear</h2>
     <p class="muted">The same 102-character text replacement previously left the old caption in place with no explanation. The revised editor keeps the draft, explains the limit and resumes preview/save/share after correction. The 96-character limit also accepts 96 paw emoji.</p>
     <div class="compare">
       <figure><h3>Before · old caption remains</h3><img src="caption-input-bb880f9/caption-limit.png" alt="After a rejected long caption replacement, the creator still shows its default caption and no error" width="720" height="1600" loading="lazy"><figcaption>Source bb880f9. Both long-caption and emoji-limit regression tests fail.</figcaption></figure>
-      <figure><h3>Current · draft and clear feedback</h3><img src="host-93c39bb/caption-limit.png" alt="The complete pasted draft remains in the field with a 102 out of 96 count and instructions to remove six characters" width="720" height="1600" loading="lazy"><figcaption>Source 93c39bb. Draft retention, correction and Unicode storage tests pass.</figcaption></figure>
+      <figure><h3>Current · draft and clear feedback</h3><img src="host-f62c961/caption-limit.png" alt="The complete pasted draft remains in the field with a 102 out of 96 count and instructions to remove six characters" width="720" height="1600" loading="lazy"><figcaption>Source f62c961. Draft retention, correction and Unicode storage tests pass.</figcaption></figure>
     </div>
-    <p><a href="host-93c39bb/caption-paste-large.png">Oversized-paste feedback at 2× text</a> · <a href="host-93c39bb/caption-input-measurements.json">Notice and viewport bounds</a> · <a href="host-93c39bb/caption-emoji.png">96-emoji boundary capture</a></p>
+    <p><a href="host-f62c961/caption-paste-large.png">Oversized-paste feedback at 2× text</a> · <a href="host-f62c961/caption-input-measurements.json">Notice and viewport bounds</a> · <a href="host-f62c961/caption-emoji.png">96-emoji boundary capture</a></p>
     <p>The entire large-text notice fits inside its measured scrolling viewport at 320×640 dp. These checks use Compose text replacement; physical keyboards, OS clipboard behavior and TalkBack remain device tests.</p>
   </section>
   <section aria-labelledby="capacity-heading">
@@ -90,29 +91,39 @@
     <p class="muted">After a rejected 41st save, the old screen showed no visible feedback. The revised screen reveals the limit and opens collection management. Cancel keeps every card; confirmed deletion frees a slot, and the original draft and palette remain ready to save.</p>
     <div class="compare">
       <figure><h3>Before · no visible response</h3><img src="collection-2f8e976/collection-full.png" alt="The creator after a rejected 41st save: Save card is visible but the generic error is below the viewport" width="720" height="1600" loading="lazy"><figcaption>Source 2f8e976. The focused UI contract fails; existing-file preservation already passes.</figcaption></figure>
-      <figure><h3>Current · clear recovery</h3><img src="host-93c39bb/collection-full.png" alt="The creator reveals Collection full, 40 cards, with instructions and a Manage collection button" width="720" height="1600" loading="lazy"><figcaption>Source 93c39bb. Complete recovery and compact-text checks pass using 40 seeded cards.</figcaption></figure>
+      <figure><h3>Current · clear recovery</h3><img src="host-f62c961/collection-full.png" alt="The creator reveals Collection full, 40 cards, with instructions and a Manage collection button" width="720" height="1600" loading="lazy"><figcaption>Source f62c961. Complete recovery and compact-text checks pass using 40 seeded cards.</figcaption></figure>
     </div>
-    <p><a href="host-93c39bb/collection-full-large.png">Recovery at 2× text</a> · <a href="host-93c39bb/collection-capacity-measurements.json">Measured text and viewport bounds</a> · <a href="host-93c39bb/collection-at-capacity.png">Count before the list</a> · <a href="host-93c39bb/collection-recovered.png">Original draft saved after recovery</a></p>
-    <p>The 80 files belonging to the existing 40 cards remain byte-identical after rejection. The recovery labels fit y=254.5–490 dp inside the y=217–498 dp viewport at 320×640 dp and 2× text, without an extra scroll. These are host checks; native lifecycle and TalkBack remain open.</p>
+    <p><a href="host-f62c961/collection-full-large.png">Recovery at 2× text</a> · <a href="host-f62c961/collection-capacity-measurements.json">Measured text and viewport bounds</a> · <a href="host-f62c961/collection-at-capacity.png">Count before the list</a> · <a href="host-f62c961/collection-recovered.png">Original draft saved after recovery</a></p>
+    <p>The 80 files belonging to the existing 40 cards remain byte-identical after rejection. The recovery labels fit y=254.5–490 dp inside the y=164–498 dp viewport at 320×640 dp and 2× text, without an extra scroll. These are host checks; native lifecycle and TalkBack remain open.</p>
   </section>
   <section aria-labelledby="navigation-heading">
     <h2 id="navigation-heading">Keep your place when you come back</h2>
     <p class="muted">Opening an older card used to discard the collection's scroll position. Returning put the selected card offscreen. Collection and detail now keep independent positions, including through saved-state recreation and leaving/returning to Create.</p>
     <div class="compare">
       <figure><h3>Before · back at the newest cards</h3><img src="navigation-047a33b/collection-position-return.png" alt="After returning from Pack memory 2, the old screen shows memories 12 through 9 and loses the previous position" width="720" height="1600" loading="lazy"><figcaption>Source 047a33b. The selected card moves from y=618 to 1571 dp. Both Back paths fail the position check.</figcaption></figure>
-      <figure><h3>Current · same card, same place</h3><img src="host-93c39bb/collection-position-return.png" alt="After returning from Pack memory 2, the improved screen keeps that card visible at its original position" width="720" height="1600" loading="lazy"><figcaption>Source 93c39bb. Both Back paths and saved-state recreation retain y=618 dp. Immediate captures use twelve seeded cards and can show loading thumbnails.</figcaption></figure>
+      <figure><h3>Current · same card, same place</h3><img src="host-f62c961/collection-position-return.png" alt="After returning from Pack memory 2, the improved screen keeps that card visible at its original position" width="720" height="1600" loading="lazy"><figcaption>Source f62c961. Both Back paths and saved-state recreation retain y=618 dp. Immediate captures use twelve seeded cards and can show loading thumbnails.</figcaption></figure>
     </div>
-    <p><a href="host-93c39bb/collection-position-return-large.png">Return at 2× text</a> · <a href="host-93c39bb/collection-navigation.json">Normal measurements</a> · <a href="host-93c39bb/collection-navigation-large.json">Compact measurements</a></p>
-    <p>The compact 2× anchor also stays fixed at y=289.5 dp; the old screen returned it to 2808 dp. All 32 pre-existing screen captures match the previous verified build byte-for-byte. The Back dispatcher and saved-state tests run on the host; native gestures and OS process death remain open.</p>
+    <p><a href="host-f62c961/collection-position-return-large.png">Return at 2× text</a> · <a href="host-f62c961/collection-navigation.json">Normal measurements</a> · <a href="host-f62c961/collection-navigation-large.json">Compact measurements</a></p>
+    <p>The compact 2× anchor also stays fixed at y=289.5 dp; the old screen returned it to 2808 dp. All standard-font captures match the previous verified build byte-for-byte. The compact section viewport is now taller; 29 of the prior 49 captures are unchanged overall. The Back dispatcher and saved-state tests run on the host; native gestures and OS process death remain open.</p>
+  </section>
+  <section aria-labelledby="pinned-heading">
+    <h2 id="pinned-heading">Show the quote and its age together</h2>
+    <p class="muted">At large text sizes, a repeated destination heading and two rows of Tools tabs consumed too much of the screen. The quote age extended below the first viewport. Removing that repeated heading and reducing only tab padding brings the entire age into view.</p>
+    <div class="compare">
+      <figure><h3>Before · quote age cut off</h3><img src="pinned-cabc2bd/pinned-market-large.png" alt="Earlier compact Tools first entry hides the last line of the delayed quote age below navigation" width="640" height="1280" loading="lazy"><figcaption>Source cabc2bd · 320×640 dp · font-scale setting 2. Content viewport 281 dp high; quote age ends at 556.5 dp, below the viewport's 498 dp bottom.</figcaption></figure>
+      <figure><h3>Current · price and complete age</h3><img src="host-f62c961/pinned-market-large.png" alt="Current compact Tools first entry shows the price and both lines of the delayed quote age, with Market and Holdings on one row" width="640" height="1280" loading="lazy"><figcaption>Source f62c961. Content viewport 408 dp high; complete age fits at y=333.5–429.5 dp. Fixture values are not current market data.</figcaption></figure>
+    </div>
+    <p>Tools gains <strong>127 dp</strong> of reading height and Create gains <strong>53 dp</strong>. All five section labels remain 16 sp and one line, with fully visible targets 66 dp high and at least 65.5 dp wide. The selected bottom destination still names the section.</p>
+    <p><a href="host-f62c961/pinned-navigation.json">Exact first-entry bounds and typography</a> · <a href="host-f62c961/pinned-create-large.png">Create at the compact setting</a></p>
   </section>
   <section aria-labelledby="tools-heading">
     <h2 id="tools-heading">Keep the amount intact</h2>
     <p class="muted">A compact screen with larger text used to split the cents in $105,000.00. The headline now adapts from 34 to 32 sp and keeps the complete amount on one line. Market labels stack above their values at larger text settings.</p>
     <div class="compare">
       <figure><h3>Before · cents split</h3><img src="populated-a6b2820/holdings-larger-value-large.png" alt="Baseline holdings screen splits the final cent onto another line" width="640" height="1280" loading="lazy"><figcaption>Source a6b2820 · 320×640 dp · font-scale setting 2. Deterministic review amount, not user holdings.</figcaption></figure>
-      <figure><h3>Current · full amount on one line</h3><img src="host-93c39bb/holdings-larger-value-large.png" alt="Improved holdings screen keeps $105,000.00 on one line" width="640" height="1280" loading="lazy"><figcaption>Source 93c39bb. Normal size remains 34 sp; compact size uses 32 sp. Exceptionally long values can wrap at an 18 sp floor without losing digits.</figcaption></figure>
+      <figure><h3>Current · full amount on one line</h3><img src="host-f62c961/holdings-larger-value-large.png" alt="Improved holdings screen keeps $105,000.00 on one line" width="640" height="1280" loading="lazy"><figcaption>Source f62c961. Normal size remains 34 sp; compact size uses 32 sp. Exceptionally long values can wrap at an 18 sp floor without losing digits.</figcaption></figure>
     </div>
-    <p><a href="host-93c39bb/market-metrics-large.png">Readable Market metrics</a> · <a href="host-93c39bb/populated-tools-large.json">Compact typography and touch measurements</a> · <a href="host-93c39bb/holdings-extreme-value-large.png">Full extreme-value fallback</a></p>
+    <p><a href="host-f62c961/market-metrics-large.png">Readable Market metrics</a> · <a href="host-f62c961/populated-tools-large.json">Compact typography and touch measurements</a> · <a href="host-f62c961/holdings-extreme-value-large.png">Full extreme-value fallback</a></p>
     <p>Chart ranges select five, four or two observations from the labelled history fixture and retain selection after recreation. All three range targets are at least 48×48 dp. Holdings validation, Cancel, saving optional cost and confirmed removal are checked against private storage. These are host flows; quotes and balances shown here are synthetic.</p>
   </section>
   <section aria-labelledby="native-heading">
@@ -125,12 +136,12 @@
   <section class="checks" aria-labelledby="open-heading">
     <h2 id="open-heading">What still prevents an S-tier claim</h2>
     <p>Real keyboard and system-bar behavior; actual share-recipient delivery; widget placement and wallpaper outcomes; TalkBack reading order; OS process restoration; and measured performance on named hardware.</p>
-    <p><a href="../../DEVICE-REVIEW.md">Device review contract</a> · <a href="host-93c39bb/preview-inspection.json">Preview APK inspection</a> · <a href="../../CRITIQUE-2026-09-08.md">Full critique and iteration history</a></p>
+    <p><a href="../../DEVICE-REVIEW.md">Device review contract</a> · <a href="host-f62c961/preview-inspection.json">Preview APK inspection</a> · <a href="../../CRITIQUE-2026-09-08.md">Full critique and iteration history</a></p>
   </section>
   <footer>
-    <strong>Verified source:</strong> <code>93c39bb3e26d220b87f076d81f356775f1ba862a</code><br>
+    <strong>Verified source:</strong> <code>f62c961c39c011bbecec02dc4d9b2232e5ba83d4</code><br>
     <strong>Command:</strong> <code>GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh</code><br>
-    <a href="host-93c39bb/preview-gate.txt">Full gate log</a>. Both lint variants: 35 warnings, zero errors. Local debug-signed preview only; no release was published.
+    <a href="host-f62c961/preview-gate.txt">Full gate log</a>. Both lint variants: 35 warnings, zero errors. Local debug-signed preview only; no release was published.
   </footer>
 </main>
 <script>
@@ -144,6 +155,7 @@
     'collection-full': ['A full collection has a way forward.', 'After a rejected 41st save, the limit and Manage collection action appear automatically. The test cancels deletion, confirms deletion, returns to the original draft and palette, and saves successfully. The other 39 cards remain intact. This capture uses seeded cards.'],
     'saved-card': ['Reopen the exact original.', 'Saved and shared PNG pixels match the original 1080×1080 card in the host tests. Deletion requires confirmation. Opening a share chooser is not proof of delivery.'],
     'caption-limit': ['Keep the draft. Fix the length.', 'A 102-character caption remains editable and survives section changes and saved-state recreation. The field explains that six characters must be removed before previewing, saving or sharing. The counter uses Android logical-character boundaries for emoji and combined characters.'],
+    'pinned-market-large': ['More space to read.', 'At 320×640 dp and font-scale setting 2, Tools provides 408 dp of content height, up from 281 dp. Price and the complete delayed age fit together on first entry. Tab text remains 16 sp and targets remain at least 48×48 dp. This is a synthetic quote fixture.'],
     'market-populated': ['Market data with its age visible.', 'A deterministic .0042 USD fixture is delayed by 42 minutes after a failed refresh. Its local history preserves gaps. This is not a current market quote.'],
     'holdings-populated': ['Your estimate and its assumptions.', 'Synthetic locally entered holdings show the full estimated value, quote age and entered cost. The host tests exercise validation, cancellation, saving and confirmed removal.'],
     'holdings-larger-value-large': ['Keep every digit.', 'At 320×640 dp and font-scale setting 2, the $105,000.00 fixture stays on one line at 32 sp. This is a review fixture, not user holdings or a current quote.'],
@@ -154,9 +166,9 @@
   document.querySelectorAll('[data-screen]').forEach(button => button.addEventListener('click', () => {
     const key = button.dataset.screen, [title, note] = screens[key];
     document.querySelectorAll('[data-screen]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
-    document.getElementById('screen-image').src = 'host-93c39bb/' + key + '.png';
+    document.getElementById('screen-image').src = 'host-f62c961/' + key + '.png';
     document.getElementById('screen-image').alt = title + ' ' + note;
-    document.getElementById('screen-caption').textContent = (key === 'holdings-larger-value-large' ? '320×640 dp · font-scale setting 2' : '360×800 dp') + ' · xhdpi · Robolectric / API 35 · source 93c39bb';
+    document.getElementById('screen-caption').textContent = (['holdings-larger-value-large', 'pinned-market-large'].includes(key) ? '320×640 dp · font-scale setting 2' : '360×800 dp') + ' · xhdpi · Robolectric / API 35 · source f62c961';
     document.getElementById('screen-title').textContent = title;
     document.getElementById('screen-note').textContent = note;
   }));

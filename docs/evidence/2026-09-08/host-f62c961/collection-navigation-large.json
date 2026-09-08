@@ -1,0 +1,15 @@
+{
+  "fontScale": 2,
+  "anchorBeforeTopDp": 289.5,
+  "anchorAfterButtonTopDp": 289.5,
+  "anchorAfterBackTopDp": 289.5,
+  "detailTitleTopDp": 180,
+  "anchorAfterListRestorationTopDp": 289.5,
+  "scrolledDetailBeforeRestorationTopDp": 16,
+  "scrolledDetailAfterRestorationTopDp": 16,
+  "scrolledDetailAfterTabSwitchTopDp": 16,
+  "artworkTopDp": 312.5,
+  "artworkBottomDp": 592.5,
+  "viewportTopDp": 164,
+  "viewportBottomDp": 498
+}

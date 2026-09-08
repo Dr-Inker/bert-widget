@@ -1,0 +1,20 @@
+{
+  "label": "Paste a shorter passage. Your caption is unchanged.",
+  "lineCount": 4,
+  "widthPx": 496,
+  "heightPx": 256,
+  "density": 2,
+  "fontScaleSetting": 2,
+  "fontSizeSp": 12,
+  "fontSizePx": 48,
+  "reference14spPx": 52,
+  "reference38spPx": 90.17143,
+  "lastLineEnd": 51,
+  "ellipsized": false,
+  "maxLineRightPx": 346.3141,
+  "lastLineBottomPx": 256,
+  "noticeTopDp": 370,
+  "noticeBottomDp": 498,
+  "viewportTopDp": 164,
+  "viewportBottomDp": 498
+}
