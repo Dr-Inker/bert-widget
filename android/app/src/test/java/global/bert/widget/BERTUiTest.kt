@@ -187,6 +187,52 @@ class BERTUiTest {
         compose.onNodeWithText("Back soon. Keep my hat.").assertExists()
     }
 
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun compactScreenAtLargeTextKeepsControlsReadable() {
+        app(fontScale = 2f)
+        capture("compact-home-large")
+        val measurements = org.json.JSONArray()
+        for (label in listOf("Home", "Explore", "Create", "Tools")) {
+            compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
+            measurements.put(measureLabel(label, singleLine = true))
+        }
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Share caption card").performScrollTo().assertIsDisplayed()
+        for (label in listOf("Art", "Saved", "Personalize")) {
+            compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp)
+            measurements.put(measureLabel(label, singleLine = true))
+        }
+        capture("compact-create-large")
+        compose.onNodeWithText("Personalize", useUnmergedTree = true).performClick()
+        for (label in listOf("Apply both", "Home only", "Lock screen only", "Compact", "Market")) {
+            compose.onNodeWithText(label).performScrollTo().assertIsDisplayed()
+            measurements.put(measureLabel(label))
+        }
+        capture("compact-widgets-large")
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Save holdings").performScrollTo().assertIsDisplayed()
+        measurements.put(measureLabel("Save holdings"))
+        capture("compact-holdings-large")
+        File("build/outputs/host-ui/compact-measurements.json").writeText(measurements.toString(2))
+    }
+
+    private fun measureLabel(label: String, singleLine: Boolean = false): org.json.JSONObject {
+        val layouts = mutableListOf<TextLayoutResult>()
+        compose.onNodeWithText(label, useUnmergedTree = true).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val result = layouts.single()
+        if (singleLine) assertEquals("$label must stay on one line at 320 dp / 2x text", 1, result.lineCount)
+        for (line in 0 until result.lineCount) {
+            assertTrue("$label is clipped horizontally", result.getLineLeft(line) >= -0.5f && result.getLineRight(line) <= result.size.width + 0.5f)
+            assertTrue("$label is clipped vertically", result.getLineBottom(line) <= result.size.height + 0.5f)
+        }
+        return org.json.JSONObject().put("label", label).put("lineCount", result.lineCount)
+            .put("widthPx", result.size.width).put("heightPx", result.size.height)
+            .put("maxLineRightPx", (0 until result.lineCount).maxOf { result.getLineRight(it) })
+            .put("lastLineBottomPx", result.getLineBottom(result.lineCount - 1))
+    }
+
     private fun waitForPreview(caption: String? = null) {
         compose.waitUntil(15_000) {
             compose.onAllNodes(hasContentDescription("Caption card preview:" + (caption?.let { " $it" } ?: ""), substring = true)).fetchSemanticsNodes().isNotEmpty()
