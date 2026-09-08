@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.theme.WallpaperApplyResultTest" tests="6" skipped="0" failures="0" errors="0" timestamp="2026-09-08T18:27:48.603Z" hostname="ubuntu-16gb-hel1-1" time="0.005">
+  <properties/>
+  <testcase name="failedHomeStillAllowsIndependentLockChange" classname="global.bert.widget.theme.WallpaperApplyResultTest" time="0.001"/>
+  <testcase name="neitherSuccessIsNeverReportedAsApplied" classname="global.bert.widget.theme.WallpaperApplyResultTest" time="0.001"/>
+  <testcase name="cancellationDoesNotContinueMutatingAnotherSurface" classname="global.bert.widget.theme.WallpaperApplyResultTest" time="0.0"/>
+  <testcase name="zeroWallpaperIdIsFailureEvenWithoutAnException" classname="global.bert.widget.theme.WallpaperApplyResultTest" time="0.0"/>
+  <testcase name="bothSuccessesAreReported" classname="global.bert.widget.theme.WallpaperApplyResultTest" time="0.001"/>
+  <testcase name="lockFailurePreservesAndReportsSuccessfulHomeChange" classname="global.bert.widget.theme.WallpaperApplyResultTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

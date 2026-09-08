@@ -1,0 +1,238 @@
+Checking source SHA: 7a54a0500037f4b320d59200bb9d56e5a6e5b425
+npm notice run bert-widget@0.1.0 check
+npm notice run node --check src/server.js && node --check tools/verify-release.mjs && node --test
+TAP version 13
+# Subtest: selects the most liquid valid pool
+ok 1 - selects the most liquid valid pool
+  ---
+  duration_ms: 1.023769
+  type: 'test'
+  ...
+# Subtest: rejects a pool where BERT is only the quote token
+ok 2 - rejects a pool where BERT is only the quote token
+  ---
+  duration_ms: 0.453334
+  type: 'test'
+  ...
+# Subtest: normalizes numeric strings and missing optional fields
+ok 3 - normalizes numeric strings and missing optional fields
+  ---
+  duration_ms: 0.852227
+  type: 'test'
+  ...
+# Subtest: accepts only HTTPS DEX Screener Solana pair URLs
+ok 4 - accepts only HTTPS DEX Screener Solana pair URLs
+  ---
+  duration_ms: 1.590054
+  type: 'test'
+  ...
+# Subtest: caches a fresh quote
+ok 5 - caches a fresh quote
+  ---
+  duration_ms: 28.799696
+  type: 'test'
+  ...
+# Subtest: returns cached data as stale when refresh fails
+ok 6 - returns cached data as stale when refresh fails
+  ---
+  duration_ms: 0.770237
+  type: 'test'
+  ...
+# Subtest: rejects oversized upstream bodies even without Content-Length
+ok 7 - rejects oversized upstream bodies even without Content-Length
+  ---
+  duration_ms: 1.372871
+  type: 'test'
+  ...
+# Subtest: rejects an oversized declared Content-Length before reading
+ok 8 - rejects an oversized declared Content-Length before reading
+  ---
+  duration_ms: 0.620036
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 417.548001
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:compileDebugKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:processDebugResources
+> Task :app:bundleDebugClassesToRuntimeJar UP-TO-DATE
+> Task :app:bundleDebugClassesToCompileJar UP-TO-DATE
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin UP-TO-DATE
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest
+
+> Task :app:processDebugUnitTestManifest
+/opt/bert-widget/android/app/build/intermediates/tmp/manifest/test/debug/tempFile2ProcessTestManifest11344241184286139617.xml:14:5-71:19 Warning:
+	application@android:usesCleartextTraffic was tagged at tempFile2ProcessTestManifest11344241184286139617.xml:14 to replace other declarations but no other declaration present
+
+> Task :app:generateDebugUnitTestConfig
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:testDebugUnitTest
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel
+> Task :app:lintAnalyzeDebug
+> Task :app:lintAnalyzeDebugAndroidTest
+> Task :app:lintAnalyzeDebugUnitTest
+
+> Task :app:lintReportDebug
+Wrote HTML report to file:///opt/bert-widget/android/app/build/reports/lint-results-debug.html
+
+> Task :app:lintDebug
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:generateDebugGlobalSynthetics UP-TO-DATE
+> Task :app:mergeDebugJavaResource UP-TO-DATE
+> Task :app:checkDebugDuplicateClasses UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:mergeExtDexDebug UP-TO-DATE
+> Task :app:mergeLibDexDebug UP-TO-DATE
+> Task :app:dexBuilderDebug UP-TO-DATE
+> Task :app:mergeProjectDexDebug UP-TO-DATE
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:mergeDebugNativeLibs UP-TO-DATE
+> Task :app:stripDebugDebugSymbols UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 1m 12s
+56 actionable tasks: 17 executed, 39 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:prePreviewBuild UP-TO-DATE
+> Task :app:generatePreviewBuildConfig
+> Task :app:generatePreviewResources
+> Task :app:packagePreviewResources
+> Task :app:processPreviewNavigationResources
+> Task :app:parsePreviewLocalResources
+> Task :app:generatePreviewRFile
+
+> Task :app:compilePreviewKotlin
+w: file:///opt/bert-widget/android/app/src/main/java/global/bert/widget/theme/BERTThemePack.kt:13:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///opt/bert-widget/android/app/src/main/java/global/bert/widget/theme/BERTThemePack.kt:14:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+w: file:///opt/bert-widget/android/app/src/main/java/global/bert/widget/theme/BERTThemePack.kt:15:5 This annotation is currently applied to the value parameter only, but in the future it will also be applied to field.
+- To opt in to applying to both value parameter and field, add '-Xannotation-default-target=param-property' to your compiler arguments.
+- To keep applying to the value parameter only, use the '@param:' annotation target.
+
+See https://youtrack.jetbrains.com/issue/KT-73255 for more details.
+
+> Task :app:javaPreCompilePreview
+> Task :app:compilePreviewJavaWithJavac
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:extractDeepLinksPreview
+> Task :app:processPreviewMainManifest
+> Task :app:generatePreviewLintReportModel
+> Task :app:lintAnalyzePreview
+
+> Task :app:lintReportPreview
+Wrote HTML report to file:///opt/bert-widget/android/app/build/reports/lint-results-preview.html
+
+> Task :app:lintPreview
+> Task :app:mergePreviewNativeDebugMetadata NO-SOURCE
+> Task :app:generatePreviewAssets UP-TO-DATE
+> Task :app:mergePreviewAssets
+> Task :app:compressPreviewAssets
+> Task :app:generatePreviewGlobalSynthetics
+> Task :app:checkPreviewDuplicateClasses
+> Task :app:desugarPreviewFileDependencies
+> Task :app:mergeExtDexPreview
+> Task :app:mergeLibDexPreview
+> Task :app:processPreviewJavaRes
+> Task :app:mergePreviewJavaResource
+> Task :app:checkPreviewAarMetadata
+> Task :app:mapPreviewSourceSetPaths
+> Task :app:compilePreviewNavigationResources
+> Task :app:mergePreviewResources
+> Task :app:createPreviewCompatibleScreenManifests
+> Task :app:processPreviewManifest
+> Task :app:processPreviewManifestForPackage
+> Task :app:processPreviewResources
+> Task :app:dexBuilderPreview
+> Task :app:mergeProjectDexPreview
+> Task :app:mergePreviewJniLibFolders
+> Task :app:mergePreviewNativeLibs
+
+> Task :app:stripPreviewDebugSymbols
+Unable to strip the following libraries, packaging them as they are: libandroidx.graphics.path.so. Run with --info option to learn more.
+
+> Task :app:validateSigningPreview
+> Task :app:writePreviewAppMetadata
+> Task :app:writePreviewSigningConfigVersions
+> Task :app:packagePreview
+> Task :app:createPreviewApkListingFileRedirect
+> Task :app:assemblePreview
+
+BUILD SUCCESSFUL in 2m 49s
+43 actionable tasks: 42 executed, 1 up-to-date
+Consider enabling configuration cache to speed up this build: https://docs.gradle.org/9.4.1/userguide/configuration_cache_enabling.html
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+{
+  "result": "PASS",
+  "apk": "android/app/build/outputs/apk/preview/app-preview.apk",
+  "apk_sha256": "ac9dd09991439c0a73a38c7f832fc948d051d13086a235905a8736c9bf38ffe4",
+  "package": "global.bert.widget.preview",
+  "label": "BERT Preview",
+  "endpoints": [
+    "https://berthalla.io/widget/api/quote",
+    "https://berthalla.io/status.json"
+  ],
+  "caption_authority": "global.bert.widget.preview.captions",
+  "cleartext_allowed": false,
+  "signature_verified": true,
+  "signer": "Android Debug",
+  "build_tools": "/opt/android-sdk/build-tools/36.1.0",
+  "scope": "Artifact inspection only. No installation, device journeys, release approval or publication."
+}

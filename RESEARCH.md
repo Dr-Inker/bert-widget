@@ -169,3 +169,8 @@ Public inspection found an existing `https://berthalla.io/status.json` source fo
 ### Accepted first implementation — 2026-09-08
 
 The owner accepted the direction after research. The next Android source iteration implements Home / Explore / Create / Tools, a bounded and cached activity adapter, direct curated experience links, and a local caption-card creator alongside existing personalization. It uses standard Android link intents; Custom Tabs, a full updates archive, non-price widgets, and an interactive companion remain follow-ups. See `docs/NEXT-SESSION.md` for the actual source SHA and verification state; the published release remains separate.
+
+
+### Premium-quality loop — 2026-09-08
+
+The owner authorized repeated critique, improvement and verification. The subsequent implementation adds persistent private saved cards, native creation before external drawing, measured large-text navigation, persistent section access, saved-state restoration checks and accurate partial wallpaper results. A separately installable preview makes device review practical. Latest verified source, exact commands, captures and unresolved acceptance work live in `docs/NEXT-SESSION.md`; the source implementation remains unpublished. S tier is not established by feature count or host-only tests.

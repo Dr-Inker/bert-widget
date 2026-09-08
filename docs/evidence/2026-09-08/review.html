@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BERT app · September review</title>
+<style>
+  :root { color-scheme: dark; font-family: system-ui,sans-serif; background:#071a2f; color:#fff5df }
+  * { box-sizing:border-box } body { margin:0 } main { max-width:1120px; margin:auto; padding:40px 24px 80px }
+  h1 { font-size:clamp(36px,6vw,66px); letter-spacing:-.04em; line-height:1.05; max-width:760px; margin:16px 0 24px }
+  h2 { font-size:26px; margin:0 0 18px } p { line-height:1.65; max-width:760px } .muted,figcaption { color:#9cb0c5 }
+  .eyebrow { color:#ff9e85; letter-spacing:.16em; font-size:12px; font-weight:750 } a { color:#ff9e85; text-underline-offset:4px }
+  .status { border:1px solid #496176; border-radius:16px; padding:16px 20px; margin:28px 0; line-height:1.6 }
+  .metrics { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; margin:32px 0 44px }
+  .metric { padding:20px; background:#0d2942; border-radius:18px } .metric strong { display:block; font-size:30px; margin-bottom:8px }
+  section { margin-top:48px } .tabs { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:24px }
+  button { min-height:48px; border:1px solid #9cb0c5; border-radius:12px; padding:12px 18px; background:transparent; color:#fff5df; font:inherit; cursor:pointer }
+  button[aria-pressed=true] { border-color:#ff9e85; background:#123957 } button:focus-visible,a:focus-visible { outline:3px solid #ffc857; outline-offset:5px }
+  .stage { display:grid; grid-template-columns:minmax(260px,360px) 1fr; gap:40px; align-items:start }
+  figure { margin:0 } img { width:100%; height:auto; display:block; border:1px solid #496176; border-radius:16px }
+  figcaption { line-height:1.5; padding-top:12px; font-size:13px } .details { padding-top:16px }
+  .compare { display:grid; grid-template-columns:repeat(2,minmax(0,360px)); gap:28px; margin-top:24px }
+  .compare h3 { margin:0 0 12px; font-size:17px } .checks { padding:24px; background:#0d2942; border-radius:18px }
+  code { overflow-wrap:anywhere; font-size:13px } footer { margin-top:48px; border-top:1px solid #496176; padding-top:24px; line-height:1.8 }
+  @media(max-width:660px) { main { padding:28px 18px 60px } .metrics { grid-template-columns:1fr } .stage { grid-template-columns:1fr; gap:12px } .stage figure { max-width:360px } .compare { gap:12px } }
+</style>
+<main>
+  <div class="eyebrow">BERT · LOCAL APP REVIEW · 8 SEPTEMBER 2026</div>
+  <h1>A BERT app with room for the whole pack.</h1>
+  <p class="muted">Four improvement passes: a general Home / Explore / Create / Tools structure, useful offline creation, a private saved collection, readable navigation and honest feedback when actions fail.</p>
+  <div class="status"><strong>Device review is still open.</strong> These are actual Compose screens rendered on the host with deterministic fixtures. They establish layout and interaction evidence; they do not establish phone performance, TalkBack, launcher behavior or delivery to a share recipient.</div>
+  <div class="metrics">
+    <div class="metric"><strong>41 + 8</strong>Android and service tests passed</div>
+    <div class="metric"><strong>211–531 dp</strong>Full creation preview in the first viewport</div>
+    <div class="metric"><strong>2× text</strong>Navigation labels fit measured bounds</div>
+  </div>
+  <section aria-labelledby="screens-heading">
+    <h2 id="screens-heading">Explore the current screens</h2>
+    <div class="tabs" aria-label="Choose a captured screen">
+      <button aria-pressed="true" data-screen="create">Create</button>
+      <button aria-pressed="false" data-screen="home-activity">Home</button>
+      <button aria-pressed="false" data-screen="home-offline">Offline</button>
+      <button aria-pressed="false" data-screen="explore">Explore</button>
+      <button aria-pressed="false" data-screen="saved-collection">Collection</button>
+      <button aria-pressed="false" data-screen="saved-card">Saved card</button>
+      <button aria-pressed="false" data-screen="holdings">Holdings</button>
+      <button aria-pressed="false" data-screen="home-large">Large text</button>
+      <button aria-pressed="false" data-screen="personalize-large-scrolled">Scrolled sections</button>
+    </div>
+    <div class="stage">
+      <figure><img id="screen-image" src="host-7a54a05/create.png" alt="Create: full Bert caption preview and caption field above bottom navigation" width="720" height="1600"><figcaption>360×800 dp · xhdpi · Robolectric / API 35 · source 7a54a05</figcaption></figure>
+      <div class="details" aria-live="polite"><h2 id="screen-title">Native creation leads.</h2><p id="screen-note">The whole 320 dp artwork preview fits above navigation on arrival. The caption is editable, three palettes are available, and an explicit save keeps the original PNG privately.</p><p class="muted">Normal-size captures use font scale 1. Large-text captures simulate linear 2× scaling; actual Android text scaling and keyboard behavior remain device checks.</p><p><a href="host-7a54a05/results.json">Exact results and capture hashes</a> · <a href="host-7a54a05/large-nav-measurements.json">Navigation measurements</a></p></div>
+    </div>
+  </section>
+  <section aria-labelledby="comparison-heading">
+    <h2 id="comparison-heading">The largest visible correction</h2>
+    <p class="muted">Originally, Create led with an external web tool and pushed its native preview below most of the first viewport. The current layout puts the user's artwork first and keeps section navigation available while scrolling.</p>
+    <div class="compare">
+      <figure><h3>Before · preview starts at 659 dp</h3><img src="host-baseline-5c1083d/create-before.png" alt="Earlier Create screen with the native caption preview mostly below the first viewport" width="720" height="1600" loading="lazy"><figcaption>Source 5c1083d. Host UI tests passed; that attempt's full gate was interrupted during lint.</figcaption></figure>
+      <figure><h3>Current · preview starts at 211 dp</h3><img src="host-7a54a05/create.png" alt="Current Create screen showing the complete native preview and caption field" width="720" height="1600" loading="lazy"><figcaption>Source 7a54a05. Full development and preview gate passed; phone journeys remain open.</figcaption></figure>
+    </div>
+  </section>
+  <section class="checks" aria-labelledby="open-heading">
+    <h2 id="open-heading">What still prevents an S-tier claim</h2>
+    <p>Real keyboard and system-bar behavior; actual share-recipient delivery; widget placement and wallpaper outcomes; TalkBack reading order; OS process restoration; and measured performance on named hardware.</p>
+    <p><a href="../../DEVICE-REVIEW.md">Device review contract</a> · <a href="host-7a54a05/preview-inspection.json">Preview APK inspection</a> · <a href="../../CRITIQUE-2026-09-08.md">Full critique and iteration history</a></p>
+  </section>
+  <footer>
+    <strong>Verified source:</strong> <code>7a54a0500037f4b320d59200bb9d56e5a6e5b425</code><br>
+    <strong>Command:</strong> <code>GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh</code><br>
+    <a href="host-7a54a05/preview-gate.txt">Full gate log</a>. Both lint variants: 35 warnings, zero errors. Local debug-signed preview only; no release was published.
+  </footer>
+</main>
+<script>
+  const screens = {
+    create: ['Native creation leads.', 'The whole 320 dp artwork preview fits above navigation on arrival. The caption is editable, three palettes are available, and an explicit save keeps the original PNG privately.'],
+    'home-activity': ['A home beyond the price.', 'Bert’s dispatch and mood have their own data source. This capture uses a labelled deterministic fixture; it is not a real current dispatch.'],
+    'home-offline': ['Offline does not close the app.', 'An unavailable update offers retry while all four destinations remain usable. Creation and saved cards work without a quote or an account.'],
+    explore: ['Direct paths into BERT.', 'Game, music and community entries show where they open. The host test verifies these entry points; gameplay and authenticated external journeys remain separate checks.'],
+    'saved-collection': ['Work worth keeping.', 'The collection is private and survives store recreation. An offline UI test creates, saves, reopens and deletes a card. No existing card is silently evicted when the collection is full.'],
+    'saved-card': ['Reopen the exact original.', 'Saved and shared PNG pixels match the original 1080×1080 card in the host tests. Deletion requires confirmation. Opening a share chooser is not proof of delivery.'],
+    holdings: ['Tools remain useful offline.', 'Holdings are entered locally, without a wallet connection. The general app keeps financial tools together rather than making them the first screen. This capture is an empty-record state.'],
+    'home-large': ['Labels measured at 2× text.', 'All four navigation controls measure at least 48×48 dp. Labels remain on one line and their rendered line edges fit inside the measured text boxes at 360 dp width.'],
+    'personalize-large-scrolled': ['Sections stay reachable.', 'After scrolling to wallpaper actions at 2× text, Art, Saved and Personalize remain accessible above the content. The same interaction test checks Market and Holdings.']
+  };
+  document.querySelectorAll('[data-screen]').forEach(button => button.addEventListener('click', () => {
+    const key = button.dataset.screen, [title, note] = screens[key];
+    document.querySelectorAll('[data-screen]').forEach(item => item.setAttribute('aria-pressed', String(item === button)));
+    document.getElementById('screen-image').src = 'host-7a54a05/' + key + '.png';
+    document.getElementById('screen-image').alt = title + ' ' + note;
+    document.getElementById('screen-title').textContent = title;
+    document.getElementById('screen-note').textContent = note;
+  }));
+</script>
+</html>

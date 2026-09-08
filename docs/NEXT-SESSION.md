@@ -4,7 +4,7 @@ Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but n
 
 ## Latest implementation — research accepted
 
-The owner authorized a repeated premium-quality improvement loop. Latest verified source: `04d31540f2877eb6b24484df323806ce7cfe8d11`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
+The owner authorized a repeated premium-quality improvement loop. Latest verified source: `7a54a0500037f4b320d59200bb9d56e5a6e5b425`; changes include native creation and a private saved-card collection, measured large-text navigation, expandable updates and a consistent icon/color system. A separately installable BERT Preview APK and packaged-artifact gate now support practical device review. Current root lease covers Android source, host UI verification, QA tools and repo ledgers. No other agents are authorized. No deployment or external-service mutation occurred.
 
 ## Owner direction
 
@@ -31,16 +31,16 @@ This is a **general BERT app**. Widgets are one feature, alongside market tools,
 
 ## Verification
 
-**Development gate passed at `04d31540f2877eb6b24484df323806ce7cfe8d11`:**
+**Development and preview gates passed at `7a54a0500037f4b320d59200bb9d56e5a6e5b425`:**
 
 ```bash
 GRADLE_USER_HOME=/opt/bert-widget-qa/gradle \
 ANDROID_USER_HOME=/opt/bert-widget-qa/android-home \
 JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa \
-tools/check-android.sh
+tools/check-android-preview.sh
 ```
 
-8 Node tests, 41 Android JVM tests (8 Compose UI + 4 library/PNG/provider + 6 wallpaper-result tests), no failures. LintDebug: 36 warnings, zero errors. AssembleDebug passed. [Output](evidence/2026-09-08/host-04d3154/development-gate.txt), [results and capture hashes](evidence/2026-09-08/host-04d3154/results.json). The follow-up commit contains documentation/evidence only.
+8 Node tests, 41 Android JVM tests (8 Compose UI + 4 library/PNG/provider + 6 wallpaper-result tests), no failures. LintDebug and lintPreview: 35 warnings each, zero errors. AssembleDebug, assemblePreview and packaged APK inspection passed. [Output](evidence/2026-09-08/host-7a54a05/preview-gate.txt), [results and capture hashes](evidence/2026-09-08/host-7a54a05/results.json). The follow-up commit contains documentation/evidence only.
 
 **Host UI evidence now exists.** Eleven actual Compose app-shell captures at 360×800 dp include offline Home, Explore, Create, collection, reopened card and normal/2x text. The full creation preview fits y=211–531 dp above navigation at 720 dp. Navigation labels fit one line at 2x text with >=48 dp targets; saved/shared PNGs preserve exact pixels. Draft switching, long-update expansion and offline save/open/keep/delete are exercised. This is narrower than a device test.
 
@@ -50,11 +50,18 @@ tools/check-android.sh
 
 On this host, build caches and Android preferences for this pass are under `/opt/bert-widget-qa`, keeping tool writes out of `/root`. No production signing material is copied into that directory.
 
+## Review artifacts
+
+- [Interactive visual review](evidence/2026-09-08/review.html): current screens, before/after creation, exact source and measurement links. Host renders, not phone screenshots.
+- Stable local APK: `android/app/build/outputs/review/BERT-preview-7a54a05.apk` (ignored build artifact). SHA-256 `ac9dd09991439c0a73a38c7f832fc948d051d13086a235905a8736c9bf38ffe4`.
+- Package `global.bert.widget.preview`, Android debug signature, labels BERT Preview, independent app/provider identity. It uses public HTTPS endpoints; emulator fixtures remain debug-only. Actual on-device installation/coexistence is unverified.
+- [Device review contract](DEVICE-REVIEW.md). The owner was asked asynchronously for the primary phone model/Android version; no answer was available when this handoff was written. The supported range remains API 26–36; do not invent a tested device.
+
 ## Next implementation priorities
 
 The owner accepted the research and the first implementation now uses Home / Explore / Create / Tools. Start validation from the report's user tasks and current native QA script.
 
-1. Continue the premium-quality loop from the critique and host captures. Iteration 3 is verified: section tabs remain reachable after scrolling, wallpaper outcomes are reported independently and saved-state restoration is exercised. Prepare and inspect a separately installable preview next. Validate process restoration, actual sharing, launcher behavior, TalkBack and API 36 insets on a functioning device/AVD.
+1. Continue the premium-quality loop from the critique and host captures. Iteration 4 is verified: the isolated preview APK uses public HTTPS data sources and passes package/provider/signature/network inspection. Follow docs/DEVICE-REVIEW.md for native acceptance; use the review page to inspect current host evidence. Validate process restoration, actual sharing, launcher behavior, TalkBack and API 36 insets on a functioning device/AVD.
 2. Confirm long-term source ownership for `https://berthalla.io/status.json`. The adapter handles its current shape but it is not a chronological feed or documented native API. Do not scrape stale homepage fallback cards.
 3. Verify external phone journeys for Flappy Bert, web drawing, music and Woofhub. Official Playground labels Farmhalla and Hold The Line coming soon; they are excluded from the playable catalog. Custom Tabs are a possible follow-up; persistent saved creations are implemented in iteration 2.
 4. Add favorites only after confirming repeated discovery use. Explore a non-price widget after the corresponding app content works.
@@ -69,8 +76,8 @@ TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SID
 TO: Next BERT app session
 TASK: Continue the general BERT app direction, starting from the research, critique and verified state
 CWD: /opt/bert-widget
-BASE: Verified source 04d31540f2877eb6b24484df323806ce7cfe8d11 followed by documentation/evidence only; read the exact gate command above
-READ: docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
+BASE: Verified source 7a54a0500037f4b320d59200bb9d56e5a6e5b425 followed by documentation/evidence only; read the exact gate command above
+READ: docs/DEVICE-REVIEW.md, docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): Root Android source, QA and repo ledgers under the owner's ongoing loop authorization; no other agents
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos
 ACCEPT: Executable development gate at the actual source SHA plus native evidence for visual claims; no unverified release claim
