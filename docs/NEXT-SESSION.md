@@ -2,9 +2,9 @@
 
 Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but no campaign handoff ledger before this pass; keep continuity here and in the dated critique. Do not use the frozen session-graph archive.
 
-## Active implementation — research accepted
+## Latest implementation — research accepted
 
-The owner accepted the research direction. Current edit lease: Android navigation and content adapter, Home / Explore / Create / Tools, native creation/personalization entry points, focused regression checks, and these repo ledgers. Base: `24a8cc30b880ff835e25e0a320f76fe9b21bc498`. No live deployment or external-service mutation. The source and verification sections below describe the prior iteration until this pass is committed and checked.
+The owner accepted the research direction. The first implementation is committed as `086d8e5d0af2a40dd3ba40fcd965f0081706f297`, following research base `24a8cc30b880ff835e25e0a320f76fe9b21bc498`. No edit lease remains active. No live deployment or external-service mutation occurred.
 
 ## Owner direction
 
@@ -31,7 +31,18 @@ This is a **general BERT app**. Widgets are one feature, alongside market tools,
 
 ## Verification
 
-The current general-app iteration is awaiting its committed-source development gate. Previous source `30007889bd9948142090b8afdf692a9e4ab5626e` has a development result recorded with command/log in the critique; that result does not verify these changes. Prior native UI verification did **not** pass: the software emulator timed out in package removal before installing that candidate. No candidate UI capture or physical-device verification is available yet. `tools/check-android.sh` runs Node checks, Android JVM tests, lintDebug and assembleDebug. It is a **development** gate, not the release-signature/publication gate in DEPLOYMENT.md.
+**Development gate passed at `086d8e5d0af2a40dd3ba40fcd965f0081706f297`:**
+
+```bash
+GRADLE_USER_HOME=/opt/bert-widget-qa/gradle \
+ANDROID_USER_HOME=/opt/bert-widget-qa/android-home \
+JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa \
+tools/check-android.sh
+```
+
+8 Node tests, 23 Android JVM tests, lintDebug (35 warnings, zero errors), assembleDebug. [Output](evidence/2026-09-08/development-gate-086d8e5.txt). This is a **development** gate, not the release-signature/publication gate in DEPLOYMENT.md.
+
+**Native UI remains unverified.** The existing AVD was locked; a fresh disposable `bert-general-review` booted, but candidate installation timed out after 90 seconds. No native app checks ran and no candidate UI captures exist. [Attempt record](evidence/2026-09-08/native-attempt-086d8e5.json). The exact command and limitations are in the critique's general-app verification section. Do not claim verified caption export, state restoration, visual quality, large-text behavior or physical wallpaper/widget placement from the development gate. Both native attempts recorded a clean source tree and the same APK digest.
 
 `tools/qa/android-companion.py` exercises a disposable AVD with labelled quote fixtures and captures native screenshots/UI trees. Read its arguments; never point this workflow at a personal/live device. Fixture market values are not real quotes. This host lacks `/dev/kvm`; software emulation is slow. Run one heavy job at a time.
 
@@ -56,7 +67,7 @@ TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SID
 TO: Next BERT app session
 TASK: Continue the general BERT app direction, starting from the research, critique and verified state
 CWD: /opt/bert-widget
-BASE: General-app implementation follows 24a8cc30b880ff835e25e0a320f76fe9b21bc498; final source SHA and gate result pending this pass
+BASE: Application source 086d8e5d0af2a40dd3ba40fcd965f0081706f297, followed by verification documentation/evidence only; read the exact gate command above
 READ: docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): No active lease after this session; scope the next change under the owner's authorization
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos

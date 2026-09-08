@@ -1,0 +1,46 @@
+Waiting for Android boot: 0s
+Waiting for Android boot: 10s
+Waiting for Android boot: 20s
+Waiting for Android boot: 30s
+Waiting for Android boot: 40s
+Waiting for Android boot: 50s
+Waiting for Android boot: 60s
+Waiting for Android boot: 70s
+Waiting for Android boot: 82s
+Waiting for Android boot: 93s
+Waiting for Android boot: 103s
+Waiting for Android boot: 114s
+Waiting for Android boot: 124s
+Waiting for Android boot: 135s
+Waiting for Android boot: 146s
+Waiting for Android boot: 156s
+Waiting for Android boot: 168s
+Waiting for Android boot: 180s
+Waiting for Android boot: 191s
+Waiting for Android boot: 202s
+Waiting for Android boot: 212s
+Waiting for Android boot: 223s
+Waiting for Android boot: 235s
+Waiting for Android boot: 246s
+Waiting for Android boot: 258s
+Waiting for Android boot: 271s
+Waiting for Android boot: 283s
+Android ready; installing test APK.
+Installing candidate.
+Traceback (most recent call last):
+  File "/opt/bert-widget/tools/qa/android-companion.py", line 199, in <module>
+    run(adb + ['install', '--no-streaming', '-r', args.apk])
+  File "/opt/bert-widget/tools/qa/android-companion.py", line 39, in run
+    return subprocess.run(command, check=True, capture_output=True, timeout=90, **kwargs).stdout
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 550, in run
+    stdout, stderr = process.communicate(input, timeout=timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 1209, in communicate
+    stdout, stderr = self._communicate(input, endtime, timeout)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 2116, in _communicate
+    self._check_timeout(endtime, orig_timeout, stdout, stderr)
+  File "/usr/lib/python3.12/subprocess.py", line 1253, in _check_timeout
+    raise TimeoutExpired(
+subprocess.TimeoutExpired: Command '['/opt/android-sdk/platform-tools/adb', '-P', '5040', '-s', 'emulator-5580', 'install', '--no-streaming', '-r', 'android/app/build/outputs/apk/debug/app-debug.apk']' timed out after 90 seconds
