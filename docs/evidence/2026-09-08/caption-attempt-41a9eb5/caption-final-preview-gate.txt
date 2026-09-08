@@ -1,0 +1,107 @@
+Checking source SHA: 41a9eb54343352876b02229bd7019ce7b7fefbfd
+npm notice run bert-widget@0.1.0 check
+npm notice run node --check src/server.js && node --check tools/verify-release.mjs && node --test
+TAP version 13
+# Subtest: selects the most liquid valid pool
+ok 1 - selects the most liquid valid pool
+  ---
+  duration_ms: 0.850998
+  type: 'test'
+  ...
+# Subtest: rejects a pool where BERT is only the quote token
+ok 2 - rejects a pool where BERT is only the quote token
+  ---
+  duration_ms: 0.341623
+  type: 'test'
+  ...
+# Subtest: normalizes numeric strings and missing optional fields
+ok 3 - normalizes numeric strings and missing optional fields
+  ---
+  duration_ms: 0.708197
+  type: 'test'
+  ...
+# Subtest: accepts only HTTPS DEX Screener Solana pair URLs
+ok 4 - accepts only HTTPS DEX Screener Solana pair URLs
+  ---
+  duration_ms: 1.383112
+  type: 'test'
+  ...
+# Subtest: caches a fresh quote
+ok 5 - caches a fresh quote
+  ---
+  duration_ms: 22.599411
+  type: 'test'
+  ...
+# Subtest: returns cached data as stale when refresh fails
+ok 6 - returns cached data as stale when refresh fails
+  ---
+  duration_ms: 0.749666
+  type: 'test'
+  ...
+# Subtest: rejects oversized upstream bodies even without Content-Length
+ok 7 - rejects oversized upstream bodies even without Content-Length
+  ---
+  duration_ms: 1.433404
+  type: 'test'
+  ...
+# Subtest: rejects an oversized declared Content-Length before reading
+ok 8 - rejects an oversized declared Content-Length before reading
+  ---
+  duration_ms: 0.576105
+  type: 'test'
+  ...
+1..8
+# tests 8
+# suites 0
+# pass 8
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 558.291726
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+To honour the JVM settings for this build a single-use Daemon process will be forked. For more on this, please refer to https://docs.gradle.org/9.4.1/userguide/gradle_daemon.html#sec:disabling_the_daemon in the Gradle documentation.
+Daemon will be stopped at the end of the build 
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugBuildConfig UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:processDebugNavigationResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:generateDebugRFile UP-TO-DATE
+> Task :app:compileDebugKotlin
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:compileDebugJavaWithJavac UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:compileDebugNavigationResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:bundleDebugClassesToRuntimeJar
+> Task :app:bundleDebugClassesToCompileJar
+> Task :app:preDebugUnitTestBuild UP-TO-DATE
+> Task :app:compileDebugUnitTestKotlin
+> Task :app:javaPreCompileDebugUnitTest UP-TO-DATE
+> Task :app:compileDebugUnitTestJavaWithJavac NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:packageDebugUnitTestForUnitTest UP-TO-DATE
+> Task :app:processDebugUnitTestManifest UP-TO-DATE
+> Task :app:generateDebugUnitTestConfig UP-TO-DATE
+> Task :app:processDebugJavaRes UP-TO-DATE
+> Task :app:processDebugUnitTestJavaRes UP-TO-DATE
+
+> Task :app:testDebugUnitTest
+Picked up JAVA_TOOL_OPTIONS: -Duser.home=/opt/bert-widget-qa
+
+> Task :app:preDebugAndroidTestBuild SKIPPED
+> Task :app:generateDebugAndroidTestLintModel
+> Task :app:extractProguardFiles UP-TO-DATE
+> Task :app:generateDebugLintReportModel
+> Task :app:generateDebugUnitTestLintModel

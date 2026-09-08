@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.BERTUiTest" tests="12" skipped="0" failures="0" errors="0" timestamp="2026-09-08T19:07:12.888Z" hostname="ubuntu-16gb-hel1-1" time="12.884">
+  <properties/>
+  <testcase name="coldOfflineHomeKeepsAllDestinationsUsable" classname="global.bert.widget.BERTUiTest" time="5.678"/>
+  <testcase name="longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview" classname="global.bert.widget.BERTUiTest" time="1.223"/>
+  <testcase name="savedStateRestoresDestinationSectionAndUnfinishedCaption" classname="global.bert.widget.BERTUiTest" time="0.814"/>
+  <testcase name="captionLimitCountsVisibleCharactersIncludingEmoji" classname="global.bert.widget.BERTUiTest" time="0.915"/>
+  <testcase name="oversizedPasteExplainsRejectionAndPreservesTheDraftAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.507"/>
+  <testcase name="createSaveOpenAndDeleteIsACompleteOfflineJourney" classname="global.bert.widget.BERTUiTest" time="1.118"/>
+  <testcase name="longDispatchCanBeReadWithoutLosingNavigation" classname="global.bert.widget.BERTUiTest" time="0.234"/>
+  <testcase name="captionDraftAndPaletteSurviveSwitchingSections" classname="global.bert.widget.BERTUiTest" time="0.34"/>
+  <testcase name="sectionsStayReachableAfterScrollingAtLargeText" classname="global.bert.widget.BERTUiTest" time="0.42"/>
+  <testcase name="compactScreenAtLargeTextKeepsControlsReadable" classname="global.bert.widget.BERTUiTest" time="0.694"/>
+  <testcase name="activityAndCaptionCreationRender" classname="global.bert.widget.BERTUiTest" time="0.527"/>
+  <testcase name="largeTextHomeRemainsNavigable" classname="global.bert.widget.BERTUiTest" time="0.352"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

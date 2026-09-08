@@ -1,0 +1,14 @@
+{
+  "source_sha": "41a9eb54343352876b02229bd7019ce7b7fefbfd",
+  "working_tree_dirty_during_gate": false,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh",
+  "exit_code": 143,
+  "gate_result": "INCOMPLETE: process terminated after JVM tests, before lint/build completion. 50 Android tests and 8 Node tests passed; no complete development or preview gate. Cause of termination not established.",
+  "measurement_note": "The notice node is merged with its input field. Its top/bottom values include both; label typography comes from the unmerged Text node.",
+  "sha256": {
+    "caption-input-measurements.json": "f1442c7776f1179271f2d60c9e08af257db05917592dcc82ac52d26db9e02918",
+    "TEST-global.bert.widget.BERTUiTest.xml": "ba7c9d3be41cbc2ba5ec3e9a894d9c81b3b869d0b9de6bb13805deaacc6c96df",
+    "caption-paste-large.png": "ac156773137233158353dc1395b9681c42f5ac4c4b1299d784a3b9f0d61338a4",
+    "caption-final-preview-gate.txt": "c0d54db19f659302426922665d1f88f0add9fb11848c2b17444592319c00efdf"
+  }
+}
