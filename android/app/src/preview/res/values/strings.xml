@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">BERT Preview</string>
+    <string name="widget_compact_name">BERT Preview · Compact</string>
+    <string name="widget_market_name">BERT Preview · Market</string>
+</resources>

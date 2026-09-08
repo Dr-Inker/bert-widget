@@ -47,6 +47,15 @@ android {
             buildConfigField("String", "BERT_QUOTE_URL", "\"http://10.0.2.2:8787/v1/bert/quote\"")
             buildConfigField("String", "BERT_ACTIVITY_URL", "\"http://10.0.2.2:8787/v1/bert/activity\"")
         }
+        create("preview") {
+            isDebuggable = true
+            signingConfig = signingConfigs.getByName("debug")
+            applicationIdSuffix = ".preview"
+            versionNameSuffix = "-preview"
+            matchingFallbacks += "debug"
+            // Keep default public HTTPS endpoints and main's cleartext restriction.
+            // Debug's emulator fixtures and test activity manifest are not included.
+        }
         release {
             isMinifyEnabled = false
             signingConfig = signingConfigs.getByName("release")

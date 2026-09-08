@@ -44,6 +44,17 @@ Editable wallpaper compositions and source provenance live in [`../design/theme-
 
 The resulting development APK is written to `app/build/outputs/apk/debug/app-debug.apk`. It is debug-signed and configured for an emulator that can reach the quote service at `10.0.2.2:8787`; it is not a production release artifact.
 
+## Phone review preview
+
+```bash
+# From the repository root
+tools/check-android-preview.sh
+```
+
+This runs the development gate, then `lintPreview`, `assemblePreview` and inspection of the packaged manifest, resources, DEX endpoint strings and signature. The local artifact is `android/app/build/outputs/apk/preview/app-preview.apk`, labelled **BERT Preview**, package `global.bert.widget.preview`. It uses the public HTTPS quote/activity sources and an Android debug signature. Its application ID, caption provider and widget labels are distinct, allowing it to coexist with the published app and keep its own saved cards/holdings. Wallpaper actions still affect the phone's Home/Lock surfaces when explicitly used.
+
+`preview-inspection.json` alongside the APK records its hash and package checks. The gate does not install, publish or establish device behavior. After installation on a review device, follow the journeys in [the device review contract](../docs/DEVICE-REVIEW.md); record the APK hash and device details with captures/results. The emulator fixture runner remains specific to the debug package.
+
 ## Release
 
 Release builds use the explicit production endpoint `https://berthalla.io/widget/api/quote`. Signing credentials are intentionally kept outside Git. See [`../DEPLOYMENT.md`](../DEPLOYMENT.md) before producing or replacing a release APK.
