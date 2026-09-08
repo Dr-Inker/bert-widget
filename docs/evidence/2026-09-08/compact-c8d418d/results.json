@@ -1,0 +1,15 @@
+{
+  "sourceSha": "c8d418d58974b593c7643bef6493abe10ca009b1",
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.BERTUiTest.compactScreenAtLargeTextKeepsControlsReadable' --console=plain",
+  "outcome": "focused test passed but captures expose mid-word control wrapping; the next revision strengthens this inadequate assertion",
+  "environment": "Robolectric API35; 320x640dp; xhdpi; linear 2x font scale; host app-shell render",
+  "unverified": "No native journey or complete application gate at this SHA. No device/font raster/performance equivalence.",
+  "sha256": {
+    "compact-baseline.txt": "7eafa662a800a3cdbb0b9eb4676628b121afc2b359e8fa5fe4374bccc9d77a00",
+    "compact-home-large.png": "744167fb9fd24610986737bd29e44b7154478a39a745131e9c19186092b73f5d",
+    "compact-create-large.png": "1e78972703e93ac08935650d519fd41f3acf3d76f9438b7f6a438641c9957503",
+    "compact-widgets-large.png": "8a46d3a231d58072320e36a2f17e1a22a389e3ae169768b7ad059751a7e9fa83",
+    "compact-measurements.json": "7853b68602607491bf9d6a4bde4190525f9d527bdeca43e782a7adbb7b49038d",
+    "compact-holdings-large.png": "46e71103d824ada7fc3ce18071b1a4f5d5553235b29350124cfb4e1c3de9137c"
+  }
+}

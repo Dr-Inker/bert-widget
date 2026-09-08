@@ -312,7 +312,7 @@ private val LocalWidgetPalette = compositionLocalOf {
 }
 
 private val Green = Color(0xFF45E09A)
-private val Red = Color(0xFFFF6B7A)
+internal val Red = Color(0xFFFF6B7A)
 private val Amber = Color(0xFFFFC857)
 
 class BERTWidgetReceiver : GlanceAppWidgetReceiver() {

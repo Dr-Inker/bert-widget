@@ -1,0 +1,106 @@
+[
+  {
+    "label": "Home",
+    "lineCount": 1,
+    "widthPx": 148,
+    "heightPx": 90,
+    "maxLineRightPx": 147,
+    "lastLineBottomPx": 90
+  },
+  {
+    "label": "Explore",
+    "lineCount": 1,
+    "widthPx": 187,
+    "heightPx": 90,
+    "maxLineRightPx": 185.51953,
+    "lastLineBottomPx": 90
+  },
+  {
+    "label": "Create",
+    "lineCount": 1,
+    "widthPx": 164,
+    "heightPx": 90,
+    "maxLineRightPx": 162.51953,
+    "lastLineBottomPx": 90
+  },
+  {
+    "label": "Tools",
+    "lineCount": 1,
+    "widthPx": 138,
+    "heightPx": 90,
+    "maxLineRightPx": 136.48828,
+    "lastLineBottomPx": 90
+  },
+  {
+    "label": "Art",
+    "lineCount": 1,
+    "widthPx": 83,
+    "heightPx": 84,
+    "maxLineRightPx": 81.36719,
+    "lastLineBottomPx": 84
+  },
+  {
+    "label": "Saved",
+    "lineCount": 1,
+    "widthPx": 163,
+    "heightPx": 84,
+    "maxLineRightPx": 161.23438,
+    "lastLineBottomPx": 84
+  },
+  {
+    "label": "Personalize",
+    "lineCount": 1,
+    "widthPx": 315,
+    "heightPx": 84,
+    "maxLineRightPx": 313.20703,
+    "lastLineBottomPx": 84
+  },
+  {
+    "label": "Apply both",
+    "lineCount": 2,
+    "widthPx": 138,
+    "heightPx": 150,
+    "maxLineRightPx": 133.38126,
+    "lastLineBottomPx": 150
+  },
+  {
+    "label": "Home only",
+    "lineCount": 3,
+    "widthPx": 138,
+    "heightPx": 225,
+    "maxLineRightPx": 111.80001,
+    "lastLineBottomPx": 225
+  },
+  {
+    "label": "Lock screen only",
+    "lineCount": 2,
+    "widthPx": 392,
+    "heightPx": 150,
+    "maxLineRightPx": 285.5195,
+    "lastLineBottomPx": 150
+  },
+  {
+    "label": "Compact",
+    "lineCount": 2,
+    "widthPx": 138,
+    "heightPx": 150,
+    "maxLineRightPx": 108.8,
+    "lastLineBottomPx": 150
+  },
+  {
+    "label": "Market",
+    "lineCount": 2,
+    "widthPx": 138,
+    "heightPx": 150,
+    "maxLineRightPx": 122.20001,
+    "lastLineBottomPx": 150
+  },
+  {
+    "label": "Save holdings",
+    "lineCount": 1,
+    "widthPx": 331,
+    "heightPx": 75,
+    "maxLineRightPx": 329.09296,
+    "lastLineBottomPx": 75
+  }
+]
