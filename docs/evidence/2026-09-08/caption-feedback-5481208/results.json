@@ -1,0 +1,14 @@
+{
+  "source_sha": "5481208e5a0c6dd505691646ea1df91e367502e6",
+  "working_tree_dirty_during_gate": false,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android-preview.sh",
+  "gate_result": "PASS: 50 Android JVM tests, 8 Node tests; both lint/build variants and preview inspection completed.",
+  "preview_apk_sha256": "fe15db776ec31b7b295b20b7da336b2c8bd03a4ca960c238c61349f8d27e99fb",
+  "visual_finding": "The 320x640dp / 2x oversized-paste notice continues below the content viewport into navigation. Label glyph bounds alone do not verify visibility in its scroll viewport; the next revision shortens the copy and asserts screen bounds.",
+  "sha256": {
+    "TEST-global.bert.widget.BERTUiTest.xml": "1153f1b27cd901c1171b22d9e5d967f7c6fa8bb121907fb751d85b3ab5834164",
+    "caption-paste-large.png": "853ff7ab8af316e4facfe6c038855bbf8af66276a00baae8ad7f52af4bbd56d9",
+    "caption-limit.png": "d7d8d380d814a1f75d6562323bcd39edf13a3712e65591f657a39a8252bbfcee",
+    "caption-preview-gate.txt": "b4f821ee57bdfa9661c2bcd6f12663089d1b6ec03b51d6b04cebe1bb9d3c363c"
+  }
+}

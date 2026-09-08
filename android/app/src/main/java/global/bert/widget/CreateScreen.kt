@@ -92,7 +92,7 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
         value = caption,
         onValueChange = {
             if (it.length > MAX_CAPTION_DRAFT_UNITS) {
-                inputNotice = "That passage is too long. Paste a shorter part. Your current caption is unchanged."
+                inputNotice = "Paste a shorter passage. Your caption is unchanged."
             } else {
                 caption = normalizeCaption(it)
                 inputNotice = null
