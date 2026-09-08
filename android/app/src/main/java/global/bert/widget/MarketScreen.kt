@@ -69,7 +69,7 @@ internal fun MarketScreen(state: QuoteState, history: List<BERTPriceSample>, now
                 Text(if (refreshing) "Refreshing…" else "Refresh quote")
             }
             OutlinedButton(onClick = {
-                openBERTLink(context, BERTQuoteRepository.requireValidDexScreenerPairUrl(quote.pairUrl))
+                openBERTMarketLink(context, quote.pairUrl)
             }, modifier = Modifier.fillMaxWidth()) { Text("Open DEX Screener ↗", color = Cream) }
         }
     }

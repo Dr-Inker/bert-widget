@@ -32,7 +32,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 internal enum class BERTDestination(val label: String, val icon: String) {
-    HOME("Home", "⌂"), MARKET("Market", "↗"), HOLDINGS("Holdings", "◎"), STUDIO("Studio", "✦")
+    HOME("Home", "⌂"), EXPLORE("Explore", "↗"), CREATE("Create", "✦"), TOOLS("Tools", "◎")
 }
 
 class MainActivity : ComponentActivity() {
@@ -52,6 +52,7 @@ class MainActivity : ComponentActivity() {
 private fun BERTScreen(lifecycle: Lifecycle) {
     val context = LocalContext.current
     val repository = remember { BERTQuoteRepository(context.applicationContext) }
+    val activityRepository = remember { BERTActivityRepository(context.applicationContext) }
     val historyStore = remember { BERTPriceHistory(context.applicationContext) }
     val holdingsStore = remember { BERTHoldingsStore(context.applicationContext) }
     val scope = rememberCoroutineScope()
@@ -59,8 +60,12 @@ private fun BERTScreen(lifecycle: Lifecycle) {
     var history by remember { mutableStateOf(historyStore.load()) }
     var position by remember { mutableStateOf(holdingsStore.loadPosition()) }
     var refreshing by remember { mutableStateOf(false) }
+    var activityState by remember { mutableStateOf<ActivityState>(activityRepository.load()?.let { ActivityState.Available(it) } ?: ActivityState.Loading) }
+    var activityRefreshing by remember { mutableStateOf(false) }
     var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
     var destination by rememberSaveable { mutableStateOf(BERTDestination.HOME) }
+    var toolsTab by rememberSaveable { mutableStateOf("Market") }
+    var createTab by rememberSaveable { mutableStateOf("Art") }
     val savedScreens = rememberSaveableStateHolder()
 
     suspend fun updateWidgets() {
@@ -87,9 +92,25 @@ private fun BERTScreen(lifecycle: Lifecycle) {
         }
     }
 
+    suspend fun refreshActivity() {
+        if (activityRefreshing) return
+        activityRefreshing = true
+        try {
+            activityState = ActivityState.Available(activityRepository.refresh())
+        } catch (cancelled: CancellationException) {
+            throw cancelled
+        } catch (_: Exception) {
+            activityState = activityRepository.load()?.let { ActivityState.Available(it, true) } ?: ActivityState.Unavailable
+        } finally {
+            now = System.currentTimeMillis()
+            activityRefreshing = false
+        }
+    }
+
     LaunchedEffect(lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             launch { while (true) { now = System.currentTimeMillis(); delay(15_000) } }
+            launch { while (true) { refreshActivity(); delay(5 * 60_000) } }
             while (true) { refresh(); delay(60_000) }
         }
     }
@@ -115,7 +136,12 @@ private fun BERTScreen(lifecycle: Lifecycle) {
             }
         },
     ) { padding ->
-        savedScreens.SaveableStateProvider(destination.name) {
+        val screenKey = when (destination) {
+            BERTDestination.TOOLS -> "TOOLS-$toolsTab"
+            BERTDestination.CREATE -> "CREATE-$createTab"
+            else -> destination.name
+        }
+        savedScreens.SaveableStateProvider(screenKey) {
             Column(
                 modifier = Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)
                     .imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp, vertical = 16.dp),
@@ -123,22 +149,39 @@ private fun BERTScreen(lifecycle: Lifecycle) {
             ) {
                 AppHeader(destination)
                 when (destination) {
-                    BERTDestination.HOME -> HomeScreen(state, now) { destination = it }
-                    BERTDestination.MARKET -> MarketScreen(state, history, now, refreshing) { scope.launch { refresh() } }
-                    BERTDestination.HOLDINGS -> HoldingsScreen(position, state, now) {
-                        holdingsStore.savePosition(it)
-                        position = it
-                        scope.launch { updateWidgets() }
-                    }
-                    BERTDestination.STUDIO -> {
-                        Text("A little BERT. Everywhere.", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
-                        Text("Widgets for a quick glance. Wallpapers for the rest of your day.", color = Muted, fontSize = 14.sp)
-                        WidgetSetup(context)
-                        ThemeStudio()
-                    }
+                    BERTDestination.HOME -> HomeScreen(activityState, now, activityRefreshing, { scope.launch { refreshActivity() } }) { destination = it }
+                    BERTDestination.EXPLORE -> ExploreScreen()
+                    BERTDestination.CREATE -> CreateScreen(createTab) { createTab = it }
+                    BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, toolsTab, { toolsTab = it },
+                        refresh = { scope.launch { refresh() } },
+                        savePosition = {
+                            holdingsStore.savePosition(it)
+                            position = it
+                            scope.launch { updateWidgets() }
+                        },
+                    )
                 }
                 Text("BERT · v${BuildConfig.VERSION_NAME}", color = Muted, fontSize = 12.sp, modifier = Modifier.padding(vertical = 8.dp))
             }
+        }
+    }
+}
+
+@Composable
+private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, position: BERTPosition, now: Long,
+                        refreshing: Boolean, tab: String, selectTab: (String) -> Unit,
+                        refresh: () -> Unit, savePosition: (BERTPosition) -> Unit) {
+    SectionTabs(listOf("Market", "Holdings"), tab, selectTab)
+    if (tab == "Market") MarketScreen(state, history, now, refreshing, refresh)
+    else HoldingsScreen(position, state, now, savePosition)
+}
+
+@Composable
+internal fun SectionTabs(tabs: List<String>, selected: String, select: (String) -> Unit) {
+    SingleChoiceSegmentedButtonRow(Modifier.fillMaxWidth()) {
+        tabs.forEachIndexed { index, tab ->
+            SegmentedButton(selected = tab == selected, onClick = { select(tab) },
+                shape = SegmentedButtonDefaults.itemShape(index, tabs.size)) { Text(tab) }
         }
     }
 }

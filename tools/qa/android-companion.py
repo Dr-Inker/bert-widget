@@ -9,6 +9,8 @@ import os
 from pathlib import Path
 import re
 import subprocess
+import struct
+from urllib.parse import urlsplit
 import sys
 import threading
 import time
@@ -49,6 +51,9 @@ def check(name, condition):
 
 class QuoteServer(http.server.BaseHTTPRequestHandler):
     online = True
+    activity_online = True
+    activity_expired = False
+    activity_stale = False
     protocol_version = 'HTTP/1.1'
 
     def do_CONNECT(self):
@@ -68,8 +73,22 @@ class QuoteServer(http.server.BaseHTTPRequestHandler):
                        'observedAt': datetime.datetime.now(datetime.timezone.utc).isoformat()},
             'meta': {'freshness': 'fresh'},
         }
-        body = json.dumps(quote if self.online else {'error': 'fixture_offline'}).encode()
-        self.send_response(200 if self.online else 503)
+        path = urlsplit(self.path).path
+        if path == '/v1/bert/activity':
+            end = datetime.datetime.now(datetime.timezone.utc) + datetime.timedelta(days=-1 if self.activity_expired else 3)
+            payload = {
+                'updated_at': int(time.time()) - (2400 if self.activity_stale else 0),
+                'mood': 'curious', 'latest_post': 'QA fixture: Bert is exploring town.',
+                'flappy': {'name': 'QA fixture tournament', 'status': 'live', 'ends_at': end.isoformat()},
+            }
+            online = self.activity_online
+        elif path == '/v1/bert/quote':
+            payload, online = quote, self.online
+        else:
+            self.send_error(404)
+            return
+        body = json.dumps(payload if online else {'error': 'fixture_offline'}).encode()
+        self.send_response(200 if online else 503)
         self.send_header('Content-Type', 'application/json')
         self.send_header('Content-Length', str(len(body)))
         self.end_headers()
@@ -168,7 +187,7 @@ try:
     shell('input', 'keyevent', 'KEYCODE_WAKEUP')
     shell('wm', 'dismiss-keyguard')
     print('Android ready; installing test APK.', flush=True)
-    subprocess.run(adb + ['uninstall', package], capture_output=True, timeout=90)
+    # Replace in place; avoid the uninstall path that previously hung this software AVD.
     if args.baseline_apk:
         run(adb + ['install', '-r', args.baseline_apk])
         launch()
@@ -177,13 +196,19 @@ try:
         checks.append({'check': 'baseline first viewport', 'price_visible': '$0.005' in baseline, 'theme_visible': 'BERT THEME STUDIO' in baseline})
         run(adb + ['uninstall', package])
     print('Installing candidate.', flush=True)
-    run(adb + ['install', '-r', args.apk])
+    run(adb + ['install', '--no-streaming', '-r', args.apk])
+    shell('pm', 'clear', package)
     prefs('bert_theme', {'active_theme': 'woofhub-night'})
     launch()
-    wait_text('MARKET AT A GLANCE')
+    wait_text('QA fixture: Bert is exploring town.')
     print('Capturing Home.', flush=True)
     home = screenshot('after-home')
-    check('BERT home and all destinations visible', all(x in home for x in ['WELCOME TO BERT', 'Market', 'Holdings', 'Studio']))
+    check('BERT activity and general destinations visible', all(x in home for x in ['QA fixture: Bert is exploring town.', 'Home', 'Explore', 'Create', 'Tools']))
+    check('Home activity is independent of a market panel', '$0.005' not in home)
+    tap('Explore')
+    explore = screenshot('after-explore')
+    check('Explore has direct game and music entries', 'Flappy Bert' in explore and 'Bert Music' in explore)
+    tap('Tools')
     tap('Market')
     wait_text('$0.005')
     market = screenshot('after-market-collecting')
@@ -205,6 +230,7 @@ try:
     check('Known position value and gain match independent fixture', '$1,250.00' in holdings and '$250.00' in holdings and '+25.00%' in holdings)
     shell('am', 'force-stop', package)
     launch()
+    tap('Tools')
     tap('Holdings')
     check('Position survives restart', '$1,250.00' in screenshot('after-holdings-restart'))
     QuoteServer.online = False
@@ -216,6 +242,7 @@ try:
     now = int(time.time() * 1000)
     prefs('bert_price_history', {'samples': json.dumps([{'t': now - i * 15 * 60_000, 'p': p} for i, p in [(5, .0045), (4, .0048), (3, .0046), (2, .0051), (1, .005)]])})
     launch()
+    tap('Tools')
     tap('Market')
     wait_text('observations')
     screenshot('after-market-history')
@@ -224,7 +251,8 @@ try:
     root = tree()[0]
     selected = [n for n in root.iter('node') if n.attrib.get('selected') == 'true']
     check('One-hour chart range is selected', any('1H' in ET.tostring(n).decode() for n in selected))
-    tap('Studio')
+    tap('Create')
+    tap('Personalize')
     studio = screenshot('after-studio')
     check('Widget setup is reachable', 'HOME-SCREEN WIDGETS' in studio and 'Compact' in studio)
     scroll()
@@ -245,19 +273,68 @@ try:
     tap('Use palette on widgets')
     check('Explicit palette action persists the chosen theme', 'mayor-purple' in shell('run-as', package, 'cat', 'shared_prefs/bert_theme.xml'))
     shell('settings', 'put', 'system', 'font_scale', '1.5')
+    tap('Tools')
     tap('Market')
     large = screenshot('after-market-large-text')
-    check('Large text keeps market price and navigation available', '$0.005' in large and 'Holdings' in large and 'Studio' in large)
+    check('Large text keeps market price and navigation available', '$0.005' in large and 'Explore' in large and 'Create' in large and 'Tools' in large)
     shell('settings', 'put', 'system', 'font_scale', '1.0')
     shell('am', 'force-stop', package)
     prefs('bert_quote', {})
     launch()
-    wait_text('Market unavailable')
+    QuoteServer.activity_online = False
+    resume()
+    wait_text('Saved update')
     unavailable = screenshot('after-home-unavailable')
-    check('Home remains usable with no quote', 'Studio' in unavailable and 'MARKET ONLINE' not in unavailable)
+    check('Home remains usable without either source', 'Create' in unavailable and 'Saved update' in unavailable and 'MARKET ONLINE' not in unavailable)
+    tap('Tools')
     tap('Holdings')
     no_quote = screenshot('after-holdings-no-quote')
     check('Missing quote never shows a zero position value', 'A quote is needed' in no_quote and '$0.00' not in no_quote)
+    tap('Home')
+    QuoteServer.activity_online = True
+    QuoteServer.activity_expired = True
+    tap('Refresh')
+    for _ in range(5):
+        if 'TOURNAMENT ENDED' in tree()[1].decode(): break
+        scroll()
+    expired = screenshot('after-expired-event')
+    check('Expired event cannot claim open', 'TOURNAMENT ENDED' in expired and 'TOURNAMENT OPEN' not in expired)
+    shell('am', 'force-stop', package)
+    QuoteServer.activity_expired = False
+    QuoteServer.activity_stale = True
+    launch()
+    wait_text('Saved update')
+    for _ in range(5):
+        if 'STATUS UNCONFIRMED' in tree()[1].decode(): break
+        scroll()
+    stale = screenshot('after-stale-event')
+    check('Stale source cannot claim open', 'STATUS UNCONFIRMED' in stale and 'TOURNAMENT OPEN' not in stale)
+    tap('Create')
+    # Personalize state persists, so return to Art explicitly.
+    for _ in range(5): shell('input', 'swipe', '360', '360', '360', '1000', '350')
+    tap('Art')
+    for _ in range(5):
+        if 'Share caption card' in tree()[1].decode(): break
+        scroll()
+    wait_text('Share caption card')
+    screenshot('after-caption-preview')
+    tap('Share caption card')
+    screenshot('after-caption-share-sheet')
+    files = shell('run-as', package, 'ls', 'cache/caption-cards').splitlines()
+    files = [name for name in files if re.fullmatch(r'bert-[a-f0-9-]+\.png', name)]
+    check('Share action creates an image', len(files) == 1)
+    exported = run(adb + ['exec-out', 'run-as', package, 'cat', 'cache/caption-cards/' + files[0]])
+    check('Export is a 1080 square PNG', exported[:8] == b'\x89PNG\r\n\x1a\n' and struct.unpack('>II', exported[16:24]) == (1080, 1080))
+    (out / 'caption-export.png').write_bytes(exported)
+    # Opening a chooser is not proof that a recipient received an image.
+    shell('input', 'keyevent', 'KEYCODE_BACK')
+    shell('am', 'force-stop', package)
+    prefs('bert_activity', {})
+    QuoteServer.activity_online = False
+    launch()
+    wait_text('Bert’s update couldn’t load.')
+    empty = screenshot('after-home-no-activity')
+    check('Cold offline Home retains navigation', all(label in empty for label in ['Explore', 'Create', 'Tools']))
     check('No native app crash', 'FATAL EXCEPTION' not in shell('logcat', '-d', '-s', 'AndroidRuntime:E'))
     completed = True
     print('Native UI checks complete.', flush=True)

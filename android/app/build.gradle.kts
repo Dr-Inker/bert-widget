@@ -14,6 +14,7 @@ android {
         versionCode = 14
         versionName = "0.4.0"
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
+        buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
     }
 
     val releaseKeystore = file(providers.gradleProperty("BERT_RELEASE_KEYSTORE").getOrElse("/etc/bert-widget/bert-widget-release.jks"))
@@ -44,6 +45,7 @@ android {
     buildTypes {
         debug {
             buildConfigField("String", "BERT_QUOTE_URL", "\"http://10.0.2.2:8787/v1/bert/quote\"")
+            buildConfigField("String", "BERT_ACTIVITY_URL", "\"http://10.0.2.2:8787/v1/bert/activity\"")
         }
         release {
             isMinifyEnabled = false
@@ -70,4 +72,5 @@ dependencies {
     implementation("androidx.glance:glance-appwidget:1.1.1")
     implementation("androidx.work:work-runtime:2.11.2")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")
 }

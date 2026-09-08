@@ -165,3 +165,7 @@ Follow-up priorities and evidence live in `docs/CRITIQUE-2026-09-08.md`; the nex
 The [general-app research](docs/RESEARCH-2026-09-08.md) compares Nintendo Today!, LEGO Play and Finch patterns, inventories existing BERT experiences, and recommends prototyping Home / Explore / Create / Tools. This navigation is a recommendation, not an implemented or accepted decision.
 
 Public inspection found an existing `https://berthalla.io/status.json` source for Bert's mood, latest dispatch and Flappy tournament; the observed payload has a refresh timestamp but no post ID, publication date, permalink or archive. Web Studio also exposes a read-only status endpoint. Public retrieval does not establish supported native APIs or working user journeys. Use the [timestamped evidence](docs/evidence/2026-09-08/ecosystem-research.json) and the report's readiness distinctions before choosing integrations. No app source or release changed during research.
+
+### Accepted first implementation — 2026-09-08
+
+The owner accepted the direction after research. The next Android source iteration implements Home / Explore / Create / Tools, a bounded and cached activity adapter, direct curated experience links, and a local caption-card creator alongside existing personalization. It uses standard Android link intents; Custom Tabs, a full updates archive, non-price widgets, and an interactive companion remain follow-ups. See `docs/NEXT-SESSION.md` for the actual source SHA and verification state; the published release remains separate.
