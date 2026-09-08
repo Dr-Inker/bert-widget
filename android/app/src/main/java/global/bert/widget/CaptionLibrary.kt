@@ -9,6 +9,8 @@ import java.util.UUID
 
 internal data class SavedCaption(val id: String, val caption: String, val palette: Int, val savedAt: Long)
 
+internal class CaptionCollectionFullException : IllegalStateException("Your collection is full. Remove a card before saving another.")
+
 /** Immutable PNG plus metadata, published by one same-directory rename after both writes succeed. */
 internal class CaptionLibrary(context: Context) {
     private val root = File(context.filesDir, "caption-library")
@@ -35,7 +37,7 @@ internal class CaptionLibrary(context: Context) {
         require(card.bitmap.width == 1080 && card.bitmap.height == 1080)
         check(root.mkdirs() || root.isDirectory)
         // A full collection never silently evicts someone's work.
-        check(root.listFiles().orEmpty().count { validId.matches(it.name) } < LIMIT) { "Your collection is full. Remove a card before saving another." }
+        if (root.listFiles().orEmpty().count { validId.matches(it.name) } >= LIMIT) throw CaptionCollectionFullException()
         val entry = SavedCaption(UUID.randomUUID().toString(), card.caption, card.palette, System.currentTimeMillis())
         val temporary = File(root, ".pending-${entry.id}")
         check(temporary.mkdir())

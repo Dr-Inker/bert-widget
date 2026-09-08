@@ -10,6 +10,8 @@ Iteration 6 is verified: large-text wallpaper/widget actions stack without split
 
 Iteration 7 is verified: ordinary over-limit captions remain editable with clear shortening guidance, Unicode character counting agrees with saved-card validation, and oversized pastes receive visible feedback without losing the draft. The notice fits y=370–498 dp inside a y=217–498 dp viewport at 320×640 dp / 2x text. An earlier attempt ended with exit 143 after tests; the final full gate passed at the source above.
 
+Iteration 8 candidate is in progress: baseline `2f8e976` reproduces missing specific collection-full feedback while storage preservation passes. The candidate adds direct recovery, a count above the collection and compact feedback visibility checks. No new full gate is claimed yet.
+
 ## Owner direction
 
 This is a **general BERT app**. Widgets are one feature, alongside market tools, personal holdings, themes, and future BERT experiences. The current work is Android source development. Published v0.4.0 and the unshipped iOS scaffold retain their existing status.

@@ -2,6 +2,8 @@ package global.bert.widget
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -48,6 +50,7 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
     val library = remember { CaptionLibrary(context.applicationContext) }
     var sharing by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
+    var collectionFull by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var inputNotice by rememberSaveable { mutableStateOf<String?>(null) }
     val characterCount = remember(caption) { captionCharacterCount(caption) }
@@ -114,14 +117,24 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
         palette = listOf("Midnight", "Cream", "Lilac").indexOf(it)
     }
 
-    Button(enabled = ready != null && text.isNotEmpty() && !saving && !sharing && !saved,
+    if (collectionFull) {
+        val feedback = remember { BringIntoViewRequester() }
+        LaunchedEffect(Unit) { feedback.bringIntoView() }
+        Column(Modifier.fillMaxWidth().bringIntoViewRequester(feedback), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Collection full · ${CaptionLibrary.LIMIT} cards", color = Amber, fontSize = 16.sp, fontWeight = FontWeight.Bold,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            Text("Remove one saved card to make room.", color = Muted, fontSize = 14.sp)
+            Button(onClick = openSaved, modifier = Modifier.fillMaxWidth()) { Text("Manage collection") }
+        }
+    } else Button(enabled = ready != null && text.isNotEmpty() && !saving && !sharing && !saved,
         onClick = {
             val snapshot = ready ?: return@Button
             saving = true; error = null
             scope.launch {
                 try { withContext(Dispatchers.IO) { library.save(snapshot) }; saved = true }
                 catch (cancelled: CancellationException) { throw cancelled }
-                catch (_: Exception) { error = "The card couldn’t be saved. Check space on your device or remove a card if your collection is full." }
+                catch (_: CaptionCollectionFullException) { collectionFull = true }
+                catch (_: Exception) { error = "The card couldn’t be saved. Check your device’s free space and try again." }
                 finally { saving = false }
             }
         }, modifier = Modifier.fillMaxWidth()) { Text(if (saving) "Saving…" else if (saved) "Saved to your collection" else "Save card") }

@@ -162,6 +162,9 @@ class BERTUiTest {
         compose.onNodeWithText("Share caption card").performScrollTo().assertIsEnabled()
         compose.onNodeWithText("Manage collection").performScrollTo().performClick()
         compose.waitUntil(20_000) { compose.onAllNodesWithText("Saved card 1").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithText("40/40 cards · stored on this device").assertIsDisplayed()
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("saved-card-thumbnail", useUnmergedTree = true).fetchSemanticsNodes().size == 40 }
+        capture("collection-at-capacity")
         compose.onNodeWithText("Saved card 1").performScrollTo().performClick()
         compose.onNodeWithText("Delete card").performScrollTo().performClick()
         compose.onNodeWithText("Keep card").performClick()
@@ -180,6 +183,34 @@ class BERTUiTest {
         assertEquals(40, cards.size)
         assertEquals(existing.drop(1).toSet(), cards.filter { it.caption != "A new memory for the pack." }.toSet())
         assertEquals(2, cards.single { it.caption == "A new memory for the pack." }.palette)
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun fullCollectionAutomaticallyRevealsRecoveryAtLargeText() {
+        val store = CaptionLibrary(compose.activity)
+        val card = renderCaption(compose.activity, "A saved memory.", 0)
+        try { repeat(40) { store.save(card) } } finally { card.bitmap.recycle() }
+        app(fontScale = 2f)
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        waitForPreview()
+        compose.onNodeWithText("Save card").performScrollTo().performClick()
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Manage collection").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitForIdle()
+        capture("collection-full-large")
+        val measurements = org.json.JSONArray()
+        for (label in listOf("Collection full · 40 cards", "Remove one saved card to make room.", "Manage collection")) {
+            val node = compose.onNodeWithText(label, useUnmergedTree = true)
+            val bounds = node.getUnclippedBoundsInRoot()
+            val viewport = node.onAncestors().filter(hasScrollAction()).onFirst().getBoundsInRoot()
+            assertTrue("$label must appear completely without an extra scroll", bounds.top >= viewport.top && bounds.bottom <= viewport.bottom)
+            measurements.put(measureLabel(label).put("topDp", bounds.top.value).put("bottomDp", bounds.bottom.value)
+                .put("viewportTopDp", viewport.top.value).put("viewportBottomDp", viewport.bottom.value))
+        }
+        compose.onNode(hasText("Manage collection") and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
+        compose.onNodeWithText("Share caption card").performScrollTo().assertIsEnabled()
+        assertEquals(40, store.list().size)
+        File("build/outputs/host-ui/collection-capacity-measurements.json").writeText(measurements.toString(2))
     }
 
     @Test fun longCaptionPasteStaysEditableAndCannotSaveThePreviousPreview() {

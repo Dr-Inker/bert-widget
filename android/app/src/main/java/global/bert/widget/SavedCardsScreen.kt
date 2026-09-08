@@ -70,6 +70,7 @@ internal fun SavedCardsScreen(makeCard: () -> Unit) {
         TextButton(onClick = { removing = true }, enabled = !busy) { Text("Delete card", color = Muted) }
     } else {
         val cards = entries
+        if (cards != null) Text("${cards.size}/${CaptionLibrary.LIMIT} cards · stored on this device", color = Muted, fontSize = 12.sp)
         when {
             cards == null && error == null -> LinearProgressIndicator(Modifier.fillMaxWidth())
             cards != null && cards.isEmpty() -> {
@@ -103,7 +104,6 @@ internal fun SavedCardsScreen(makeCard: () -> Unit) {
                 }
             }
         }
-        Text("${cards?.size ?: 0}/${CaptionLibrary.LIMIT} cards · stored on this device", color = Muted, fontSize = 12.sp)
         Text("Share cards to keep a copy elsewhere. Uninstalling or clearing app data removes this collection.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
     }
     error?.let { message ->

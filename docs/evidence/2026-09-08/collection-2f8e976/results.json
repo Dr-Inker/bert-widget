@@ -1,0 +1,16 @@
+{
+  "source_sha": "2f8e9760fc7fcdd6cee3bf99b0e774ff703d00ef",
+  "clean_tree_at_start": true,
+  "command": "GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa android/gradlew -p android :app:testDebugUnitTest --tests 'global.bert.widget.CaptionLibraryTest.fullCollectionPreservesEveryFileAndRecoversAfterExplicitDeletion' --tests 'global.bert.widget.BERTUiTest.fullCollectionExplainsTheLimitAndKeepsTheDraftThroughRecovery' --console=plain",
+  "exit_code": 1,
+  "tests": 2,
+  "failures": 1,
+  "result": "UI regression reproduced: precise collection-full feedback is absent; storage preservation/recovery test passes.",
+  "screenshot_provenance": "Actual production Compose shell under Robolectric API 35, 360x800dp, font scale 1.0; 40 seeded cards; no native keyboard or OS lifecycle. Capture immediately after failed 41st save; generic error below viewport.",
+  "sha256": {
+    "TEST-global.bert.widget.CaptionLibraryTest.xml": "9e817527b34db8835476cc209d2a13af17b89e4e8b55218e0ae1c83e316c10d8",
+    "collection-full.png": "4a125ca0ddeb144a01776b7d166dddea3a7160b0c3daa322b2d0a5ad6d3b267d",
+    "TEST-global.bert.widget.BERTUiTest.xml": "e5093b3dbc26ecbe5bf0e46d00b05fc64d18f3d97d1eeda7ca509372be909440",
+    "focused-gate.txt": "d6f09f4df2af852323bc05fbbe1c1f8dd337fe54b0ad56174be506f0d150ac3d"
+  }
+}
