@@ -1,0 +1,26 @@
+{
+  "website/index.html": {
+    "before": "2dab16525502bc4073919a85b2c9d989ee701ba2ca5ad2324f6b71fbdccc4c00",
+    "after": "8f395c343fb42fb02f2c9d6d9cba1fabcf5bedc7a69e8f8fefdbf03f4d9cfd1c"
+  },
+  "website/app/index.html": {
+    "before": null,
+    "after": "e32226c0c5f24ff20f98d0db49480a75d453f978a094fa9469064e58e4e7f6db"
+  },
+  "website/app/README.md": {
+    "before": null,
+    "after": "1ae1965ba6c0d60b20eb4d38b1a1b3b53b49ef791cd5cfb6f0500b6b90516682"
+  },
+  "website/widget/index.html": {
+    "before": "2608475e472fb82e0faecefcd181867c3b79d694127b63967d5969e0327c289a",
+    "after": "a1748334634d60920452039b9e8745f5eea1400eb9fdd2acd4c4f721e1e2c01a"
+  },
+  "website/widget/README.md": {
+    "before": "c64cc16cbee8f5cf3a6e5bf4d0573b27187fc7e805cc5a8c578d616f846f9e39",
+    "after": "56d27445f9f2b7913310ed476951fd454766615cf0778730473df8220afa4f6c"
+  },
+  "docs/superpowers/specs/2026-07-22-berthalla-io-website-design.md": {
+    "before": "defbea8c7c01d87fccd27ba9991fce1761f04e641ad9f2cad3f354bc4bf68276",
+    "after": "9a63d368758985bdb1201ca0fd30853cab59341cc059021730db0864e8cc6268"
+  }
+}

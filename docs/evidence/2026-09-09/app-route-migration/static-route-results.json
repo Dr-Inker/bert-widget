@@ -1,0 +1,152 @@
+{
+  "websiteSha": "9d906ba3d5d27ce7f4340aa235d014c7e1f3496c",
+  "redirectsRequired": false,
+  "rows": [
+    {
+      "path": "/widget",
+      "status": 301,
+      "location": "https://berthalla.io/widget/"
+    },
+    {
+      "path": "/widget/",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/widget/index.html",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/widget?ref=legacy",
+      "status": 301,
+      "location": "https://berthalla.io/widget/"
+    },
+    {
+      "path": "/widget/?ref=legacy",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/widget/index.html?ref=legacy",
+      "status": 200,
+      "location": null
+    },
+    {
+      "path": "/app",
+      "status": 301,
+      "location": "https://berthalla.io/app/"
+    },
+    {
+      "path": "/app?ref=legacy",
+      "status": 301,
+      "location": "https://berthalla.io/app/?ref=legacy"
+    },
+    {
+      "path": "/app/",
+      "status": 200,
+      "sha256": "e32226c0c5f24ff20f98d0db49480a75d453f978a094fa9469064e58e4e7f6db"
+    },
+    {
+      "path": "/",
+      "status": 200,
+      "sha256": "8f395c343fb42fb02f2c9d6d9cba1fabcf5bedc7a69e8f8fefdbf03f4d9cfd1c"
+    },
+    {
+      "path": "/widget/release.json?v=050",
+      "status": 200,
+      "data": {
+        "version": "0.5.0",
+        "versionCode": 15,
+        "minimumAndroid": "8.0",
+        "releaseDate": "2026-09-09",
+        "sizeBytes": 29744436,
+        "sha256": "c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0",
+        "signingCertificateSha256": "f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c",
+        "permissions": [
+          "android.permission.INTERNET",
+          "android.permission.ACCESS_NETWORK_STATE",
+          "android.permission.SET_WALLPAPER",
+          "android.permission.WAKE_LOCK",
+          "android.permission.RECEIVE_BOOT_COMPLETED",
+          "android.permission.FOREGROUND_SERVICE",
+          "global.bert.widget.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+        ],
+        "download": "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "sourceRevision": "938d9d30a85025bf10caad01bcb3f4cbf72f23ae"
+      }
+    },
+    {
+      "path": "/widget/api/quote",
+      "status": 200,
+      "data": {
+        "asset": {
+          "chain": "solana",
+          "mint": "HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump",
+          "name": "Bertram The Pomeranian",
+          "symbol": "Bert"
+        },
+        "quote": {
+          "priceUsd": 0.01767,
+          "change24hPct": 4.02,
+          "marketCapUsd": 17325344,
+          "volume24hUsd": 181746.34,
+          "liquidityUsd": 1184028.57
+        },
+        "source": {
+          "name": "dexscreener",
+          "pairAddress": "BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+          "dex": "raydium",
+          "pairUrl": "https://dexscreener.com/solana/bmsze6tkzyskys1patpkryyazgdxwfxdia4buvlg9agy",
+          "observedAt": "2026-09-09T09:31:07.808Z"
+        },
+        "meta": {
+          "freshness": "fresh",
+          "ageSeconds": 0
+        }
+      }
+    },
+    {
+      "path": "/widget/v1/bert/quote",
+      "status": 200,
+      "data": {
+        "asset": {
+          "chain": "solana",
+          "mint": "HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump",
+          "name": "Bertram The Pomeranian",
+          "symbol": "Bert"
+        },
+        "quote": {
+          "priceUsd": 0.01767,
+          "change24hPct": 4.02,
+          "marketCapUsd": 17325344,
+          "volume24hUsd": 181746.34,
+          "liquidityUsd": 1184028.57
+        },
+        "source": {
+          "name": "dexscreener",
+          "pairAddress": "BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+          "dex": "raydium",
+          "pairUrl": "https://dexscreener.com/solana/bmsze6tkzyskys1patpkryyazgdxwfxdia4buvlg9agy",
+          "observedAt": "2026-09-09T09:31:07.808Z"
+        },
+        "meta": {
+          "freshness": "fresh",
+          "ageSeconds": 0
+        }
+      }
+    },
+    {
+      "path": "/widget/download/bert-widget.apk?sha=c47fbee4",
+      "status": 200,
+      "contentType": "application/vnd.android.package-archive",
+      "length": "29744436"
+    },
+    {
+      "path": "/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+      "status": 200,
+      "contentType": "application/vnd.android.package-archive",
+      "length": "29744436"
+    }
+  ]
+}

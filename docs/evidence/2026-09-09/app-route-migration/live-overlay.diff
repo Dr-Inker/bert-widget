@@ -1,0 +1,436 @@
+diff --git a/docs/superpowers/specs/2026-07-22-berthalla-io-website-design.md b/docs/superpowers/specs/2026-07-22-berthalla-io-website-design.md
+index e48e3ec..a027c7e 100644
+--- a/docs/superpowers/specs/2026-07-22-berthalla-io-website-design.md
++++ b/docs/superpowers/specs/2026-07-22-berthalla-io-website-design.md
+@@ -181,8 +181,3 @@ The owner requested that berthalla.io and the former widget landing page reflect
+ The user-facing name is BERT app; `/widget/`, APK names, Android package and service routes remain stable for compatibility. Both pages' social metadata now uses `widget/bert-app-social-1200x630.png`. Screens are unchanged host-rendered app UI with labelled example content. The previous Figma frames document the earlier widget positioning; current code and the September browser captures are the current design record.
+ 
+ The refresh has no Android binary, backend, service, nginx or signing change. Unrelated pre-existing Music work is retained in the deployed homepage and excluded from this pass's code commit. Record the exact website source SHA, deployed file hashes and gate commands in the app repo's incumbent `docs/NEXT-SESSION.md` and dated evidence directory. See `website/widget/README.md` for preview provenance and publication checks.
+-
+-
+-## September 9, 2026 — canonical app URL correction
+-
+-The owner explicitly corrected the remaining `/widget/` landing URL. The canonical page is now `/app/`, physically maintained in `website/app/index.html`, with matching canonical/Open Graph metadata and homepage links. Old landing URLs receive permanent redirects with query strings preserved. Shared assets, APK/download aliases, release metadata and quote endpoints keep their existing `/widget/*` addresses. The site appearance and pre-existing Music work are unchanged. The scoped host change is the Berthalla nginx vhost routing block, versioned in the BERT app repo deployment template; validation and exact SHAs are recorded in the app repo ledger/evidence.
+diff --git a/website/app/README.md b/website/app/README.md
+deleted file mode 100644
+index 6314ea4..0000000
+--- a/website/app/README.md
++++ /dev/null
+@@ -1,7 +0,0 @@
+-# BERT app landing page
+-
+-Canonical public URL: <https://berthalla.io/app/>.
+-
+-Edit `index.html` here. Shared assets, release metadata and APK downloads remain in `../widget/` so existing installed apps and links continue to work. The release-loading script still reads `/widget/release.json`. Full release and preview guidance: [shared assets README](../widget/README.md).
+-
+-Production nginx permanently redirects `/app` to `/app/` and `/widget`, `/widget/`, `/widget/index.html` to `/app/`, preserving query strings. Other `/widget/*` paths retain their existing behavior. Deploy using `/opt/bert-widget/DEPLOYMENT.md` and `deploy/nginx-widget.conf`; validate the complete nginx configuration before reload, then check public redirects, canonical metadata, page resources, download and quote endpoints.
+diff --git a/website/index.html b/website/index.html
+index c974ff9..f18aa60 100644
+--- a/website/index.html
++++ b/website/index.html
+@@ -100,6 +100,7 @@
+     <a href="#arcade"><b>03</b><span>Arcade</span></a>
+     <a href="#studio"><b>04</b><span>Studio</span></a>
+     <a href="#widget"><b>05</b><span>App</span></a>
++    <a href="#music"><b>06</b><span>Music</span></a>
+   </div>
+ </nav>
+ 
+@@ -229,17 +230,40 @@
+   </div>
+ </section>
+ 
++<!-- ══ BERT MUSIC ══ -->
++<section class="music-promo" id="music">
++  <div class="wrap music-promo__row">
++    <div class="music-promo__copy">
++      <p class="chapter">06 / BERT ON THE AUX</p>
++      <h2 class="section-head">the town has a soundtrack.</h2>
++      <p class="section-sub">three songs from The Legacy of Bert Foundation — community lore, chart feelings, and one very persistent exchange question.</p>
++      <div class="music-promo__tracks" aria-label="Released songs">
++        <span><b>01</b> HODL On</span>
++        <span><b>02</b> WEN Binance?</span>
++        <span><b>03</b> Community Take Over</span>
++      </div>
++      <a class="btn btn--accent" href="/music/">listen to the songs <span class="btn__arr" aria-hidden="true">→</span></a>
++    </div>
++    <a class="music-promo__art" href="/music/" aria-label="Listen to Bert's music">
++      <span class="music-promo__signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
++      <span class="music-promo__record" aria-hidden="true"><i></i></span>
++      <span class="music-promo__label">THE LEGACY OF BERT FOUNDATION<br><b>NOW PLAYING</b></span>
++    </a>
++  </div>
++</section>
++
+ <!-- ══ CTA BAND ══ -->
+ <section class="cta-band">
+   <div class="wrap">
+     <p class="chapter">CHOOSE YOUR DOOR</p>
+     <h2>come hang in berthalla.</h2>
+     <p>the mayor&rsquo;s always around — making art, chasing high scores, and checking the chart.</p>
+-    <div class="cta-band__links">
++    <div class="cta-band__links cta-band__links--five">
+       <a href="https://x.com/Berthalla_bot" target="_blank" rel="noopener"><small>THE MAYOR</small><b>Follow Bert on X</b><span>↗</span></a>
+       <a href="/studio/"><small>MAKE SOMETHING</small><b>Draw with Bert</b><span>→</span></a>
+       <a href="https://t.me/flappybertofficialbot" target="_blank" rel="noopener"><small>CHASE A SCORE</small><b>Play Flappy Bert</b><span>↗</span></a>
+       <a href="/app/"><small>KEEP HIM CLOSE</small><b>Get the app</b><span>→</span></a>
++      <a href="/music/"><small>TURN IT UP</small><b>Hear the songs</b><span>→</span></a>
+     </div>
+   </div>
+ </section>
+@@ -258,6 +282,7 @@
+         <a href="https://bert.global" target="_blank" rel="noopener">bert.global ↗</a>
+         <a href="/studio/">bert studio</a>
+         <a href="/app/">bert app</a>
++        <a href="/music/">bert music</a>
+       </nav>
+     </div>
+     <div class="footer__divider" aria-hidden="true"></div>
+diff --git a/website/style.css b/website/style.css
+index 844db79..6c2ccb1 100644
+--- a/website/style.css
++++ b/website/style.css
+@@ -361,6 +361,58 @@ a { color: inherit; text-decoration: none; }
+ .widget-market footer { margin-top: 16px; }
+ .widget-market footer b { color: #858da6; }
+ 
++/* ══ 06 / BERT MUSIC ══ */
++.music-promo { position: relative; overflow: hidden; padding: 92px 0; background: var(--cream-soft); }
++.music-promo__row { display: grid; grid-template-columns: .9fr 1.1fr; gap: 64px; align-items: center; }
++.music-promo__copy { display: flex; flex-direction: column; align-items: flex-start; }
++.music-promo__tracks { width: 100%; margin: 26px 0 30px; border-block: 1px solid var(--hair-light); }
++.music-promo__tracks span { display: flex; gap: 18px; padding: 13px 0; font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--hair-light); }
++.music-promo__tracks span:last-child { border: 0; }
++.music-promo__tracks b { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: var(--accent); align-self: center; }
++.music-promo__art { position: relative; min-height: 430px; overflow: hidden; border-radius: 28px; background: radial-gradient(circle at 72% 40%, #28325f, var(--navy) 46%, var(--navy-deep)); border: 1px solid rgba(255,255,255,.1); box-shadow: var(--shadow-dark); transition: transform var(--dur-reveal) var(--ease-emph); }
++.music-promo__art:hover { transform: translateY(-5px) rotate(.4deg); }
++.music-promo__record { position: absolute; width: 310px; aspect-ratio: 1; border-radius: 50%; right: 9%; top: 44px; background: repeating-radial-gradient(circle, #15182a 0 3px, #090b16 4px 7px); box-shadow: 0 25px 50px rgba(0,0,0,.45); }
++.music-promo__record::before { content: ''; position: absolute; inset: 35%; border-radius: 50%; background: var(--accent); box-shadow: inset 0 0 0 8px rgba(255,255,255,.08); }
++.music-promo__record i { position: absolute; width: 20px; aspect-ratio: 1; left: calc(50% - 10px); top: calc(50% - 10px); border-radius: 50%; background: var(--cream); z-index: 1; }
++.music-promo__signal { position: absolute; left: 40px; bottom: 74px; display: flex; align-items: end; gap: 7px; height: 96px; }
++.music-promo__signal i { width: 8px; height: 34%; border-radius: 6px; background: var(--accent); }
++.music-promo__signal i:nth-child(2), .music-promo__signal i:nth-child(6) { height: 62%; }
++.music-promo__signal i:nth-child(3), .music-promo__signal i:nth-child(5) { height: 88%; }
++.music-promo__signal i:nth-child(4) { height: 48%; }
++.music-promo__label { position: absolute; left: 40px; bottom: 30px; font-family: 'JetBrains Mono', monospace; font-size: 9px; line-height: 1.6; letter-spacing: .12em; color: var(--on-dark-mut); }
++.music-promo__label b { color: var(--accent-2); }
++
++/* dedicated music page */
++.music-page { background: var(--navy-deep); }
++.subnav { background: var(--navy-deep); border-bottom: 1px solid var(--hair-dark); }
++.subnav__inner { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
++.subnav .wordmark { color: var(--cream-text); font-size: 25px; }
++.subnav nav { display: flex; align-items: center; gap: 22px; color: var(--cream-text); font-size: 14px; }
++.music-hero { position: relative; overflow: hidden; padding: 110px 0 100px; background: var(--navy); }
++.music-hero::before { content: ''; position: absolute; width: 760px; height: 760px; right: -250px; top: -360px; border-radius: 50%; background: radial-gradient(circle, rgba(236,74,38,.24), transparent 68%); }
++.music-hero__inner { position: relative; display: grid; grid-template-columns: 1fr 360px; align-items: center; gap: 60px; }
++.music-hero .eyebrow { margin-bottom: 24px; }
++.music-hero h1 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(58px, 8vw, 102px); line-height: .9; letter-spacing: -.025em; color: var(--cream-text); }
++.music-hero p:last-child { max-width: 46ch; margin-top: 24px; font-size: 18px; color: var(--on-dark-mut); }
++.music-hero__mark { width: 330px; aspect-ratio: 1; border-radius: 50%; background: repeating-radial-gradient(circle, #171b31 0 4px, #080b19 5px 9px); box-shadow: 0 28px 70px rgba(0,0,0,.48); animation: spin 18s linear infinite; }
++.music-hero__mark::before { content: ''; position: absolute; width: 120px; aspect-ratio: 1; margin: 105px; border-radius: 50%; background: var(--accent); }
++.music-hero__mark span { position: absolute; width: 22px; aspect-ratio: 1; margin: 154px; border-radius: 50%; background: var(--cream); z-index: 1; }
++@keyframes spin { to { transform: rotate(360deg); } }
++.music-library { padding: 96px 0 110px; background: var(--cream); }
++.music-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 44px; }
++.music-card { overflow: hidden; border-radius: 22px; background: var(--card-warm); border: 1px solid var(--hair-light); box-shadow: var(--shadow-raise); }
++.music-card--wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1.45fr .55fr; }
++.music-card__player { aspect-ratio: 16 / 9; background: #000; }
++.music-card__player iframe { width: 100%; height: 100%; display: block; border: 0; }
++.music-card__meta { padding: 24px 26px 28px; }
++.music-card--wide .music-card__meta { display: flex; flex-direction: column; justify-content: center; padding: 38px; }
++.music-card__meta > span { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: var(--accent); }
++.music-card__meta h3 { margin-top: 7px; font-family: 'Baloo 2', sans-serif; font-size: 25px; line-height: 1.1; }
++.music-card__meta a { display: inline-block; margin-top: 13px; font-size: 13px; color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px; }
++.music-channel { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin-top: 52px; padding: 34px 38px; border-radius: 22px; background: var(--navy); color: var(--cream-text); }
++.music-channel h2 { margin-top: 6px; font-family: 'Baloo 2', sans-serif; font-size: 28px; }
++.music-page .footer { padding: 36px 0; }
++
+ .cta-band { position: relative; overflow: hidden; background: var(--accent); color: #fff6f0; padding: 84px 0; text-align: left; }
+ .cta-band::before { content: ''; position: absolute; inset: 0; background: radial-gradient(62% 130% at 50% -12%, rgba(255,255,255,.20), transparent 62%); pointer-events: none; }
+ .cta-band .wrap { position: relative; }
+@@ -368,6 +420,7 @@ a { color: inherit; text-decoration: none; }
+ .cta-band h2 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 4.6vw, 52px); line-height: 1.02; letter-spacing: -0.015em; }
+ .cta-band > .wrap > p:not(.chapter) { font-size: 17px; opacity: .92; margin-top: 12px; }
+ .cta-band__links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 34px; }
++.cta-band__links--five { grid-template-columns: repeat(5, 1fr); }
+ .cta-band__links a { position: relative; display: flex; flex-direction: column; min-height: 114px; padding: 20px; border: 1px solid rgba(255,255,255,.27); border-radius: 15px; background: rgba(9,13,36,.09); transition: transform var(--dur-reveal), background var(--dur-ack); }
+ .cta-band__links a:hover { transform: translateY(-4px); background: rgba(9,13,36,.17); }
+ .cta-band__links small { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .12em; opacity: .7; }
+@@ -396,6 +449,11 @@ a { color: inherit; text-decoration: none; }
+   .who, .does, .arcade { padding: 72px 0; }
+   .who__row, .studio-promo__row { flex-direction: column; }
+   .widget-promo__row { grid-template-columns: 1fr; gap: 38px; }
++  .music-promo__row { grid-template-columns: 1fr; gap: 38px; }
++  .music-promo__art { min-height: 390px; }
++  .music-hero__inner { grid-template-columns: 1fr; }
++  .music-hero__mark { display: none; }
++  .music-card--wide { display: block; }
+   /* column direction makes flex-basis:0 a HEIGHT basis — reset it, and reserve the
+      image's 3:2 box so the lazy-loading card can't collapse to its border */
+   .studio-promo__art, .studio-promo__copy { flex: 0 0 auto; width: 100%; }
+@@ -434,6 +492,16 @@ a { color: inherit; text-decoration: none; }
+   .hero__cta { flex-wrap: wrap; }
+   .hero__unmute { bottom: 22px; right: 22px; }
+   .widget-promo { padding: 72px 0; }
++  .music-promo { padding: 72px 0; }
++  .music-promo__art { min-height: 330px; }
++  .music-promo__record { width: 235px; right: 4%; top: 38px; }
++  .music-promo__signal, .music-promo__label { left: 24px; }
++  .subnav__inner { min-height: 76px; }
++  .subnav nav > a:first-child { display: none; }
++  .music-hero { padding: 78px 0 70px; }
++  .music-grid { grid-template-columns: 1fr; }
++  .music-card--wide { grid-column: auto; }
++  .music-channel { flex-direction: column; align-items: flex-start; padding: 28px 24px; }
+   .widget-promo__row { gap: 32px; }
+   .widget-promo__art { border-radius: 18px; }
+   .ecosystem-nav { overflow-x: auto; scrollbar-width: none; }
+diff --git a/website/widget/README.md b/website/widget/README.md
+index 0540ede..35497f4 100644
+--- a/website/widget/README.md
++++ b/website/widget/README.md
+@@ -2,7 +2,7 @@
+ 
+ Public landing and direct-download surface for the open-source BERT Android app and widgets.
+ 
+-- Live page: <https://berthalla.io/app/> (canonical; old landing URLs redirect)
++- Live page: <https://berthalla.io/widget/>
+ - Public source: <https://github.com/Dr-Inker/bert-widget>
+ - Release history: <https://github.com/Dr-Inker/bert-widget/releases>
+ - Release metadata: [`release.json`](./release.json)
+@@ -11,13 +11,13 @@ The page deliberately gives visitors three independent trust signals before inst
+ 
+ ## Product-preview data
+ 
+-The widget mockups in [`../app/index.html`](../app/index.html) use a stable illustrative snapshot with a positive 24-hour movement. The surrounding page labels the presentation as illustrative and states that the installed widget displays current validated data. Do not reconnect these marketing examples to the live quote endpoint: short-term market movement should not dictate the page’s permanent art direction.
++The widget mockups in [`index.html`](./index.html) use a stable illustrative snapshot with a positive 24-hour movement. The surrounding page labels the presentation as illustrative and states that the installed widget displays current validated data. Do not reconnect these marketing examples to the live quote endpoint: short-term market movement should not dictate the page’s permanent art direction.
+ 
+ This separation applies only to the landing-page presentation. The Android widget and public quote API continue to use current validated market data.
+ 
+ ## App positioning — 2026-09-09
+ 
+-BERT is a general Android app. Home / Explore / Create / Tools lead the page, followed by phone themes and both 2×2 and 4×2 widgets. The homepage retains its character/ecosystem structure, hero media, sound control and X-first action, with an app introduction in chapter 05. All user-facing navigation and download actions call it the BERT app. `/app/` is the canonical landing page. `/widget`, `/widget/` and `/widget/index.html` permanently redirect there. APK names, package ID, quote API, assets and release manifest stay under their existing URLs for installed-app and download compatibility.
++BERT is a general Android app. Home / Explore / Create / Tools lead the page, followed by phone themes and both 2×2 and 4×2 widgets. The homepage retains its character/ecosystem structure, hero media, sound control and X-first action, with an app introduction in chapter 05. All user-facing navigation and download actions call it the BERT app. `/widget/`, APK names, package ID, quote API and release manifest stay compatible with existing installations and links.
+ 
+ The four `app-*.png` files are unchanged host-rendered Compose captures from app source `f62c961c39c011bbecec02dc4d9b2232e5ba83d4`, whose UI is identical to published v0.5.0 source `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`. Originals: `/opt/bert-widget/docs/evidence/2026-09-08/host-f62c961/{home-activity,explore,create,market-populated}.png`. These are actual UI renders with fixture content, not physical-device acceptance; the page labels the examples. Tools deliberately retains the example's delayed-quote state rather than inventing a fresh chart.
+ 
+@@ -38,7 +38,7 @@ Executable browser checks cover `/` and `/widget/` at 1440, 768, 390 and 320 pix
+ 1. Build and sign the APK from the public source repository.
+ 2. Run its fail-closed release verifier against the APK and proposed `release.json`.
+ 3. Copy the verified artifact to a versioned filename under [`download/`](./download/).
+-4. Update the stable `bert-widget.apk` alias, `release.json`, and every versioned download link in [`../app/index.html`](../app/index.html).
++4. Update the stable `bert-widget.apk` alias, `release.json`, and every versioned download link in [`index.html`](./index.html).
+ 5. Bump cache-busting query parameters when CSS, JavaScript, icons, or social artwork changes.
+ 6. Verify the public APK hash, MIME type, attachment disposition, security headers, landing-page links, and all four responsive rendering widths above.
+ 
+@@ -47,7 +47,3 @@ The current signed release is v0.5.0 (`versionCode` 15), published 2026-09-09 fr
+ This release adds Home / Explore / Create / Tools, private saved caption artwork, observation-based chart ranges and local holdings/cost tools. Android host tests and signed-package verification are recorded in `/opt/bert-widget/docs/evidence/2026-09-09/release-0.5.0`. Real-device journeys, launcher/wallpaper outcomes and share-recipient delivery remain UNVERIFIED; publication is not native acceptance.
+ 
+ Do not remove the GitHub source section, navigation link, or footer link during a redesign. They are part of the product’s transparency model, not decorative badges.
+-
+-## Canonical app route — September 9, 2026
+-
+-The landing HTML is maintained in `../app/index.html`; this directory holds shared images, styles, JavaScript, release metadata and downloads. The local `index.html` is a redirect fallback for simple static previews; production nginx returns HTTP 301 for the old landing URLs and preserves query parameters. Homepage app links go directly to `/app/`. See `/opt/bert-widget/DEPLOYMENT.md` and its versioned nginx template for route deployment and validation.
+diff --git a/website/widget/index.html b/website/widget/index.html
+index 8ab0959..2b32c34 100644
+--- a/website/widget/index.html
++++ b/website/widget/index.html
+@@ -3,9 +3,193 @@
+ <head>
+   <meta charset="utf-8">
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+-  <title>BERT app — moved to /app/</title>
+-  <link rel="canonical" href="https://berthalla.io/app/">
+-  <meta http-equiv="refresh" content="0; url=/app/">
++  <title>BERT — your Android app, artwork and widgets</title>
++  <meta name="description" content="The BERT Android app: community updates, saved caption artwork, market tools, local holdings and coordinated phone themes and widgets.">
++  <meta name="theme-color" content="#071a2f">
++  <meta property="og:type" content="website">
++  <meta property="og:site_name" content="Berthalla">
++  <meta property="og:title" content="BERT — a small dog. a whole app.">
++  <meta property="og:description" content="Keep up with Bert, make caption cards, explore the town and check your numbers. The BERT app for Android.">
++  <meta property="og:url" content="https://berthalla.io/widget/">
++  <meta property="og:image" content="https://berthalla.io/widget/bert-app-social-1200x630.png?v=app050">
++  <meta property="og:image:secure_url" content="https://berthalla.io/widget/bert-app-social-1200x630.png?v=app050">
++  <meta property="og:image:type" content="image/png">
++  <meta property="og:image:width" content="1200">
++  <meta property="og:image:height" content="630">
++  <meta property="og:image:alt" content="BERT Android app showing Home updates and Create caption artwork">
++  <meta name="twitter:card" content="summary_large_image">
++  <meta name="twitter:title" content="BERT — a small dog. a whole app.">
++  <meta name="twitter:description" content="Bert updates, your own caption cards, games, music, market tools and phone themes. One Android app.">
++  <meta name="twitter:image" content="https://berthalla.io/widget/bert-app-social-1200x630.png?v=app050">
++  <meta name="twitter:image:alt" content="BERT Android app showing Home updates and Create caption artwork">
++  <link rel="icon" type="image/png" sizes="32x32" href="/widget/widget-icon-32.png?v=1">
++  <link rel="icon" type="image/png" sizes="512x512" href="/widget/widget-icon-512.png?v=1">
++  <link rel="apple-touch-icon" sizes="180x180" href="/widget/widget-icon-180.png?v=1">
++  <link rel="preload" as="image" href="/widget/app-create.png">
++  <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/baloo2.woff2?v=2" crossorigin>
++  <link rel="preload" as="font" type="font/woff2" href="/assets/fonts/inter.woff2?v=2" crossorigin>
++  <link rel="stylesheet" href="/widget/widget.css?v=app050-05a96619">
+ </head>
+-<body><p>The BERT app has a new home: <a href="/app/">berthalla.io/app/</a>.</p></body>
++<body>
++  <a class="skip" href="#main">skip to content</a>
++  <nav class="nav shell" aria-label="Primary navigation">
++    <a class="wordmark" href="/">berthalla</a>
++    <div class="nav__links"><a href="#inside">the app</a><a href="#themes">themes</a><a href="#install">install</a><a href="#verify">verify</a><a href="#source">source</a><a href="/">back to town ↗</a></div>
++    <a class="nav__download" href="/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4" download>get the app <span aria-hidden="true">↓</span></a>
++  </nav>
++
++  <main id="main">
++    <section class="hero shell">
++      <div class="hero__copy">
++        <p class="kicker"><span></span> THE BERT APP · ANDROID · v<span data-release-version>0.5.0</span></p>
++        <h1>a small dog.<br><span>a whole app.</span></h1>
++        <p class="lede">Keep up with Bert. Make something worth sharing. Find your way around the town. Your little corner of Berthalla, now in one Android app.</p>
++        <ul class="promises" aria-label="Product promises">
++          <li>no account</li><li>no wallet connection</li><li>Android 8+</li>
++        </ul>
++        <div class="actions">
++          <a class="button button--primary" href="/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4" download id="download"><span class="button__android-icon" aria-hidden="true"><img src="/widget/android-head-flat.svg" alt="" width="22" height="13"></span><span>download APK</span><span aria-hidden="true">↓</span></a>
++          <a class="button button--quiet" href="#install">how to install</a>
++        </div>
++        <p class="release-line">v<span data-release-version>0.5.0</span> · <span data-release-size>28.4 MB</span> · released <time data-release-date datetime="2026-09-09">9 Sept 2026</time> · signed by Berthalla</p>
++      </div>
++
++      <figure class="app-stage" aria-label="BERT Home and Create app previews">
++        <div class="app-stage__glow" aria-hidden="true"></div>
++        <div class="app-device app-device--home"><img src="/widget/app-home.png" alt="Home: Bert updates and a shortcut to create artwork" width="720" height="1600" fetchpriority="high"></div>
++        <div class="app-device app-device--create"><img src="/widget/app-create.png" alt="Create: a Bert caption card, caption editor and palette choices" width="720" height="1600" fetchpriority="high"></div>
++        <figcaption>THE ACTUAL APP · EXAMPLE CONTENT</figcaption>
++      </figure>
++    </section>
++
++    <section class="proof" aria-label="Inside BERT"><div class="shell proof__grid">
++      <div><strong>Home</strong><span>a word from the mayor</span></div>
++      <div><strong>Explore</strong><span>follow your nose</span></div>
++      <div><strong>Create</strong><span>your words. Bert’s face.</span></div>
++      <div><strong>Tools</strong><span>your numbers, nearby</span></div>
++    </div></section>
++
++    <section class="app-inside shell" id="inside" aria-labelledby="inside-heading">
++      <header class="app-inside__heading"><div><p class="chapter">FOUR TABS. ONE GOOD DOG.</p><h2 id="inside-heading">a little more Bert<br>in your day.</h2></div><p>From the latest town dispatch to a card with your name on it. Open BERT and pick a direction.</p></header>
++      <div class="app-features">
++        <article class="app-feature"><div class="app-feature__copy"><p class="chapter">01 / HOME</p><h3>the mayor is in.</h3><p>Catch Bert’s mood, town updates and recent happenings. Come back to saved updates when you’re offline.</p></div><img src="/widget/app-home.png" alt="BERT Home with an example dispatch and mood" width="720" height="1600" loading="lazy"></article>
++        <article class="app-feature"><div class="app-feature__copy"><p class="chapter">02 / EXPLORE</p><h3>take the scenic route.</h3><p>Find Flappy Bert, the town’s music and community channels. Each link tells you whether it opens in your browser, Telegram or X.</p></div><img src="/widget/app-explore.png" alt="Explore with clearly labelled links to Flappy Bert, Bert Music and X" width="720" height="1600" loading="lazy"></article>
++        <article class="app-feature"><div class="app-feature__copy"><p class="chapter">03 / CREATE</p><h3>your words. his face.</h3><p>Write a caption, choose a palette and save your card to a private collection. Reopen it offline and share a PNG when you choose.</p></div><img src="/widget/app-create.png" alt="Create showing a caption card, text editor and palette options" width="720" height="1600" loading="lazy"></article>
++        <article class="app-feature"><div class="app-feature__copy"><p class="chapter">04 / TOOLS</p><h3>know your numbers.</h3><p>Check observed price history and quote age. Keep an optional holdings amount and total cost on your device, with estimated value and gain or loss.</p></div><img src="/widget/app-tools.png" alt="Tools with illustrative price observations and a visible delayed-quote warning" width="720" height="1600" loading="lazy"></article>
++      </div>
++      <p class="app-preview-note">App previews use example content and market data. Games and community destinations open in their own apps or your browser.</p>
++    </section>
++
++    <section class="themes shell" id="themes" aria-labelledby="themes-heading">
++      <header class="themes__heading">
++        <div><p class="chapter">THEME STUDIO</p><h2 id="themes-heading">one app.<br>three worlds.</h2></div>
++        <p>Make the outside feel like Bert, too. Three coordinated looks pair expressive Lock artwork, a quieter Home companion and matching widget colours.</p>
++      </header>
++      <div class="theme-grid">
++        <article class="theme-card theme-card--mayor">
++          <div class="theme-card__phones">
++            <figure><img src="/widget/theme-mayor-purple-lock.jpg" alt="Mayor Purple Lock Screen" width="360" height="800" loading="lazy"><figcaption>LOCK</figcaption></figure>
++            <figure><img src="/widget/theme-mayor-purple-home.jpg" alt="Mayor Purple Home Screen" width="360" height="800" loading="lazy"><figcaption>HOME</figcaption></figure>
++          </div>
++          <h3>Mayor Purple</h3><p>Editorial purple. Unmistakably BERT.</p><span>INCLUDED IN v0.5.0</span>
++        </article>
++        <article class="theme-card theme-card--woofhub">
++          <div class="theme-card__phones">
++            <figure><img src="/widget/theme-woofhub-night-lock.jpg" alt="Woofhub Night Lock Screen" width="360" height="800" loading="lazy"><figcaption>LOCK</figcaption></figure>
++            <figure><img src="/widget/theme-woofhub-night-home.jpg" alt="Woofhub Night Home Screen" width="360" height="800" loading="lazy"><figcaption>HOME</figcaption></figure>
++          </div>
++          <h3>Woofhub Night</h3><p>Near-black character art with violet depth.</p><span>INCLUDED IN v0.5.0</span>
++        </article>
++        <article class="theme-card theme-card--berthalla">
++          <div class="theme-card__phones">
++            <figure><img src="/widget/theme-berthalla-nights-lock.jpg" alt="Berthalla Nights Lock Screen" width="360" height="800" loading="lazy"><figcaption>LOCK</figcaption></figure>
++            <figure><img src="/widget/theme-berthalla-nights-home.jpg" alt="Berthalla Nights Home Screen" width="360" height="800" loading="lazy"><figcaption>HOME</figcaption></figure>
++          </div>
++          <h3>Berthalla Nights</h3><p>A moonlit storybook world built from Berthalla art.</p><span>INCLUDED IN v0.5.0</span>
++        </article>
++      </div>
++      <div class="themes__footer"><p>Open Create → Personalize to choose a theme and apply Home, Lock or both.</p><a class="button button--primary" href="/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4" download>get all three <span aria-hidden="true">↓</span></a></div>
++    </section>
++
++    <section class="showcase shell">
++      <div class="section-copy">
++        <p class="chapter">ALSO ON YOUR HOME SCREEN</p>
++        <h2>one glance.<br>the useful bits.</h2>
++        <p>Choose Compact 2×2 or Market 4×2 directly in Android’s widget picker. Market adds market metrics and the live USD value of holdings you enter locally. Open BERT → Tools for observed price history and holdings. Add either size from your launcher’s widget picker.</p>
++      </div>
++      <div class="sizes">
++        <article class="widget-card widget-card--small widget-v2 widget-v2--compact">
++          <p class="size-label">COMPACT · 2×2</p>
++          <header><img src="/widget/bert-token.jpg" alt="Official BERT token artwork" width="48" height="48"><div><strong>BERT</strong></div><p class="widget-v2__live"><i></i> LIVE</p></header>
++          <p class="price">$0.009847</p><p class="change up">↗ +6.24% <span>24H</span></p>
++          <svg class="widget-v2__chart" viewBox="0 0 260 82" role="img" aria-label="Illustrative 24-hour BERT price sparkline"><defs><linearGradient id="compact-chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#45e09a" stop-opacity=".32"/><stop offset="1" stop-color="#45e09a" stop-opacity="0"/></linearGradient></defs><path class="chart-fill" d="M2 68 L28 59 L52 64 L78 43 L104 49 L130 30 L156 38 L182 19 L208 26 L234 10 L258 17 L258 82 L2 82 Z"/><path class="chart-line" d="M2 68 L28 59 L52 64 L78 43 L104 49 L130 30 L156 38 L182 19 L208 26 L234 10 L258 17"/></svg>
++          <p class="freshness">UPDATED NOW</p>
++        </article>
++        <article class="widget-card widget-card--wide widget-v2 widget-v2--market">
++          <span class="widget-v2__rail" aria-hidden="true"></span>
++          <p class="size-label">MARKET · 4×2</p>
++          <header><img src="/widget/bert-token.jpg" alt="" width="48" height="48"><div><strong>BERT</strong></div><p class="widget-v2__live"><i></i> MARKET LIVE</p></header>
++          <div class="price-row"><div><p class="price">$0.009847</p><p class="change up">↗ +6.24% · 24H</p></div><div class="portfolio"><span>YOUR POSITION</span><strong>$9,847.00</strong><small>1,000,000 BERT</small></div></div>
++          <div class="metrics"><div><span>MARKET CAP</span><strong>$9.7M</strong></div><div><span>24H VOLUME</span><strong>$124.8K</strong></div><div><span>LIQUIDITY</span><strong>$736.4K</strong></div></div>
++          <div class="widget-v2__footer"><span>DEXSCREENER · RAYDIUM</span><span>UPDATED NOW</span></div>
++        </article>
++        <p class="snapshot-note">Illustrative market snapshot. The installed widget displays current validated data.</p>
++      </div>
++    </section>
++
++    <section class="install" id="install"><div class="shell">
++      <div class="section-heading"><p class="chapter">THREE STEPS. NO CEREMONY.</p><h2>welcome to<br>your little town.</h2></div>
++      <ol class="steps">
++        <li><span>01</span><div><h3>download the signed APK</h3><p>Use the button on this page. Android may show a warning because the app comes directly from Berthalla, not Google Play.</p></div></li>
++        <li><span>02</span><div><h3>approve this one install</h3><p>Allow your browser to install the APK. You can disable that browser permission immediately afterward.</p></div></li>
++        <li><span>03</span><div><h3>say hello to Bert</h3><p>Open BERT and explore Home, Explore, Create and Tools. Start a caption card in Create → Art, or choose your phone’s look in Create → Personalize. Widgets are optional: long-press your home screen → Widgets → BERT.</p></div></li>
++      </ol>
++      <div class="install-cta"><div><strong>Ready when you are.</strong><span>v<span data-release-version>0.5.0</span> · Android 8+</span></div><a class="button button--primary" href="/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4" download><span class="button__android-icon" aria-hidden="true"><img src="/widget/android-head-flat.svg" alt="" width="22" height="13"></span><span>download APK</span><span aria-hidden="true">↓</span></a></div>
++    </div></section>
++
++    <section class="security shell" id="verify">
++      <div class="section-copy"><p class="chapter">TRUST, WITH RECEIPTS</p><h2>your phone.<br>your collection.</h2><p>Caption cards, optional holdings and total cost stay in private app storage. Share a card only when you choose a recipient. Network access retrieves market data and town updates; Android schedules background refreshes, and wallpaper access applies your chosen theme. There is no wallet connection, account system, advertising SDK or analytics tracker.</p></div>
++      <div class="receipt">
++        <div class="receipt__top"><span>RELEASE MANIFEST</span><span class="verified"><i></i> SIGNATURE VERIFIED</span></div>
++        <dl><div><dt>Package</dt><dd>global.bert.widget</dd></div><div><dt>Version</dt><dd><span data-release-version>0.5.0</span> (<span data-version-code>15</span>)</dd></div><div><dt>Sensitive permissions</dt><dd>NONE</dd></div><div><dt>Cards + holdings</dt><dd>ON DEVICE ONLY</dd></div><div><dt>Background refresh</dt><dd>WORKMANAGER</dd></div><div><dt>Signer</dt><dd>Berthalla BERT Widget</dd></div></dl>
++        <div class="hash"><span>APK SHA-256</span><code data-checksum>c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0</code><button type="button" data-copy="checksum">copy</button></div>
++        <div class="hash"><span>SIGNING CERTIFICATE SHA-256</span><code data-certificate>f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c</code><button type="button" data-copy="certificate">copy</button></div>
++      </div>
++    </section>
++
++    <section class="source shell" id="source" aria-labelledby="source-heading">
++      <div class="source__copy">
++        <p class="chapter">OPEN BY DESIGN</p>
++        <h2 id="source-heading">trust is better<br>with source.</h2>
++        <p>The Android app, widget and quote service are publicly available for inspection. Review how market data is validated, confirm holdings stay on-device, audit every permission, or build the project yourself.</p>
++      </div>
++      <div class="repo-card">
++        <div class="repo-card__top"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .7A11.5 11.5 0 0 0 8.36 23.1c.58.1.79-.25.79-.56v-2.22c-3.23.7-3.91-1.37-3.91-1.37-.53-1.34-1.29-1.7-1.29-1.7-1.05-.72.08-.7.08-.7 1.17.08 1.78 1.2 1.78 1.2 1.04 1.77 2.72 1.26 3.38.96.1-.75.4-1.26.74-1.55-2.58-.3-5.29-1.29-5.29-5.69 0-1.26.45-2.29 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.16 1.18a10.9 10.9 0 0 1 5.76 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.09 0 4.41-2.72 5.39-5.3 5.68.42.36.79 1.07.79 2.16v3.2c0 .31.21.67.8.56A11.5 11.5 0 0 0 12 .7Z"/></svg><span>PUBLIC</span></div>
++        <p class="repo-card__name"><span>Dr-Inker /</span> bert-widget</p>
++        <div class="repo-tree" aria-label="Repository contents"><span>android/</span><span>ios/</span><span>src/</span><span>test/</span><span>deploy/</span><span>tools/</span></div>
++        <div class="repo-card__meta"><span><i></i> source available</span><span>signed releases</span><span>security controls</span></div>
++        <div class="repo-card__actions"><a class="button button--github" href="https://github.com/Dr-Inker/bert-widget" target="_blank" rel="noopener noreferrer">inspect the code <span aria-hidden="true">↗</span></a><a href="https://github.com/Dr-Inker/bert-widget/releases" target="_blank" rel="noopener noreferrer">release history ↗</a></div>
++      </div>
++    </section>
++
++    <section class="faq shell" id="questions">
++      <div><p class="chapter">QUESTIONS, ANSWERED</p><h2>the small print,<br>at normal size.</h2></div>
++      <div class="faq__list">
++        <details open><summary>Why does Android show an installation warning?</summary><p>The APK is distributed directly rather than through Google Play. Confirm the domain is berthalla.io and compare the SHA-256 above before installing.</p></details>
++        <details><summary>Does it connect to my wallet?</summary><p>No. There is no wallet connection, signing, trading or account flow. Market tools and widgets provide informational data; the app cannot move funds.</p></details>
++        <details><summary>Can I make and save cards offline?</summary><p>Yes. Caption cards are made on your device and saved in the app’s private collection. You can reopen them offline. Sharing exports a PNG to the recipient app you select. Cards are not backed up to a Berthalla account; uninstalling BERT removes its private collection.</p></details>
++        <details><summary>Where are my BERT holdings stored?</summary><p>Only in the app’s private storage on your device. Your entered amount and optional total cost are used locally for estimated values. Neither is sent to Berthalla or a third party.</p></details>
++        <details><summary>How often does market data refresh?</summary><p>The app requests a background refresh every 15 minutes. Android ultimately controls scheduling and may delay work to preserve battery. The widget shows the quote age and marks delayed data.</p></details>
++        <details><summary>How do updates work?</summary><p>Return to this page for new releases. Download the newer APK and install it over the existing app; keep the existing app installed to preserve its private data.</p></details>
++        <details><summary>Is there an iPhone version?</summary><p>Not yet. BERT is currently available for Android 8.0 and newer.</p></details>
++      </div>
++    </section>
++
++    <section class="final-cta shell"><img src="/widget/bert-token.jpg" alt="Bert wearing his red hat and blue coat" width="180" height="180"><div><p class="chapter">OFFICE HOURS: ALWAYS</p><h2>take the town with you.</h2><p>A little company. Something to make. A whole town to explore.</p></div><a class="button button--light" href="/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4" download><span>download v<span data-release-version>0.5.0</span></span><span aria-hidden="true">↓</span></a></section>
++  </main>
++
++  <footer class="footer shell"><a class="wordmark" href="/">berthalla</a><p>Informational market data only. Not financial advice.<br>Android is a trademark of Google LLC. <a href="https://creativecommons.org/licenses/by/3.0/" target="_blank" rel="noopener">Android robot: CC BY 3.0</a>.</p><div><a href="https://github.com/Dr-Inker/bert-widget" target="_blank" rel="noopener noreferrer">GitHub ↗</a><a href="https://dexscreener.com/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump" target="_blank" rel="noopener">DEX Screener ↗</a><a href="/">back to town</a></div></footer>
++  <aside class="mobile-dock" aria-label="Quick actions"><a href="#source">source</a><a href="/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4" download>get BERT <span aria-hidden="true">↓</span></a></aside>
++  <script src="/widget/widget.js?v=050-5186ce4a" defer></script>
++</body>
+ </html>

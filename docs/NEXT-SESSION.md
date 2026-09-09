@@ -1,5 +1,13 @@
 # Next session — BERT app
 
+## Canonical `/app/` route — live; legacy redirect approval pending
+
+The owner corrected the remaining `/widget/` landing URL. **`https://berthalla.io/app/` is live**, with matching canonical/Open Graph metadata and all five homepage app links updated. Website prepared source: `9d906ba3d5d27ce7f4340aa235d014c7e1f3496c`; app routing template/runbook: `0f5f223ee121b26bbd0c9e24a63d3e3b9bf1432e`. Only the new app HTML and homepage links were published. Existing APK, metadata, asset and API paths remain intact.
+
+**Automatic approval review rejected** modifying `/etc/nginx/sites-available/berthalla.io` and reloading nginx because explicit authorization for that host target and side effect was missing. The exact question is pending with the owner. No nginx/config change or client-side redirect workaround occurred; `/widget/` still serves the preceding page. The committed legacy redirect fallback and website migration docs remain unapplied; do not mistake their working-tree differences for user changes. Existing Music edits remain preserved. [State, executable checks, reviewed diff and resume instructions](evidence/2026-09-09/app-route-migration/README.md).
+
+At website SHA `9d906ba3d5d27ce7f4340aa235d014c7e1f3496c` with the recorded live overlay, `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/opt/berthalla PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' .claude/test-gate.sh` passed (577 passed, 33 skipped). From `/opt/bert-widget-qa/app-route-migration`, `node check-page.cjs` passed at all four widths with zero overflow and six correct download links; `python3 check-routes.py --static-only` passed public page, metadata, fresh quote and APK-route checks. Legacy redirects are explicitly NOT verified as deployed. The proposed nginx configuration passed its pre-commit `nginx -t` check; apply/reload remains gated on the requested explicit approval.
+
 ## App website refresh — 2026-09-09
 
 The owner requested that berthalla.io and the widget page reflect BERT as a general app. **Both pages are updated and live** at website source `86a370e493fd8da1be700c702e7873524793780b`: app navigation and homepage chapter, Home / Explore / Create / Tools previews, caption-card and local-collection copy, external destination labels, installation/privacy guidance and a new social card. Widgets and all three themes remain app features. The homepage keeps its character identity, X-first hero/video/sound and Music chapter. `/widget/`, signed APK names and package/service routes are stable. v0.5.0 and its binary are unchanged.

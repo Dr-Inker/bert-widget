@@ -2,6 +2,8 @@
 
 ## Production topology
 
+Rollout note (2026-09-09): `/app/` and homepage links are live. The exact legacy landing redirects below are prepared in the routing template but await explicit approval to modify the Berthalla nginx vhost and reload the shared service. Read `docs/NEXT-SESSION.md` before applying them.
+
 `bert-widget.service` runs the dependency-free Node quote service as `www-data` on `127.0.0.1:8787`. nginx exposes the landing page and proxies the public quote routes:
 
 - `/app/` — canonical BERT Android app landing page

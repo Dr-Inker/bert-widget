@@ -1,0 +1,17 @@
+{
+  "websiteSha": "9d906ba3d5d27ce7f4340aa235d014c7e1f3496c",
+  "routingSourceSha": "0f5f223ee121b26bbd0c9e24a63d3e3b9bf1432e",
+  "published": [
+    "website/app/index.html",
+    "website/index.html"
+  ],
+  "pending": [
+    "website/widget/index.html",
+    "website/widget/README.md",
+    "website/app/README.md",
+    "docs/superpowers/specs/2026-07-22-berthalla-io-website-design.md"
+  ],
+  "nginxChanged": false,
+  "nginxSha256": "67467c38694aaac1afb27a6a46e589686ca585f2e282b383410f0c64b44c02bc",
+  "reason": "Automatic approval review requires explicit authorization for /etc/nginx/sites-available/berthalla.io modification and nginx reload."
+}

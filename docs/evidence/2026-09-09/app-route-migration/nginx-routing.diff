@@ -1,0 +1,22 @@
+--- /etc/nginx/sites-available/berthalla.io
++++ /etc/nginx/sites-available/berthalla.io
+@@ -64,8 +64,17 @@
+         include /etc/nginx/snippets/studio-proxy-common.conf;
+     }
+ 
+-    # Native Android $BERT widget: static product page + signed APK + quote API.
+-    location = /widget { return 301 /widget/; }
++    # BERT app landing page; legacy assets, downloads and APIs stay compatible.
++    location = /app { return 301 /app/$is_args$args; }
++    location = /widget { return 301 /app/$is_args$args; }
++    location = /widget/ { return 301 /app/$is_args$args; }
++    location = /widget/index.html { return 301 /app/$is_args$args; }
++
++    location ^~ /app/ {
++        include /etc/nginx/snippets/bert-widget-security.conf;
++        add_header Cache-Control "no-cache" always;
++        try_files $uri $uri/ =404;
++    }
+ 
+     location ^~ /widget/ {
+         include /etc/nginx/snippets/bert-widget-security.conf;
