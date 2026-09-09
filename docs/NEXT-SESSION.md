@@ -1,5 +1,9 @@
 # Next session — BERT app
 
+## Release deployment — 2026-09-09
+
+The owner explicitly requested deployment to berthalla.io after being told that the September improvements were local and native validation remained outstanding. This authorizes building/signing v0.5.0 (version code 15), publishing the APK, manifest and landing-page update under `/opt/berthalla/website/widget`, and committing release records. Preparation is in progress; no new release gate or deployment success is claimed yet. Keep the production signing files protected and unchanged. Device journeys remain UNVERIFIED; deployment does not establish S-tier acceptance. This authorization supersedes the older no-deployment handoff below for this release only.
+
 Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but no campaign handoff ledger before this pass; keep continuity here and in the dated critique. Do not use the frozen session-graph archive.
 
 ## Latest implementation — research accepted

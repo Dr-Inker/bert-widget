@@ -11,8 +11,8 @@ android {
         applicationId = "global.bert.widget"
         minSdk = 26
         targetSdk = 36
-        versionCode = 14
-        versionName = "0.4.0"
+        versionCode = 15
+        versionName = "0.5.0"
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
     }
