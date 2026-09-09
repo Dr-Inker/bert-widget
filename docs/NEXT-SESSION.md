@@ -1,5 +1,27 @@
 # Next session — BERT app
 
+## Homepage preview correction — September 9
+
+Owner feedback requested dark layouts and current Flappy Bert artwork. The preview at
+https://berthalla.io/preview/home/ now uses deep navy, warm text and orange actions, plus an
+unedited screenshot captured today from a real run of the live Season 5 game. Website source
+`0c0cb6be1b5dc6cbf4702b60c0dc1fa5828c7fc1`; the following checker-only commit is
+`c0ec1e68f85bb73656f1a35a08d4333299b81420`. Both Figma hero concepts now use the dark palette.
+This supersedes the cream design and outdated portfolio screenshot in the earlier preview.
+
+At the website source SHA, `HOME_PREVIEW_URL=https://berthalla.io/preview/home/
+HOME_EVIDENCE=/opt/berthalla-home-design/docs/evidence/2026-09-09-home-dark node
+docs/evidence/2026-09-09-home-design/check-home.cjs` passed at 1440/768/390/320px with zero
+overflow, dark surface/text contrast assertions and existing functional checks. The documented
+`.claude/test-gate.sh` command passed before and after deployment there (577 passed, 33 skipped),
+and again at the merged checker SHA. `python3 docs/evidence/2026-09-09-home-dark/check-public.py`
+passed at the checker SHA: all public preview bytes match and homepage/Music hashes are preserved.
+Exact gate environments, captures and live game provenance are in the website repo's
+`docs/evidence/2026-09-09-home-dark/README.md` and `docs/RESEARCH_LOG.md`.
+
+Owner review continues at the preview URL; the root homepage and `/app/` were not changed in
+this correction. This does not change native app release/acceptance status.
+
 ## Homepage design preview — September 9
 
 The owner accepted a less formulaic homepage direction. A complete responsive preview is now
