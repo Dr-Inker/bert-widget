@@ -1,5 +1,23 @@
 # Next session — BERT app
 
+## Homepage design preview — September 9
+
+The owner accepted a less formulaic homepage direction. A complete responsive preview is now
+published at https://berthalla.io/preview/home/; the original homepage, `/app/`, signed APK and
+pre-existing Music work remain unchanged. Implementation lives in the Berthalla repository,
+`website/preview/home/`, at source `11a0a2db17deb1d96f37e930a4a6d27e5a185a3d`. The isolated
+working checkout is `/opt/berthalla-home-design`. The website's incumbent `docs/RESEARCH_LOG.md`
+and `docs/evidence/2026-09-09-home-design/README.md` carry the design decisions and public evidence.
+
+At that website SHA, `.claude/test-gate.sh` (with `PYTHONDONTWRITEBYTECODE=1` and
+`PYTEST_ADDOPTS='-p no:cacheprovider'`) passed before and after the deployment fast-forward
+(577 passed, 33 skipped). `HOME_PREVIEW_URL=https://berthalla.io/preview/home/ node
+docs/evidence/2026-09-09-home-design/check-home.cjs` passed at the same SHA for 1440/768/390/320px,
+including live/stale/unavailable data, untrusted player text, keyboard skip navigation and
+JavaScript-disabled fallbacks. The 390px page is 4253px tall versus the original 9249px.
+Figma hero direction: desktop `46:2`, mobile `46:15`, file `oTxUhbR4F1d3zDj8WlJOqh`.
+Next step is owner feedback on the working preview; the preview does not replace `/`.
+
 ## Canonical `/app/` route — deployed and verified
 
 The owner explicitly authorized updating `/etc/nginx/sites-available/berthalla.io` and reloading nginx after automatic approval review requested that scope. **The migration is complete:** `https://berthalla.io/app/` is canonical, all five homepage app links point there, and `/widget`, `/widget/`, `/widget/index.html` permanently redirect with query strings preserved. Website source `9d906ba3d5d27ce7f4340aa235d014c7e1f3496c` is deployed; the pre-existing Music overlay remains live and uncommitted. The previously pending redirect fallback and migration docs are applied. APK, metadata, shared assets and installed-app API paths remain intact.
