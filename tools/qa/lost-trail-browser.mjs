@@ -62,6 +62,10 @@ try{
  // Real keyboard input earns the first lantern, then a new page reloads its stored state.
  const {routeInput}=await import('/opt/bert-platformer/tools/qa/route-controller.mjs');
  const {createGame,stepGame}=await import('/opt/bert-platformer/src/engine.mjs');
+ for(const file of ['tools/qa/route-controller.mjs','src/engine.mjs','src/worlds.mjs']){
+  const pinned=execFileSync('git',['show',`${manifest.sourceSha}:${file}`],{cwd:'/opt/bert-platformer'});
+  assert.deepEqual(fs.readFileSync('/opt/bert-platformer/'+file),pinned,'Route inputs must use the bundled source version');
+ }
  const ctx=await browser.newContext({viewport:{width:390,height:724},hasTouch:true,isMobile:true});
  await ctx.route('**/*',r=>r.fulfill({body:html,contentType:'text/html',headers:{'Content-Security-Policy':csp}}));
  const page=await ctx.newPage();page.on('pageerror',e=>result.errors.push(e.message));await page.goto(url+'&qa');await page.waitForFunction(()=>__QA?.ready());await page.evaluate(()=>__QA.manual());await page.locator('#start').tap();
