@@ -2,11 +2,15 @@
 
 ## Release deployment — 2026-09-09
 
-The owner explicitly requested deployment to berthalla.io after being told that the September improvements were local and native validation remained outstanding. This authorizes building/signing v0.5.0 (version code 15), publishing the APK, manifest and landing-page update under `/opt/berthalla/website/widget`, and committing release records. Preparation is in progress; no new release gate or deployment success is claimed yet. Keep the production signing files protected and unchanged. Device journeys remain UNVERIFIED; deployment does not establish S-tier acceptance. This authorization supersedes the older no-deployment handoff below for this release only.
+The owner explicitly requested deployment to berthalla.io after being told that the September improvements were local and native validation remained outstanding. **v0.5.0 (version code 15) is now published** under `/opt/berthalla/website/widget`, with the same production package and signing certificate. App source: `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`; website: `302a21cdee26cfa028e47b1b2476ebcc54ca5923`; APK SHA-256: `c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0`.
 
-Updated 2026-09-08. This repo had README/RESEARCH/DEPLOYMENT documentation but no campaign handoff ledger before this pass; keep continuity here and in the dated critique. Do not use the frozen session-graph archive.
+`GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa tools/check-android.sh` passed at app source `938d9d3` (8 Node tests, 60 Android tests). With the same environment, `android/gradlew -p android :app:lintRelease :app:assembleRelease --console=plain` passed there; debug/release lint each reports zero errors and 35 warnings. `npm run verify:release -- android/app/build/outputs/apk/release/app-release.apk /opt/bert-widget-qa/release-0.5.0/staged/release.json 14` passed there. `python3 /opt/bert-widget-qa/release-0.5.0/check-public.py` and `node /opt/bert-widget-qa/release-0.5.0/check-page.cjs public` passed against website `302a21c` and app source `938d9d3`: both public APKs match the signature/hash, quote routes are fresh with advancing observations, all six download links target v0.5.0, and measured page overflow is zero at 1440/768/390/320 px. [Logs, commands, captures and limits](evidence/2026-09-09/release-0.5.0/README.md).
 
-## Latest implementation — research accepted
+The landing page now describes the general app and correct Personalize route. Narrow-screen hero decorations/phone sizing no longer widen the document; asset URLs use content hashes after a reused numeric query served stale Cloudflare content. Previous versioned APKs remain available. Rollback files are under `/opt/bert-widget-qa/release-0.5.0/previous`; production signing files and service/nginx configuration were unchanged. Unrelated website work was preserved. No GitHub push or GitHub release was performed. Device journeys remain UNVERIFIED; deployment does not establish S-tier acceptance. The owner's deployment instruction superseded the older no-deployment restriction for this release.
+
+Updated 2026-09-09. This repo had README/RESEARCH/DEPLOYMENT documentation but no campaign handoff ledger before this pass; keep continuity here and in the dated critique. Do not use the frozen session-graph archive.
+
+## September 8 implementation history — research accepted
 
 Iteration 12 audits acceptance and finds the next substantive work blocked on native test access. All six campaign criteria have an explicit evidence boundary in the latest critique; all ten device journeys remain UNVERIFIED. The host has no connected device or usable emulator acceleration, and the previous software AVD hit a blocking System UI ANR. The owner has been asked for test access or a manual preview/checklist run; no answer is available. No S-tier score or completion is claimed. Do not add speculative features or repeat the unchanged AVD attempt to prolong the loop.
 
@@ -26,7 +30,7 @@ Iteration 9 is verified at the latest source: collection and card detail have in
 
 ## Owner direction
 
-This is a **general BERT app**. Widgets are one feature, alongside market tools, personal holdings, themes, and future BERT experiences. The current work is Android source development. Published v0.4.0 and the unshipped iOS scaffold retain their existing status.
+This is a **general BERT app**. Widgets are one feature, alongside market tools, personal holdings, themes, and future BERT experiences. Android v0.5.0 is published; native acceptance remains outstanding. The iOS scaffold remains unshipped.
 
 ## Read first
 
@@ -100,10 +104,10 @@ TO / TASK / CWD / BASE / READ / WRITE (edit lease) / DO_NOT_TOUCH / ACCEPT / SID
 TO: Next BERT app session
 TASK: Resume the general BERT app improvement loop when native test access or concrete device/user findings are available; complete the device contract before any S-tier claim
 CWD: /opt/bert-widget
-BASE: Fully gated source f62c961c39c011bbecec02dc4d9b2232e5ba83d4; follow-up changes are evidence/documentation only. Native attempt runner 7d5939a072f409c5c756bcdaca43dfb6eb97dec5 failed at a blocking System UI ANR; no app journey gate passed.
+BASE: Published v0.5.0 app source 938d9d30a85025bf10caad01bcb3f4cbf72f23ae; website 302a21cdee26cfa028e47b1b2476ebcc54ca5923. Release commands and evidence above. Native attempt runner 7d5939a072f409c5c756bcdaca43dfb6eb97dec5 failed at a blocking System UI ANR; no app journey gate passed.
 READ: docs/DEVICE-REVIEW.md, docs/NEXT-SESSION.md, docs/RESEARCH-2026-09-08.md, docs/CRITIQUE-2026-09-08.md, RESEARCH.md, android/README.md, DEPLOYMENT.md
 WRITE (edit lease): Root Android source, QA and repo ledgers under the owner's ongoing loop authorization; no other agents
 DO_NOT_TOUCH: /root/.codex/session-graphs; live /var/www; signing credentials; unrelated repos
 ACCEPT: Executable development gate at the actual source SHA plus native evidence for visual claims; no unverified release claim
-SIDE_EFFECTS: No deployment, public push, external messages, or release publication
+SIDE_EFFECTS: Owner-authorized v0.5.0 website/APK publication completed on 2026-09-09; no public git push or external messages
 RETURN: Changes, command + tested SHA, capture paths, and explicit unverified work

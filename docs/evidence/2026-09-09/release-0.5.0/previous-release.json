@@ -1,0 +1,11 @@
+{
+  "version": "0.4.0",
+  "versionCode": 14,
+  "minimumAndroid": "8.0",
+  "releaseDate": "2026-07-29",
+  "sizeBytes": 29645660,
+  "sha256": "a5da30d29069168eea5273dd0139eaca1e0c84faa6504d2274cd938894b13388",
+  "signingCertificateSha256": "f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c",
+  "permissions": ["android.permission.INTERNET", "android.permission.ACCESS_NETWORK_STATE", "android.permission.WAKE_LOCK", "android.permission.RECEIVE_BOOT_COMPLETED", "android.permission.FOREGROUND_SERVICE", "android.permission.SET_WALLPAPER"],
+  "download": "https://berthalla.io/widget/download/bert-widget-0.4.0.apk?sha=a5da30d2"
+}

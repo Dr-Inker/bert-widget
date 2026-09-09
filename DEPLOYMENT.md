@@ -175,3 +175,16 @@ f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c
 - Versioned download: <https://berthalla.io/widget/download/bert-widget-0.4.0.apk?sha=a5da30d2>
 - Stable download: <https://berthalla.io/widget/download/bert-widget.apk?sha=a5da30d2>
 - UI: Theme Studio with paired Home and Lock artwork for Mayor Purple, Woofhub Night, and Berthalla Nights; automatically matched widget palettes
+
+## v0.5.0 Android release record — 2026-09-09
+
+- Owner explicitly authorized deployment in the session after the native-validation limitation was disclosed.
+- Package: `global.bert.widget`; version code `15`; minimum Android API 26; APK size 29,744,436 bytes.
+- App source: `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`; website commit: `302a21cdee26cfa028e47b1b2476ebcc54ca5923`.
+- APK SHA-256: `c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0`. Existing pinned signing certificate retained.
+- [Versioned download](https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4), [stable download](https://berthalla.io/widget/download/bert-widget.apk?sha=c47fbee4).
+- Home / Explore / Create / Tools, saved caption artwork, observed chart ranges, local holdings/cost tools, large-text navigation and explicit wallpaper outcomes.
+- [Executable checks, public measurements and captures](docs/evidence/2026-09-09/release-0.5.0/README.md). Both public APKs were downloaded and passed the release verifier; both quote routes returned fresh data with advancing observations. Physical-device journeys remain UNVERIFIED.
+- Publication updated only `/opt/berthalla/website/widget` files; no nginx/service changes or GitHub publication. Every previous versioned APK remains available. Rollback copies of the previous stable APK and page/manifest/assets are under `/opt/bert-widget-qa/release-0.5.0/previous`.
+
+Use content hashes in updated JavaScript/CSS query parameters. The initial reused `widget.js?v=8` URL returned an older Cloudflare-cached script; `widget.js?v=050-5186ce4a` and `widget.css?v=050-bab24fb1` were verified to return the published bytes. Verify public asset bytes, not only origin files or HTTP 200.

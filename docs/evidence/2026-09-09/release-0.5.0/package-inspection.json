@@ -1,0 +1,18 @@
+{
+  "sha256": "c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0",
+  "package": "global.bert.widget",
+  "version": "0.5.0",
+  "versionCode": 15,
+  "debuggable": false,
+  "publicEndpointsPresent": true,
+  "emulatorEndpointsAbsent": true,
+  "permissions": [
+    "android.permission.INTERNET",
+    "android.permission.ACCESS_NETWORK_STATE",
+    "android.permission.SET_WALLPAPER",
+    "android.permission.WAKE_LOCK",
+    "android.permission.RECEIVE_BOOT_COMPLETED",
+    "android.permission.FOREGROUND_SERVICE",
+    "global.bert.widget.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+  ]
+}

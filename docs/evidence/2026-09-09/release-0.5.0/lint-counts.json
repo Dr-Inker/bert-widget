@@ -1,0 +1,12 @@
+{
+  "debug": {
+    "Error": 0,
+    "Warning": 35,
+    "Fatal": 0
+  },
+  "release": {
+    "Error": 0,
+    "Warning": 35,
+    "Fatal": 0
+  }
+}

@@ -2,7 +2,7 @@
 
 Native Android BERT app and Jetpack Glance home-screen widgets.
 
-## Next iteration (source only; unpublished)
+## Published v0.5.0
 
 The app opens at a BERT home with Bert's latest dispatch, mood and Flappy tournament status. Home / Explore / Create / Tools have persistent navigation; Android Back returns to Home. Explore links directly to games, music and community experiences. Create separates Art, Saved and Personalize; Tools groups Market and Holdings. Each section preserves its draft and scroll state when switching destinations. At large text sizes, navigation adapts to two rows so its labels remain readable. Long dispatches can be expanded in Home.
 
@@ -16,7 +16,7 @@ Holdings are accessible without a network connection. The existing stored amount
 
 Section tabs in Create and Tools stay visible while their content scrolls, including at large text sizes. Wallpaper actions retain their result on screen and report Home and Lock outcomes separately; a partial success names the screen that changed. Android's zero return value is treated as failure, and the app does not opt wallpaper images into OS backup. Saved-state host tests cover destination, section, caption and palette restoration; actual OS process-death behavior still requires device verification.
 
-The release metadata below still describes the published v0.4.0 APK. No version bump or signed release has been produced for this iteration.
+This iteration was published on 2026-09-09 as signed v0.5.0 (version code 15), from source `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`. The existing signing identity and package are retained. Host and publication checks are recorded in [the release evidence](../docs/evidence/2026-09-09/release-0.5.0/README.md); real-device journeys remain UNVERIFIED.
 
 The development `local.properties` points at `/opt/android-sdk` on this server and is ignored by Git. Other machines should create it with their Android SDK location.
 
@@ -59,7 +59,7 @@ This runs the development gate, then `lintPreview`, `assemblePreview` and inspec
 
 Release builds use the explicit production endpoint `https://berthalla.io/widget/api/quote`. Signing credentials are intentionally kept outside Git. See [`../DEPLOYMENT.md`](../DEPLOYMENT.md) before producing or replacing a release APK.
 
-The published v0.4.0 package is `global.bert.widget` (`versionCode` 14), requires Android 8.0 or newer, and is distributed from [berthalla.io/widget](https://berthalla.io/widget/).
+The published v0.5.0 package is `global.bert.widget` (`versionCode` 15), requires Android 8.0 or newer, and is distributed from [berthalla.io/widget](https://berthalla.io/widget/).
 
 ## Host UI review
 
