@@ -1,5 +1,43 @@
 # Next session — BERT app
 
+## Mobile Lost Trail — v0.6.0 published, September 9
+
+The owner's request to add bert-platformer to the Bert app with Figma MCP is complete for
+Android. Update at https://berthalla.io/app/, then **Explore → The Lost Trail**. All six worlds
+work offline with portrait/landscape touch controls, Run toggle, pause/Back behavior and
+saved lanterns/items/gates. Returning retains Explore. Figma portrait/landscape frames are
+`58:325` / `58:326` in `oTxUhbR4F1d3zDj8WlJOqh`, using actual gameplay captures.
+
+Published app source: `569f9ca232098a4f8419d590d65273fba364157a`, game source:
+`36ec959f2a4ac9b200def91687c892a030e73e5e`, website:
+`6ef9a97822615d8720a96b5ba8d0f74be190d456`. Version 0.6.0 / code 16; signed APK hash
+`3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30`, 30,090,889 bytes.
+
+At the app source SHA,
+`GRADLE_USER_HOME=/opt/bert-widget-qa/gradle ANDROID_USER_HOME=/opt/bert-widget-qa/android-home JAVA_TOOL_OPTIONS=-Duser.home=/opt/bert-widget-qa EVIDENCE_DIR=/tmp/bert-mobile-game-release tools/check-mobile-game.sh`
+passed: 8 Node tests, 62 Android tests, debug lint/build and exact bundled-game browser gate.
+With the same Gradle environment, `android/gradlew -p android :app:lintRelease :app:assembleRelease --console=plain`
+passed; debug/release lint each has zero errors and 35 warnings. `npm run verify:release -- android/app/build/outputs/apk/release/app-release.apk /opt/bert-widget-qa/release-0.6.0/staged/release.json 15`
+passed signature/package/version/hash verification. `EVIDENCE_DIR=/tmp/bert-platformer-mobile-final tools/deploy-gate.sh`
+passed at game source `36ec959` (13 engine cases, six browser courses, art/input/save checks).
+
+At website `6ef9a97`, `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/opt/berthalla PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' .claude/test-gate.sh`
+passed after the authorized fast-forward (577 passed, 33 skipped), following the same full gate
+in staging. `python3 docs/evidence/2026-09-09/release-0.6.0/check-public.py` and
+`node docs/evidence/2026-09-09/release-0.6.0/check-page.cjs public` passed against that website
+and app source `569f9ca`: both downloaded APKs match, current page/assets match, fresh quote
+observations advance, four responsive widths have zero overflow. No service/nginx changes
+or GitHub push. Root homepage/Music overlays remain as before. Rollback:
+`/opt/bert-widget-qa/release-0.6.0/previous`.
+
+The initial 40.4% portrait playfield and ground-obscuring toast were rejected. Final portrait
+playfield is 53.9% at 390×724, targets are at least 48px, and the toast sits above the path.
+[Full evidence, captures, commands and limits](evidence/2026-09-09/release-0.6.0/README.md).
+Physical-phone install/performance, OS process-death/system bars and accessibility remain
+UNVERIFIED; no accelerated emulator/device is available. iOS is unshipped. Do not repeat the
+known failed software AVD attempt without new evidence. Native acceptance is not inferred
+from host/browser tests. The older v0.5.0 release statements below are historical.
+
 ## Homepage preview correction — September 9
 
 Owner feedback requested dark layouts and current Flappy Bert artwork. The preview at

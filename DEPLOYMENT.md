@@ -198,3 +198,22 @@ f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c
 - Publication updated only `/opt/berthalla/website/widget` files; no nginx/service changes or GitHub publication. Every previous versioned APK remains available. Rollback copies of the previous stable APK and page/manifest/assets are under `/opt/bert-widget-qa/release-0.5.0/previous`.
 
 Use content hashes in updated JavaScript/CSS query parameters. The initial reused `widget.js?v=8` URL returned an older Cloudflare-cached script; `widget.js?v=050-5186ce4a` and `widget.css?v=050-bab24fb1` were verified to return the published bytes. Verify public asset bytes, not only origin files or HTTP 200.
+
+
+## v0.6.0 Android release record — 2026-09-09
+
+- Owner requested mobile platformer integration and retained deployment authorization.
+- App source `569f9ca232098a4f8419d590d65273fba364157a`; game source `36ec959f2a4ac9b200def91687c892a030e73e5e`.
+- Website source `6ef9a97822615d8720a96b5ba8d0f74be190d456`, published by scoped fast-forward after staging.
+- Package `global.bert.widget`, version code 16, Android 8.0+, 30,090,889 bytes; existing certificate retained.
+- APK SHA-256 `3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30`.
+- Versioned APK: https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083
+- Stable APK: https://berthalla.io/widget/download/bert-widget.apk?sha=3a683083
+- `/app/` now shows the offline Lost Trail game and current native Explore capture. Six worlds,
+  portrait/landscape touch controls, native pause/Back and local lantern recovery are bundled.
+- Full mobile/Android gate and signed release verification passed at app source; full website
+  gate passed before/after deployment at website source. Exact commands, SHAs, public download
+  and page checks are in [release evidence](docs/evidence/2026-09-09/release-0.6.0/README.md).
+- Homepage/Music changes preserved; no service/nginx changes or GitHub publication. Previous
+  versioned APKs retained. Rollback files: `/opt/bert-widget-qa/release-0.6.0/previous`.
+- Physical-device installation/performance and OS lifecycle/system bars remain UNVERIFIED.

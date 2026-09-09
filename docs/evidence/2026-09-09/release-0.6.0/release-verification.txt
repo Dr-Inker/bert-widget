@@ -1,0 +1,3 @@
+Release verified: global.bert.widget v0.6.0 (16)
+APK SHA-256: 3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30
+Certificate SHA-256: f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c

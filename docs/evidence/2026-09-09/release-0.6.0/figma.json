@@ -1,0 +1,34 @@
+{
+  "fileKey": "oTxUhbR4F1d3zDj8WlJOqh",
+  "url": "https://www.figma.com/design/oTxUhbR4F1d3zDj8WlJOqh?node-id=58-325",
+  "frames": [
+    {
+      "id": "58:325",
+      "name": "Portrait mobile app",
+      "width": 390,
+      "height": 772,
+      "header": "59:320",
+      "imageNode": "59:334",
+      "imageHash": "bafd41871f114a4d551bb80c51458ef53ede84a7",
+      "capture": "game/playing-390.png"
+    },
+    {
+      "id": "58:326",
+      "name": "Landscape mobile app",
+      "width": 844,
+      "height": 342,
+      "header": "59:335",
+      "imageNode": "59:338",
+      "imageHash": "3c6ca6d74afc8f768958a15406c8da8262c4021f",
+      "capture": "game/playing-844.png"
+    }
+  ],
+  "headerHeight": 48,
+  "font": "Roboto",
+  "library": "Material Design 3",
+  "textButtonComponentKey": "c94bd76a8dbf75d7885f3015ad8474d898fca25b",
+  "bodyTextStyleKey": "1e92164361231ef1ed79f8fd256e78e0f6fbf250",
+  "method": "Figma MCP; native header components plus real game captures; node/font/image results and final screenshots inspected during creation",
+  "appSource": "569f9ca232098a4f8419d590d65273fba364157a",
+  "gameSource": "36ec959f2a4ac9b200def91687c892a030e73e5e"
+}

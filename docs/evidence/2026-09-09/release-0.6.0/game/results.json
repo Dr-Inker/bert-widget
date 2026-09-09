@@ -1,0 +1,445 @@
+{
+  "appSha": "569f9ca232098a4f8419d590d65273fba364157a",
+  "game": {
+    "sourceRepository": "bert-platformer",
+    "sourceSha": "36ec959f2a4ac9b200def91687c892a030e73e5e",
+    "sha256": "965c2cbefe715bd9e3181a7ca5bebed237ba30343b48a131a8897a4d39ad0f20",
+    "bytes": 314143,
+    "buildCommand": "node tools/build-expedition.mjs",
+    "art": "Owner-approved Bert and 20 completed PixelLab jobs; see platformer manifest",
+    "thumbnail": "Platformer release world-1.png, source 412c4f6c7591b71e3ca2d618230d2c3c96a898dd"
+  },
+  "layouts": [
+    {
+      "width": 320,
+      "height": 520,
+      "frame": {
+        "x": 0,
+        "y": 11,
+        "width": 320,
+        "height": 320
+      },
+      "toast": {
+        "x": 80,
+        "y": 69,
+        "width": 160,
+        "height": 46
+      },
+      "gameAreaFraction": 0.6153846153846154,
+      "controls": {
+        "left": {
+          "x": 16,
+          "y": 432,
+          "width": 56,
+          "height": 56
+        },
+        "right": {
+          "x": 80,
+          "y": 432,
+          "width": 56,
+          "height": 56
+        },
+        "run": {
+          "x": 216,
+          "y": 360,
+          "width": 88,
+          "height": 48
+        },
+        "bark": {
+          "x": 168,
+          "y": 424,
+          "width": 56,
+          "height": 56
+        },
+        "jump": {
+          "x": 232,
+          "y": 416,
+          "width": 72,
+          "height": 72
+        }
+      },
+      "restored": {
+        "screen": "playing",
+        "world": 0,
+        "p": {
+          "x": 80,
+          "y": 250,
+          "w": 24,
+          "h": 38,
+          "vx": 0,
+          "vy": 0,
+          "dir": 1,
+          "ground": false,
+          "coyote": 0,
+          "buffer": 0,
+          "hp": 3,
+          "inv": 100,
+          "bark": 0,
+          "barkPose": 0,
+          "anim": 0,
+          "riding": null
+        },
+        "tick": 0,
+        "coins": 0,
+        "bones": 0,
+        "deaths": 0,
+        "state": "playing",
+        "checkpoint": {
+          "x": 80,
+          "y": 250,
+          "id": -1
+        },
+        "stats": {
+          "jumps": 0,
+          "barks": 0,
+          "stomps": 0,
+          "hits": 0,
+          "checkpoints": 0,
+          "springs": 0,
+          "rides": 0,
+          "switches": 0
+        },
+        "boss": null,
+        "switches": [
+          {
+            "x": 1120,
+            "y": 252,
+            "r": 16,
+            "gateId": "bell-one",
+            "active": false
+          }
+        ],
+        "progress": {
+          "version": 1,
+          "worlds": []
+        }
+      }
+    },
+    {
+      "width": 390,
+      "height": 724,
+      "frame": {
+        "x": 0,
+        "y": 78,
+        "width": 390,
+        "height": 390
+      },
+      "toast": {
+        "x": 97.5,
+        "y": 136,
+        "width": 195,
+        "height": 46
+      },
+      "gameAreaFraction": 0.5386740331491713,
+      "controls": {
+        "left": {
+          "x": 16,
+          "y": 636,
+          "width": 56,
+          "height": 56
+        },
+        "right": {
+          "x": 80,
+          "y": 636,
+          "width": 56,
+          "height": 56
+        },
+        "run": {
+          "x": 286,
+          "y": 564,
+          "width": 88,
+          "height": 48
+        },
+        "bark": {
+          "x": 238,
+          "y": 628,
+          "width": 56,
+          "height": 56
+        },
+        "jump": {
+          "x": 302,
+          "y": 620,
+          "width": 72,
+          "height": 72
+        }
+      },
+      "restored": {
+        "screen": "playing",
+        "world": 0,
+        "p": {
+          "x": 80,
+          "y": 250,
+          "w": 24,
+          "h": 38,
+          "vx": 0,
+          "vy": 0,
+          "dir": 1,
+          "ground": false,
+          "coyote": 0,
+          "buffer": 0,
+          "hp": 3,
+          "inv": 100,
+          "bark": 0,
+          "barkPose": 0,
+          "anim": 0,
+          "riding": null
+        },
+        "tick": 0,
+        "coins": 0,
+        "bones": 0,
+        "deaths": 0,
+        "state": "playing",
+        "checkpoint": {
+          "x": 80,
+          "y": 250,
+          "id": -1
+        },
+        "stats": {
+          "jumps": 0,
+          "barks": 0,
+          "stomps": 0,
+          "hits": 0,
+          "checkpoints": 0,
+          "springs": 0,
+          "rides": 0,
+          "switches": 0
+        },
+        "boss": null,
+        "switches": [
+          {
+            "x": 1120,
+            "y": 252,
+            "r": 16,
+            "gateId": "bell-one",
+            "active": false
+          }
+        ],
+        "progress": {
+          "version": 1,
+          "worlds": []
+        }
+      }
+    },
+    {
+      "width": 844,
+      "height": 294,
+      "frame": {
+        "x": 160.671875,
+        "y": 0,
+        "width": 522.65625,
+        "height": 294
+      },
+      "toast": {
+        "x": 306.625,
+        "y": 58,
+        "width": 230.75,
+        "height": 35
+      },
+      "gameAreaFraction": 0.6192609597156398,
+      "controls": {
+        "left": {
+          "x": 16,
+          "y": 229,
+          "width": 52,
+          "height": 52
+        },
+        "right": {
+          "x": 76,
+          "y": 229,
+          "width": 52,
+          "height": 52
+        },
+        "run": {
+          "x": 634,
+          "y": 229,
+          "width": 64,
+          "height": 52
+        },
+        "bark": {
+          "x": 706,
+          "y": 229,
+          "width": 52,
+          "height": 52
+        },
+        "jump": {
+          "x": 766,
+          "y": 224,
+          "width": 62,
+          "height": 62
+        }
+      },
+      "restored": {
+        "screen": "playing",
+        "world": 0,
+        "p": {
+          "x": 80,
+          "y": 250,
+          "w": 24,
+          "h": 38,
+          "vx": 0,
+          "vy": 0,
+          "dir": 1,
+          "ground": false,
+          "coyote": 0,
+          "buffer": 0,
+          "hp": 3,
+          "inv": 100,
+          "bark": 0,
+          "barkPose": 0,
+          "anim": 0,
+          "riding": null
+        },
+        "tick": 0,
+        "coins": 0,
+        "bones": 0,
+        "deaths": 0,
+        "state": "playing",
+        "checkpoint": {
+          "x": 80,
+          "y": 250,
+          "id": -1
+        },
+        "stats": {
+          "jumps": 0,
+          "barks": 0,
+          "stomps": 0,
+          "hits": 0,
+          "checkpoints": 0,
+          "springs": 0,
+          "rides": 0,
+          "switches": 0
+        },
+        "boss": null,
+        "switches": [
+          {
+            "x": 1120,
+            "y": 252,
+            "r": 16,
+            "gateId": "bell-one",
+            "active": false
+          }
+        ],
+        "progress": {
+          "version": 1,
+          "worlds": []
+        }
+      }
+    }
+  ],
+  "errors": [],
+  "remoteRequests": [],
+  "checkpoint": {
+    "earned": {
+      "screen": "playing",
+      "world": 0,
+      "p": {
+        "x": 1612.519999999993,
+        "y": 250,
+        "w": 24,
+        "h": 38,
+        "vx": 5.1,
+        "vy": 0,
+        "dir": 1,
+        "ground": true,
+        "coyote": 7,
+        "buffer": 0,
+        "hp": 3,
+        "inv": 34,
+        "bark": 15,
+        "barkPose": 7,
+        "anim": 176.80520000000124,
+        "riding": null
+      },
+      "tick": 348,
+      "coins": 13,
+      "bones": 0,
+      "deaths": 0,
+      "state": "playing",
+      "checkpoint": {
+        "x": 1664,
+        "y": 250,
+        "id": 0
+      },
+      "stats": {
+        "jumps": 4,
+        "barks": 13,
+        "stomps": 0,
+        "hits": 2,
+        "checkpoints": 1,
+        "springs": 0,
+        "rides": 0,
+        "switches": 1
+      },
+      "boss": null,
+      "switches": [
+        {
+          "x": 1120,
+          "y": 252,
+          "r": 16,
+          "gateId": "bell-one",
+          "active": true
+        }
+      ],
+      "progress": {
+        "version": 1,
+        "worlds": []
+      }
+    },
+    "resumed": {
+      "screen": "playing",
+      "world": 0,
+      "p": {
+        "x": 1664,
+        "y": 250,
+        "w": 24,
+        "h": 38,
+        "vx": 0,
+        "vy": 0,
+        "dir": 1,
+        "ground": false,
+        "coyote": 0,
+        "buffer": 0,
+        "hp": 3,
+        "inv": 100,
+        "bark": 0,
+        "barkPose": 0,
+        "anim": 0,
+        "riding": null
+      },
+      "tick": 0,
+      "coins": 13,
+      "bones": 0,
+      "deaths": 0,
+      "state": "playing",
+      "checkpoint": {
+        "x": 1664,
+        "y": 250,
+        "id": 0
+      },
+      "stats": {
+        "jumps": 0,
+        "barks": 0,
+        "stomps": 0,
+        "hits": 0,
+        "checkpoints": 0,
+        "springs": 0,
+        "rides": 0,
+        "switches": 0
+      },
+      "boss": null,
+      "switches": [
+        {
+          "x": 1120,
+          "y": 252,
+          "r": 16,
+          "gateId": "bell-one",
+          "active": true
+        }
+      ],
+      "progress": {
+        "version": 1,
+        "worlds": []
+      }
+    }
+  }
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="global.bert.widget.data.BERTQuoteRepositoryTest" tests="2" skipped="0" failures="0" errors="0" timestamp="2026-09-09T12:46:53.325Z" hostname="ubuntu-16gb-hel1-1" time="0.002">
+  <properties/>
+  <testcase name="acceptsOnlyHttpsDexScreenerSolanaPairUrls" classname="global.bert.widget.data.BERTQuoteRepositoryTest" time="0.002"/>
+  <testcase name="boundsQuoteResponseBeforeParsing" classname="global.bert.widget.data.BERTQuoteRepositoryTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

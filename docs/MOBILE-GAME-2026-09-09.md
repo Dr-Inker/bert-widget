@@ -38,3 +38,21 @@ DO_NOT_TOUCH: Frozen session graphs; secrets; unrelated Music/home edits; iOS di
 ACCEPT: Executable commands + actual SHAs, exact bundled bytes, capture paths and stated limits
 SIDE_EFFECTS: Figma mobile design; local APK builds; established scoped release publication
 RETURN: App/game outcome, install/design links, verification evidence and remaining limitations
+
+## Outcome — published
+
+App source `569f9ca232098a4f8419d590d65273fba364157a` is published as signed Android v0.6.0 / code 16
+at https://berthalla.io/app/. Website source `6ef9a97822615d8720a96b5ba8d0f74be190d456` passed its full
+`.claude/test-gate.sh` before and after publication; exact commands/environments and test counts
+are in [release evidence](evidence/2026-09-09/release-0.6.0/README.md). That record includes the
+full app/game gates, signed/public APK verification, real captures and Figma node provenance.
+
+Critique round one rejected lost in-progress runs and website-style framing inside the app:
+added validated lantern recovery, a private offline host and direct Explore launch. Round two
+rejected a 40.4% portrait playfield, a ground-obscuring toast and wrapping Run label: changed
+portrait framing to 53.9%, moved the toast above the path, and checked at least 48px targets
+with real two-thumb input. No aesthetic score is claimed without device evidence.
+
+Remaining acceptance is physical-phone validation (installation, OS process death, WebView
+performance, native insets and accessibility), plus separately scoped iOS distribution.
+The published Android feature and website deployment are complete; no approval is pending.

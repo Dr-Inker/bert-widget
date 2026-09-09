@@ -1,0 +1,159 @@
+{
+  "mode": "public",
+  "websiteSha": "6ef9a97822615d8720a96b5ba8d0f74be190d456",
+  "sourceSha": "569f9ca232098a4f8419d590d65273fba364157a",
+  "release": {
+    "version": "0.6.0",
+    "versionCode": 16,
+    "minimumAndroid": "8.0",
+    "releaseDate": "2026-09-09",
+    "sizeBytes": 30090889,
+    "sha256": "3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30",
+    "signingCertificateSha256": "f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c",
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.SET_WALLPAPER",
+      "android.permission.WAKE_LOCK",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.FOREGROUND_SERVICE",
+      "global.bert.widget.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    ],
+    "download": "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+    "sourceRevision": "569f9ca232098a4f8419d590d65273fba364157a"
+  },
+  "rows": [
+    {
+      "width": 1440,
+      "documentWidth": 1440,
+      "versions": [
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0"
+      ],
+      "links": [
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083"
+      ],
+      "checksum": "3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30",
+      "code": "16",
+      "date": "2026-09-09",
+      "sourceNavigation": true,
+      "sourceFooter": true,
+      "sourceLinks": 2,
+      "cta": {
+        "x": 130,
+        "y": 615.890625,
+        "width": 229,
+        "height": 54
+      },
+      "errors": [],
+      "capture": "public-1440.png"
+    },
+    {
+      "width": 768,
+      "documentWidth": 768,
+      "versions": [
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0"
+      ],
+      "links": [
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083"
+      ],
+      "checksum": "3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30",
+      "code": "16",
+      "date": "2026-09-09",
+      "sourceNavigation": true,
+      "sourceFooter": true,
+      "sourceLinks": 2,
+      "cta": {
+        "x": 24,
+        "y": 514.25,
+        "width": 229,
+        "height": 54
+      },
+      "errors": [],
+      "capture": "public-768.png"
+    },
+    {
+      "width": 390,
+      "documentWidth": 390,
+      "versions": [
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0"
+      ],
+      "links": [
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083"
+      ],
+      "checksum": "3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30",
+      "code": "16",
+      "date": "2026-09-09",
+      "sourceNavigation": true,
+      "sourceFooter": true,
+      "sourceLinks": 2,
+      "cta": {
+        "x": 14,
+        "y": 467.5,
+        "width": 362,
+        "height": 54
+      },
+      "errors": [],
+      "capture": "public-390.png"
+    },
+    {
+      "width": 320,
+      "documentWidth": 320,
+      "versions": [
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0",
+        "0.6.0"
+      ],
+      "links": [
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083",
+        "https://berthalla.io/widget/download/bert-widget-0.6.0.apk?sha=3a683083"
+      ],
+      "checksum": "3a683083da772cbff5efb0c2decef740e88c3ae2d865a43ff7011888a2387d30",
+      "code": "16",
+      "date": "2026-09-09",
+      "sourceNavigation": true,
+      "sourceFooter": true,
+      "sourceLinks": 2,
+      "cta": {
+        "x": 14,
+        "y": 502.5,
+        "width": 292,
+        "height": 54
+      },
+      "errors": [],
+      "capture": "public-320.png"
+    }
+  ]
+}

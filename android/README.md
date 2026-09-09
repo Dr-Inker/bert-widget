@@ -2,7 +2,21 @@
 
 Native Android BERT app and Jetpack Glance home-screen widgets.
 
-## Published v0.5.0
+## Published v0.6.0
+
+Explore now opens **Super Bert World: The Lost Trail** in a private native game Activity.
+All six worlds and their artwork are bundled in the APK and work offline. The dark game
+layout supports portrait and landscape, two-thumb touch controls with a Run toggle,
+native Pause and Back to Bert. Android Back pauses a running game first; backgrounding
+pauses input and audio. Returning to the app retains Explore. The game saves lanterns,
+collected items and opened gates locally; reopening offers Continue from lantern with
+safe health/position. World records persist. Saves are device-local and separate from
+website browser storage; uninstalling or clearing app data removes them.
+
+Only the bundled HTTPS appassets document is served inside this WebView. All remote,
+file and content requests are blocked; no JavaScript-to-native object bridge or new
+device permissions are added. Rotation resizes the existing game. Actual OS process
+recreation, system bars and performance still require physical-device verification.
 
 The app opens at a BERT home with Bert's latest dispatch, mood and Flappy tournament status. Home / Explore / Create / Tools have persistent navigation; Android Back returns to Home. Explore links directly to games, music and community experiences. Create separates Art, Saved and Personalize; Tools groups Market and Holdings. Each section preserves its draft and scroll state when switching destinations. At large text sizes, navigation adapts to two rows so its labels remain readable. Long dispatches can be expanded in Home.
 
@@ -16,7 +30,7 @@ Holdings are accessible without a network connection. The existing stored amount
 
 Section tabs in Create and Tools stay visible while their content scrolls, including at large text sizes. Wallpaper actions retain their result on screen and report Home and Lock outcomes separately; a partial success names the screen that changed. Android's zero return value is treated as failure, and the app does not opt wallpaper images into OS backup. Saved-state host tests cover destination, section, caption and palette restoration; actual OS process-death behavior still requires device verification.
 
-This iteration was published on 2026-09-09 as signed v0.5.0 (version code 15), from source `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`. The existing signing identity and package are retained. Host and publication checks are recorded in [the release evidence](../docs/evidence/2026-09-09/release-0.5.0/README.md); real-device journeys remain UNVERIFIED.
+The app-shell features above were first published on 2026-09-09 as signed v0.5.0 (version code 15), from source `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`. The existing signing identity and package are retained. Host and publication checks are recorded in [the release evidence](../docs/evidence/2026-09-09/release-0.5.0/README.md); real-device journeys remain UNVERIFIED.
 
 The development `local.properties` points at `/opt/android-sdk` on this server and is ignored by Git. Other machines should create it with their Android SDK location.
 
@@ -59,7 +73,13 @@ This runs the development gate, then `lintPreview`, `assemblePreview` and inspec
 
 Release builds use the explicit production endpoint `https://berthalla.io/widget/api/quote`. Signing credentials are intentionally kept outside Git. See [`../DEPLOYMENT.md`](../DEPLOYMENT.md) before producing or replacing a release APK.
 
-The published v0.5.0 package is `global.bert.widget` (`versionCode` 15), requires Android 8.0 or newer, and is distributed from [berthalla.io/widget](https://berthalla.io/widget/).
+The published v0.6.0 package is `global.bert.widget` (`versionCode` 16), requires Android 8.0 or newer, and is distributed from [berthalla.io/app](https://berthalla.io/app/). Source `569f9ca232098a4f8419d590d65273fba364157a` and bundled game `36ec959f2a4ac9b200def91687c892a030e73e5e` are recorded in [release evidence](../docs/evidence/2026-09-09/release-0.6.0/README.md).
+
+`tools/check-mobile-game.sh` from the repo root runs the Android gate and then checks the
+exact packaged HTML's touch/layout/save/Back behavior in Chromium under its production CSP.
+`LostTrailTest` checks native content policy and lifecycle; the existing Explore host UI
+test verifies the game card's explicit Activity launch. These checks complement each other
+but do not execute the production APK on a phone.
 
 ## Host UI review
 

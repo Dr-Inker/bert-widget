@@ -1,12 +1,12 @@
 # BERT
 
-A native BERT app with ecosystem discovery, market tools, personal holdings, phone themes, and home-screen widgets.
+A native BERT app with an offline platform game, ecosystem discovery, market tools, personal holdings, phone themes, and home-screen widgets.
 
-The next Android iteration introduces Home / Explore / Create / Tools navigation, Bert's latest dispatch and tournament status, direct ecosystem links, and a local caption-card creator with a private saved collection. Market charts, private holdings, widgets and wallpapers remain available within the broader app. These source changes are **not published**; the distributed release described below remains v0.4.0. See [the product research](docs/RESEARCH-2026-09-08.md), [critique](docs/CRITIQUE-2026-09-08.md) and [session state](docs/NEXT-SESSION.md).
+Home / Explore / Create / Tools brings together Bert's latest dispatch and tournament status, ecosystem links, a local caption-card creator and private saved collection. Explore now opens **Super Bert World: The Lost Trail** inside the app: six worlds, touch controls, pause and saved lantern checkpoints, playable offline. See [the mobile integration](docs/MOBILE-GAME-2026-09-09.md) and [session state](docs/NEXT-SESSION.md).
 
 A separately installable **BERT Preview** can be built with `tools/check-android-preview.sh`. See [the visual review](docs/evidence/2026-09-08/review.html) and [device acceptance journeys](docs/DEVICE-REVIEW.md). This preview is local and debug-signed.
 
-The signed Android v0.5.0 release is live at [berthalla.io/app](https://berthalla.io/app/). It includes Home / Explore / Create / Tools, private saved artwork, market history and local holdings tools. This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-09-09/release-0.5.0/README.md); physical-device journeys remain unverified.
+The signed Android v0.6.0 release is live at [berthalla.io/app](https://berthalla.io/app/). This repository contains the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-09-09/release-0.6.0/README.md); physical-device journeys remain unverified.
 
 The token identity is pinned by mint rather than ticker:
 
