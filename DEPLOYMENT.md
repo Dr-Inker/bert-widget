@@ -4,11 +4,19 @@
 
 `bert-widget.service` runs the dependency-free Node quote service as `www-data` on `127.0.0.1:8787`. nginx exposes the landing page and proxies the public quote routes:
 
+- `/app/` — canonical BERT Android app landing page
+- `/widget`, `/widget/`, `/widget/index.html` — permanent redirects to `/app/`
 - `/widget/api/quote` — canonical production endpoint
 - `/widget/v1/bert/quote` — compatibility quote endpoint
 - `/widget/download/bert-widget.apk` — signed Android release
 
-The public landing-page files live under `website/widget/` in the separate Berthalla website repository and are not duplicated here. The page links back to the public source repository and release history; keep those transparency links current whenever the repository or release process changes.
+The landing HTML lives at `website/app/index.html` in the separate Berthalla website repository. Shared assets, release metadata and APK downloads remain under `website/widget/`; installed-app API and download URLs do not change. The page links back to the public source repository and release history; keep those transparency links current whenever the repository or release process changes.
+
+### Landing route changes
+
+Stage and review the landing HTML, homepage links, canonical/Open Graph metadata and the scoped routing diff before deployment. Apply the `/app/` location and exact legacy landing redirects from `deploy/nginx-widget.conf` to `/etc/nginx/sites-available/berthalla.io`. Preserve query strings with `$is_args$args`; never redirect the entire `/widget/` subtree because it contains APKs, release metadata and API routes. Keep a backup, validate the complete candidate configuration with `nginx -t`, publish the staged static files, validate the installed configuration and reload nginx. Restore the backup if validation fails.
+
+Run the Berthalla repo's `.claude/test-gate.sh` at the deployed website SHA. Verify public HTTP 301 redirects for `/widget`, `/widget/`, `/widget/index.html` and `/app`, HTTP 200 at `/app/`, canonical metadata, all page resources and download controls, and the existing quote/release/APK paths. The old physical `website/widget/index.html` is only a static-preview redirect fallback; update release links in `website/app/index.html`.
 
 ## Service deployment
 

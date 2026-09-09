@@ -6,7 +6,7 @@ The next Android iteration introduces Home / Explore / Create / Tools navigation
 
 A separately installable **BERT Preview** can be built with `tools/check-android-preview.sh`. See [the visual review](docs/evidence/2026-09-08/review.html) and [device acceptance journeys](docs/DEVICE-REVIEW.md). This preview is local and debug-signed.
 
-The signed Android v0.5.0 release is live at [berthalla.io/widget](https://berthalla.io/widget/). It includes Home / Explore / Create / Tools, private saved artwork, market history and local holdings tools. This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-09-09/release-0.5.0/README.md); physical-device journeys remain unverified.
+The signed Android v0.5.0 release is live at [berthalla.io/app](https://berthalla.io/app/). It includes Home / Explore / Create / Tools, private saved artwork, market history and local holdings tools. This public repository is the source of record for the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-09-09/release-0.5.0/README.md); physical-device journeys remain unverified.
 
 The token identity is pinned by mint rather than ticker:
 
@@ -62,7 +62,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 
 ## Production
 
-- Landing page: <https://berthalla.io/widget/>
+- Landing page: <https://berthalla.io/app/>
 - Public source: <https://github.com/Dr-Inker/bert-widget>
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
