@@ -19,6 +19,7 @@
 .bert-app .masthead,.bert-app .underbar{display:none}
 .bert-app .frame{border:0;box-shadow:none;flex-shrink:0}
 .bert-app .touch{display:flex;flex-shrink:0}
+.bert-app button{-webkit-tap-highlight-color:transparent}
 .bert-app:not([data-screen=playing]) .touch{display:none}
 .bert-app .icon-button{min-width:48px;min-height:48px;font-size:12px}
 .bert-app .button{min-height:48px;font-size:14px}
@@ -32,7 +33,7 @@
 .bert-app .muted{font-size:12px}
 @media(orientation:portrait){
  .bert-app body{justify-content:space-between}
- .bert-app .frame{width:100%;aspect-ratio:4/3;margin:auto 0}
+ .bert-app .frame{width:100%;aspect-ratio:1;margin:auto 0}
  .bert-app .frame:not([data-screen=playing]){aspect-ratio:auto;height:100%;margin:0}
  .bert-app .screen{padding:7%}
  .bert-app .title{font-size:clamp(36px,10vw,56px);letter-spacing:-1px}
@@ -56,13 +57,14 @@
  .bert-app .world-card .name{font-size:18px;margin:12px 0 8px}
  .bert-app .world-card .meta,.bert-app .world-card .num{font-size:10px}
  .bert-app .help-grid{grid-template-columns:1fr}
- .bert-app .toast{font-size:12px;bottom:3%;padding:8px 12px}
+ .bert-app .toast{font-size:12px;top:58px;bottom:auto;padding:8px 12px}
  .bert-app .result-grid{flex-wrap:wrap;gap:18px}
 }
 @media(orientation:landscape){
  .bert-app .frame{width:min(100vw,calc(100dvh * 1.77778));height:100dvh;aspect-ratio:16/9}
  .bert-app .touch{position:fixed;bottom:8px;left:0;z-index:6;pointer-events:none;padding:0 16px}
  .bert-app .touch button{pointer-events:auto;width:52px;height:52px;opacity:.92}
+ .bert-app .touch button[data-control=run]{width:64px;font-size:11px;white-space:nowrap}
  .bert-app .touch button[data-control=jump]{width:62px;height:62px}
  .bert-app .hud{top:0}
  .bert-app .hud-right{padding:0}
@@ -71,7 +73,7 @@
  .bert-app .title{font-size:38px}
  .bert-app .eyebrow{margin-bottom:8px}
  .bert-app .small-note{margin-top:10px}
- .bert-app .toast{bottom:24%;font-size:11px}
+ .bert-app .toast{top:58px;bottom:auto;font-size:11px}
 }
 
 </style>

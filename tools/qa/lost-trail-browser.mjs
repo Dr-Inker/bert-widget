@@ -27,6 +27,10 @@ try{
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
   await page.screenshot({path:`${dir}/title-${width}.png`});
   await page.locator('#start').tap();await page.evaluate(()=>__QA.advance(2));
+  const frame=await page.locator('#frame').boundingBox();
+  assert.ok(frame.width*frame.height/(width*height)>=.5,'Game must occupy at least half of the available view');
+  const toast=await page.locator('#toast').boundingBox();
+  assert.ok(toast.y+toast.height<frame.y+frame.height*.65,'Trail messages must stay above the ground and player');
   const controls={};
   for(const key of ['left','right','run','bark','jump']){
    const r=await page.locator(`[data-control=${key}]`).boundingBox();assert.ok(r.width>=48&&r.height>=48,`${key}: touch size`);
@@ -53,7 +57,7 @@ try{
   await page.reload();await page.waitForFunction(()=>__QA?.ready());await page.evaluate(()=>__QA.manual());
   assert.match(await page.locator('#start').innerText(),/Continue/);await page.locator('#start').tap();
   state=await page.evaluate(()=>__QA.read());assert.equal(state.p.hp,3);assert.equal(state.p.x,state.checkpoint.x);
-  result.layouts.push({width,height,controls,restored:state});await context.close();
+  result.layouts.push({width,height,frame,toast,gameAreaFraction:frame.width*frame.height/(width*height),controls,restored:state});await context.close();
  }
  // Real keyboard input earns the first lantern, then a new page reloads its stored state.
  const {routeInput}=await import('/opt/bert-platformer/tools/qa/route-controller.mjs');

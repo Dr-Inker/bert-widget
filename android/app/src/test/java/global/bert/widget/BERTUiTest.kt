@@ -277,6 +277,9 @@ class BERTUiTest {
         compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
         compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
         capture("explore")
+        compose.onNodeWithText("Play here · works offline").performScrollTo().performClick()
+        val gameIntent = org.robolectric.Shadows.shadowOf(compose.activity).nextStartedActivity
+        assertEquals(LostTrailActivity::class.java.name, gameIntent.component?.className)
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
         compose.onNodeWithText("BERT amount").assertExists()

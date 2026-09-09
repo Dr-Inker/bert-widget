@@ -1,8 +1,8 @@
 {
   "sourceRepository": "bert-platformer",
-  "sourceSha": "ef4206f69011bb2b835df5ba8249d1d67c7230ea",
-  "sha256": "eb51b2b8457c5a5a486d1d225a124b4d48bb1f7290d40e8f7f1d216d12a5ab1b",
-  "bytes": 313977,
+  "sourceSha": "36ec959f2a4ac9b200def91687c892a030e73e5e",
+  "sha256": "965c2cbefe715bd9e3181a7ca5bebed237ba30343b48a131a8897a4d39ad0f20",
+  "bytes": 314143,
   "buildCommand": "node tools/build-expedition.mjs",
   "art": "Owner-approved Bert and 20 completed PixelLab jobs; see platformer manifest",
   "thumbnail": "Platformer release world-1.png, source 412c4f6c7591b71e3ca2d618230d2c3c96a898dd"
