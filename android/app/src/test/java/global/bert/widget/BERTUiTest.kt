@@ -275,7 +275,7 @@ class BERTUiTest {
         compose.onNodeWithText("Bert’s update couldn’t load.").assertIsDisplayed()
         capture("home-offline")
         compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("Flappy Bert").assertIsDisplayed()
+        compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
         capture("explore")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()

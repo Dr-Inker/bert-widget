@@ -24,6 +24,9 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/caption_paths" />
         </provider>
+        <activity android:name=".LostTrailActivity" android:exported="false"
+            android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
+            android:label="Super Bert World" />
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
