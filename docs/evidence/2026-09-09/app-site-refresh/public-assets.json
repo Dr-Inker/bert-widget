@@ -1,0 +1,90 @@
+{
+  "websiteSha": "86a370e493fd8da1be700c702e7873524793780b",
+  "assets": [
+    {
+      "path": "/",
+      "sha256": "2dab16525502bc4073919a85b2c9d989ee701ba2ca5ad2324f6b71fbdccc4c00",
+      "bytes": 18440,
+      "contentType": "text/html",
+      "cache": "DYNAMIC"
+    },
+    {
+      "path": "/style.css?v=app050-bcee6e53",
+      "sha256": "bcee6e531749962f49809c6ad43bd81c993bdf6c5d7d2390cfa225b0177ea176",
+      "bytes": 43313,
+      "contentType": "text/css",
+      "cache": "REVALIDATED"
+    },
+    {
+      "path": "/widget/",
+      "sha256": "2608475e472fb82e0faecefcd181867c3b79d694127b63967d5969e0327c289a",
+      "bytes": 20979,
+      "contentType": "text/html",
+      "cache": "DYNAMIC"
+    },
+    {
+      "path": "/widget/widget.css?v=app050-05a96619",
+      "sha256": "05a96619502e6f6136817269c31bc012c777cd291ede5cfeb9287701a8cccfb4",
+      "bytes": 39242,
+      "contentType": "text/css",
+      "cache": "HIT"
+    },
+    {
+      "path": "/widget/app-home.png",
+      "sha256": "02c205258ed526699916f37af9fd7c6f9f24949a718c7690dbbc2b2d52d43fb2",
+      "bytes": 178467,
+      "contentType": "image/png",
+      "cache": "HIT"
+    },
+    {
+      "path": "/widget/app-create.png",
+      "sha256": "c059c70d7b58fa0e23012f8290a65e95e545654d5a76c2968a3cc6ade007d7cf",
+      "bytes": 335484,
+      "contentType": "image/png",
+      "cache": "HIT"
+    },
+    {
+      "path": "/widget/app-explore.png",
+      "sha256": "b1065717dac9b438c6b2df441e96bd9a56523a4687cb04af8f36397bb88930be",
+      "bytes": 128519,
+      "contentType": "image/png",
+      "cache": "HIT"
+    },
+    {
+      "path": "/widget/app-tools.png",
+      "sha256": "9f9ad9401abbbc875bffec9b79541b264cb54bd482e10a66b8a69179be09ee50",
+      "bytes": 91128,
+      "contentType": "image/png",
+      "cache": "HIT"
+    },
+    {
+      "path": "/widget/bert-app-social-1200x630.png?v=app050",
+      "sha256": "8915679fb45fc97120ed177706e2722ce628f6b4e2d355865fa67b560896eeac",
+      "bytes": 359397,
+      "contentType": "image/png",
+      "cache": "HIT"
+    }
+  ],
+  "release": {
+    "version": "0.5.0",
+    "versionCode": 15,
+    "minimumAndroid": "8.0",
+    "releaseDate": "2026-09-09",
+    "sizeBytes": 29744436,
+    "sha256": "c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0",
+    "signingCertificateSha256": "f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c",
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.SET_WALLPAPER",
+      "android.permission.WAKE_LOCK",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.FOREGROUND_SERVICE",
+      "global.bert.widget.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    ],
+    "download": "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+    "sourceRevision": "938d9d30a85025bf10caad01bcb3f4cbf72f23ae"
+  },
+  "apkSha256": "c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0",
+  "apkBytes": 29744436
+}

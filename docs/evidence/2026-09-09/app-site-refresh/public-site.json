@@ -1,0 +1,681 @@
+{
+  "mode": "public",
+  "websiteSha": "86a370e493fd8da1be700c702e7873524793780b",
+  "hashes": {
+    "index.html": "2dab16525502bc4073919a85b2c9d989ee701ba2ca5ad2324f6b71fbdccc4c00",
+    "style.css": "bcee6e531749962f49809c6ad43bd81c993bdf6c5d7d2390cfa225b0177ea176",
+    "widget/index.html": "2608475e472fb82e0faecefcd181867c3b79d694127b63967d5969e0327c289a",
+    "widget/widget.css": "05a96619502e6f6136817269c31bc012c777cd291ede5cfeb9287701a8cccfb4"
+  },
+  "noJavaScriptDownload": true,
+  "results": [
+    {
+      "pathname": "/",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "Berthalla — the Bert ecosystem",
+      "h1": "berthalla",
+      "appLinks": [
+        "bert app",
+        "meet the app →",
+        "THE BERT APP · PREVIEWS WITH EXAMPLE CONTENT",
+        "KEEP HIM CLOSEGet the app→",
+        "bert app"
+      ],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/assets/change-my-mind.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/wheres-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/odd-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/flappy-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/studio-easel.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [],
+      "ctas": [
+        {
+          "text": "meet the app\n→",
+          "x": 64,
+          "width": 172.71875,
+          "height": 54
+        }
+      ],
+      "heroHeight": 810,
+      "sourceNav": false,
+      "sourceFooter": false,
+      "artWidth": 690.8125,
+      "artHeight": 716.71875,
+      "errors": []
+    },
+    {
+      "pathname": "/widget/",
+      "width": 1440,
+      "documentWidth": 1440,
+      "title": "BERT — your Android app, artwork and widgets",
+      "h1": "a small dog.\na whole app.",
+      "appLinks": [],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-explore.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-tools.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4"
+      ],
+      "ctas": [
+        {
+          "text": "get the app\n↓",
+          "x": 1188,
+          "width": 122,
+          "height": 44
+        },
+        {
+          "text": "download APK\n↓",
+          "x": 130,
+          "width": 229,
+          "height": 54
+        }
+      ],
+      "heroHeight": 740,
+      "sourceNav": true,
+      "sourceFooter": true,
+      "artWidth": 578,
+      "artHeight": 610,
+      "errors": []
+    },
+    {
+      "pathname": "/",
+      "width": 768,
+      "documentWidth": 768,
+      "title": "Berthalla — the Bert ecosystem",
+      "h1": "berthalla",
+      "appLinks": [
+        "bert app",
+        "meet the app →",
+        "THE BERT APP · PREVIEWS WITH EXAMPLE CONTENT",
+        "KEEP HIM CLOSEGet the app→",
+        "bert app"
+      ],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/assets/change-my-mind.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/wheres-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/odd-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/flappy-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/studio-easel.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [],
+      "ctas": [
+        {
+          "text": "meet the app\n→",
+          "x": 32,
+          "width": 172.71875,
+          "height": 54
+        }
+      ],
+      "heroHeight": 810,
+      "sourceNav": false,
+      "sourceFooter": false,
+      "artWidth": 600,
+      "artHeight": 627.9375,
+      "errors": []
+    },
+    {
+      "pathname": "/widget/",
+      "width": 768,
+      "documentWidth": 768,
+      "title": "BERT — your Android app, artwork and widgets",
+      "h1": "a small dog.\na whole app.",
+      "appLinks": [],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-explore.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-tools.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4"
+      ],
+      "ctas": [
+        {
+          "text": "get the app\n↓",
+          "x": 622,
+          "width": 122,
+          "height": 44
+        },
+        {
+          "text": "download APK\n↓",
+          "x": 24,
+          "width": 229,
+          "height": 54
+        }
+      ],
+      "heroHeight": 1228.84375,
+      "sourceNav": true,
+      "sourceFooter": true,
+      "artWidth": 530,
+      "artHeight": 620,
+      "errors": []
+    },
+    {
+      "pathname": "/",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "Berthalla — the Bert ecosystem",
+      "h1": "berthalla",
+      "appLinks": [
+        "bert app",
+        "meet the app →",
+        "THE BERT APP · PREVIEWS WITH EXAMPLE CONTENT",
+        "KEEP HIM CLOSEGet the app→",
+        "bert app"
+      ],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/assets/change-my-mind.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/wheres-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/odd-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/flappy-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/studio-easel.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [],
+      "ctas": [
+        {
+          "text": "meet the app\n→",
+          "x": 22,
+          "width": 172.71875,
+          "height": 54
+        }
+      ],
+      "heroHeight": 790,
+      "sourceNav": false,
+      "sourceFooter": false,
+      "artWidth": 346,
+      "artHeight": 391.890625,
+      "errors": []
+    },
+    {
+      "pathname": "/widget/",
+      "width": 390,
+      "documentWidth": 390,
+      "title": "BERT — your Android app, artwork and widgets",
+      "h1": "a small dog.\na whole app.",
+      "appLinks": [],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-explore.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-tools.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4"
+      ],
+      "ctas": [
+        {
+          "text": "get the app\n↓",
+          "x": 260,
+          "width": 116,
+          "height": 44
+        },
+        {
+          "text": "download APK\n↓",
+          "x": 14,
+          "width": 362,
+          "height": 54
+        }
+      ],
+      "heroHeight": 1084.484375,
+      "sourceNav": true,
+      "sourceFooter": true,
+      "artWidth": 340.265625,
+      "artHeight": 452.390625,
+      "errors": []
+    },
+    {
+      "pathname": "/",
+      "width": 320,
+      "documentWidth": 320,
+      "title": "Berthalla — the Bert ecosystem",
+      "h1": "berthalla",
+      "appLinks": [
+        "bert app",
+        "meet the app →",
+        "THE BERT APP · PREVIEWS WITH EXAMPLE CONTENT",
+        "KEEP HIM CLOSEGet the app→",
+        "bert app"
+      ],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/assets/change-my-mind.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/wheres-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/odd-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/flappy-bert.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/assets/studio-easel.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [],
+      "ctas": [
+        {
+          "text": "meet the app\n→",
+          "x": 22,
+          "width": 172.71875,
+          "height": 54
+        }
+      ],
+      "heroHeight": 790,
+      "sourceNav": false,
+      "sourceFooter": false,
+      "artWidth": 276,
+      "artHeight": 323.453125,
+      "errors": []
+    },
+    {
+      "pathname": "/widget/",
+      "width": 320,
+      "documentWidth": 320,
+      "title": "BERT — your Android app, artwork and widgets",
+      "h1": "a small dog.\na whole app.",
+      "appLinks": [],
+      "brokenAnchors": [],
+      "images": [
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-home.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-explore.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-create.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/app-tools.png",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-mayor-purple-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-woofhub-night-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-lock.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/theme-berthalla-nights-home.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/android-head-flat.svg",
+          "loaded": true
+        },
+        {
+          "src": "/widget/bert-token.jpg",
+          "loaded": true
+        }
+      ],
+      "downloadLinks": [
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4",
+        "https://berthalla.io/widget/download/bert-widget-0.5.0.apk?sha=c47fbee4"
+      ],
+      "ctas": [
+        {
+          "text": "get the app\n↓",
+          "x": 190,
+          "width": 116,
+          "height": 44
+        },
+        {
+          "text": "download APK\n↓",
+          "x": 14,
+          "width": 292,
+          "height": 54
+        }
+      ],
+      "heroHeight": 1059.875,
+      "sourceNav": true,
+      "sourceFooter": true,
+      "artWidth": 274.46875,
+      "artHeight": 371.1875,
+      "errors": []
+    }
+  ]
+}

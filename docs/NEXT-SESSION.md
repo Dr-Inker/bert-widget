@@ -1,5 +1,13 @@
 # Next session — BERT app
 
+## App website refresh — 2026-09-09
+
+The owner requested that berthalla.io and the widget page reflect BERT as a general app. **Both pages are updated and live** at website source `86a370e493fd8da1be700c702e7873524793780b`: app navigation and homepage chapter, Home / Explore / Create / Tools previews, caption-card and local-collection copy, external destination labels, installation/privacy guidance and a new social card. Widgets and all three themes remain app features. The homepage keeps its character identity, X-first hero/video/sound and Music chapter. `/widget/`, signed APK names and package/service routes are stable. v0.5.0 and its binary are unchanged.
+
+At that website SHA, `GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0=/opt/berthalla PYTHONDONTWRITEBYTECODE=1 PYTEST_ADDOPTS='-p no:cacheprovider' .claude/test-gate.sh` passed from `/opt/berthalla` (577 passed, 33 skipped). From this repo, `APP_SITE_EVIDENCE=/opt/bert-widget/docs/evidence/2026-09-09/app-site-refresh node docs/evidence/2026-09-09/app-site-refresh/check-site.cjs public` passed for both pages at 1440/768/390/320px, all with zero document overflow. `python3 docs/evidence/2026-09-09/app-site-refresh/check-public-assets.py` verified nine public files and the unchanged signed v0.5.0 APK. [Commands, captures, hashes and limits](evidence/2026-09-09/app-site-refresh/README.md).
+
+Pre-existing Music edits remain uncommitted and live; the website commit includes only this pass's edits. The evidence records the preserved Music overlay and actual deployed file hashes so the exact checked homepage is reproducible. An existing 11px Arcade overflow at 320px was fixed. No application/backend/configuration changes or GitHub publication occurred. The old Figma frames predate this app refresh; code and browser evidence are the current design record. Device acceptance remains UNVERIFIED.
+
 ## Release deployment — 2026-09-09
 
 The owner explicitly requested deployment to berthalla.io after being told that the September improvements were local and native validation remained outstanding. **v0.5.0 (version code 15) is now published** under `/opt/berthalla/website/widget`, with the same production package and signing certificate. App source: `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`; website: `302a21cdee26cfa028e47b1b2476ebcc54ca5923`; APK SHA-256: `c47fbee48bc37db5d0974fa453825f34288d9d9983a603033edafcc5040df4e0`.

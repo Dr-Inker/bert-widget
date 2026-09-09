@@ -1,0 +1,42 @@
+{
+  "index.html": {
+    "previous": "15e8b4a59c7c46955cfd44116c3eb081802d2eed933f46a5614bd500240064e1",
+    "next": "2dab16525502bc4073919a85b2c9d989ee701ba2ca5ad2324f6b71fbdccc4c00"
+  },
+  "style.css": {
+    "previous": "307223391591da72f95b27e533d662dea4c88654ac0b156ffd854fda63d2edac",
+    "next": "bcee6e531749962f49809c6ad43bd81c993bdf6c5d7d2390cfa225b0177ea176"
+  },
+  "widget/index.html": {
+    "previous": "92ba175da863e3a45524539e8d1c19d8f1b696781b71dab8371f899e1a1f9e68",
+    "next": "2608475e472fb82e0faecefcd181867c3b79d694127b63967d5969e0327c289a"
+  },
+  "widget/widget.css": {
+    "previous": "bab24fb13db3ab5bfa618322bcdd952581b2577deb8f2e8379f78d234fe2d894",
+    "next": "05a96619502e6f6136817269c31bc012c777cd291ede5cfeb9287701a8cccfb4"
+  },
+  "widget/README.md": {
+    "previous": "da3e6c5920d4eee670a35e4bbe18d85433e0ca6beac167c6e93a6a20ae7ca9ca",
+    "next": "c64cc16cbee8f5cf3a6e5bf4d0573b27187fc7e805cc5a8c578d616f846f9e39"
+  },
+  "widget/app-home.png": {
+    "previous": null,
+    "next": "02c205258ed526699916f37af9fd7c6f9f24949a718c7690dbbc2b2d52d43fb2"
+  },
+  "widget/app-create.png": {
+    "previous": null,
+    "next": "c059c70d7b58fa0e23012f8290a65e95e545654d5a76c2968a3cc6ade007d7cf"
+  },
+  "widget/app-explore.png": {
+    "previous": null,
+    "next": "b1065717dac9b438c6b2df441e96bd9a56523a4687cb04af8f36397bb88930be"
+  },
+  "widget/app-tools.png": {
+    "previous": null,
+    "next": "9f9ad9401abbbc875bffec9b79541b264cb54bd482e10a66b8a69179be09ee50"
+  },
+  "widget/bert-app-social-1200x630.png": {
+    "previous": null,
+    "next": "8915679fb45fc97120ed177706e2722ce628f6b4e2d355865fa67b560896eeac"
+  }
+}

@@ -1,0 +1,162 @@
+diff --git a/website/index.html b/website/index.html
+index a22a43e..4bfeec3 100644
+--- a/website/index.html
++++ b/website/index.html
+@@ -100,6 +100,7 @@
+     <a href="#arcade"><b>03</b><span>Arcade</span></a>
+     <a href="#studio"><b>04</b><span>Studio</span></a>
+     <a href="#widget"><b>05</b><span>App</span></a>
++    <a href="#music"><b>06</b><span>Music</span></a>
+   </div>
+ </nav>
+ 
+@@ -229,17 +230,40 @@
+   </div>
+ </section>
+ 
++<!-- ══ BERT MUSIC ══ -->
++<section class="music-promo" id="music">
++  <div class="wrap music-promo__row">
++    <div class="music-promo__copy">
++      <p class="chapter">06 / BERT ON THE AUX</p>
++      <h2 class="section-head">the town has a soundtrack.</h2>
++      <p class="section-sub">three songs from The Legacy of Bert Foundation — community lore, chart feelings, and one very persistent exchange question.</p>
++      <div class="music-promo__tracks" aria-label="Released songs">
++        <span><b>01</b> HODL On</span>
++        <span><b>02</b> WEN Binance?</span>
++        <span><b>03</b> Community Take Over</span>
++      </div>
++      <a class="btn btn--accent" href="/music/">listen to the songs <span class="btn__arr" aria-hidden="true">→</span></a>
++    </div>
++    <a class="music-promo__art" href="/music/" aria-label="Listen to Bert's music">
++      <span class="music-promo__signal" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
++      <span class="music-promo__record" aria-hidden="true"><i></i></span>
++      <span class="music-promo__label">THE LEGACY OF BERT FOUNDATION<br><b>NOW PLAYING</b></span>
++    </a>
++  </div>
++</section>
++
+ <!-- ══ CTA BAND ══ -->
+ <section class="cta-band">
+   <div class="wrap">
+     <p class="chapter">CHOOSE YOUR DOOR</p>
+     <h2>come hang in berthalla.</h2>
+     <p>the mayor&rsquo;s always around — making art, chasing high scores, and checking the chart.</p>
+-    <div class="cta-band__links">
++    <div class="cta-band__links cta-band__links--five">
+       <a href="https://x.com/Berthalla_bot" target="_blank" rel="noopener"><small>THE MAYOR</small><b>Follow Bert on X</b><span>↗</span></a>
+       <a href="/studio/"><small>MAKE SOMETHING</small><b>Draw with Bert</b><span>→</span></a>
+       <a href="https://t.me/flappybertofficialbot" target="_blank" rel="noopener"><small>CHASE A SCORE</small><b>Play Flappy Bert</b><span>↗</span></a>
+       <a href="/widget/"><small>KEEP HIM CLOSE</small><b>Get the app</b><span>→</span></a>
++      <a href="/music/"><small>TURN IT UP</small><b>Hear the songs</b><span>→</span></a>
+     </div>
+   </div>
+ </section>
+@@ -258,6 +282,7 @@
+         <a href="https://bert.global" target="_blank" rel="noopener">bert.global ↗</a>
+         <a href="/studio/">bert studio</a>
+         <a href="/widget/">bert app</a>
++        <a href="/music/">bert music</a>
+       </nav>
+     </div>
+     <div class="footer__divider" aria-hidden="true"></div>
+diff --git a/website/style.css b/website/style.css
+index 844db79..6c2ccb1 100644
+--- a/website/style.css
++++ b/website/style.css
+@@ -361,6 +361,58 @@ a { color: inherit; text-decoration: none; }
+ .widget-market footer { margin-top: 16px; }
+ .widget-market footer b { color: #858da6; }
+ 
++/* ══ 06 / BERT MUSIC ══ */
++.music-promo { position: relative; overflow: hidden; padding: 92px 0; background: var(--cream-soft); }
++.music-promo__row { display: grid; grid-template-columns: .9fr 1.1fr; gap: 64px; align-items: center; }
++.music-promo__copy { display: flex; flex-direction: column; align-items: flex-start; }
++.music-promo__tracks { width: 100%; margin: 26px 0 30px; border-block: 1px solid var(--hair-light); }
++.music-promo__tracks span { display: flex; gap: 18px; padding: 13px 0; font-family: 'Baloo 2', sans-serif; font-size: 17px; font-weight: 600; border-bottom: 1px solid var(--hair-light); }
++.music-promo__tracks span:last-child { border: 0; }
++.music-promo__tracks b { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .1em; color: var(--accent); align-self: center; }
++.music-promo__art { position: relative; min-height: 430px; overflow: hidden; border-radius: 28px; background: radial-gradient(circle at 72% 40%, #28325f, var(--navy) 46%, var(--navy-deep)); border: 1px solid rgba(255,255,255,.1); box-shadow: var(--shadow-dark); transition: transform var(--dur-reveal) var(--ease-emph); }
++.music-promo__art:hover { transform: translateY(-5px) rotate(.4deg); }
++.music-promo__record { position: absolute; width: 310px; aspect-ratio: 1; border-radius: 50%; right: 9%; top: 44px; background: repeating-radial-gradient(circle, #15182a 0 3px, #090b16 4px 7px); box-shadow: 0 25px 50px rgba(0,0,0,.45); }
++.music-promo__record::before { content: ''; position: absolute; inset: 35%; border-radius: 50%; background: var(--accent); box-shadow: inset 0 0 0 8px rgba(255,255,255,.08); }
++.music-promo__record i { position: absolute; width: 20px; aspect-ratio: 1; left: calc(50% - 10px); top: calc(50% - 10px); border-radius: 50%; background: var(--cream); z-index: 1; }
++.music-promo__signal { position: absolute; left: 40px; bottom: 74px; display: flex; align-items: end; gap: 7px; height: 96px; }
++.music-promo__signal i { width: 8px; height: 34%; border-radius: 6px; background: var(--accent); }
++.music-promo__signal i:nth-child(2), .music-promo__signal i:nth-child(6) { height: 62%; }
++.music-promo__signal i:nth-child(3), .music-promo__signal i:nth-child(5) { height: 88%; }
++.music-promo__signal i:nth-child(4) { height: 48%; }
++.music-promo__label { position: absolute; left: 40px; bottom: 30px; font-family: 'JetBrains Mono', monospace; font-size: 9px; line-height: 1.6; letter-spacing: .12em; color: var(--on-dark-mut); }
++.music-promo__label b { color: var(--accent-2); }
++
++/* dedicated music page */
++.music-page { background: var(--navy-deep); }
++.subnav { background: var(--navy-deep); border-bottom: 1px solid var(--hair-dark); }
++.subnav__inner { min-height: 88px; display: flex; align-items: center; justify-content: space-between; gap: 20px; }
++.subnav .wordmark { color: var(--cream-text); font-size: 25px; }
++.subnav nav { display: flex; align-items: center; gap: 22px; color: var(--cream-text); font-size: 14px; }
++.music-hero { position: relative; overflow: hidden; padding: 110px 0 100px; background: var(--navy); }
++.music-hero::before { content: ''; position: absolute; width: 760px; height: 760px; right: -250px; top: -360px; border-radius: 50%; background: radial-gradient(circle, rgba(236,74,38,.24), transparent 68%); }
++.music-hero__inner { position: relative; display: grid; grid-template-columns: 1fr 360px; align-items: center; gap: 60px; }
++.music-hero .eyebrow { margin-bottom: 24px; }
++.music-hero h1 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(58px, 8vw, 102px); line-height: .9; letter-spacing: -.025em; color: var(--cream-text); }
++.music-hero p:last-child { max-width: 46ch; margin-top: 24px; font-size: 18px; color: var(--on-dark-mut); }
++.music-hero__mark { width: 330px; aspect-ratio: 1; border-radius: 50%; background: repeating-radial-gradient(circle, #171b31 0 4px, #080b19 5px 9px); box-shadow: 0 28px 70px rgba(0,0,0,.48); animation: spin 18s linear infinite; }
++.music-hero__mark::before { content: ''; position: absolute; width: 120px; aspect-ratio: 1; margin: 105px; border-radius: 50%; background: var(--accent); }
++.music-hero__mark span { position: absolute; width: 22px; aspect-ratio: 1; margin: 154px; border-radius: 50%; background: var(--cream); z-index: 1; }
++@keyframes spin { to { transform: rotate(360deg); } }
++.music-library { padding: 96px 0 110px; background: var(--cream); }
++.music-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 44px; }
++.music-card { overflow: hidden; border-radius: 22px; background: var(--card-warm); border: 1px solid var(--hair-light); box-shadow: var(--shadow-raise); }
++.music-card--wide { grid-column: 1 / -1; display: grid; grid-template-columns: 1.45fr .55fr; }
++.music-card__player { aspect-ratio: 16 / 9; background: #000; }
++.music-card__player iframe { width: 100%; height: 100%; display: block; border: 0; }
++.music-card__meta { padding: 24px 26px 28px; }
++.music-card--wide .music-card__meta { display: flex; flex-direction: column; justify-content: center; padding: 38px; }
++.music-card__meta > span { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .12em; color: var(--accent); }
++.music-card__meta h3 { margin-top: 7px; font-family: 'Baloo 2', sans-serif; font-size: 25px; line-height: 1.1; }
++.music-card__meta a { display: inline-block; margin-top: 13px; font-size: 13px; color: var(--ink-muted); text-decoration: underline; text-underline-offset: 3px; }
++.music-channel { display: flex; align-items: center; justify-content: space-between; gap: 30px; margin-top: 52px; padding: 34px 38px; border-radius: 22px; background: var(--navy); color: var(--cream-text); }
++.music-channel h2 { margin-top: 6px; font-family: 'Baloo 2', sans-serif; font-size: 28px; }
++.music-page .footer { padding: 36px 0; }
++
+ .cta-band { position: relative; overflow: hidden; background: var(--accent); color: #fff6f0; padding: 84px 0; text-align: left; }
+ .cta-band::before { content: ''; position: absolute; inset: 0; background: radial-gradient(62% 130% at 50% -12%, rgba(255,255,255,.20), transparent 62%); pointer-events: none; }
+ .cta-band .wrap { position: relative; }
+@@ -368,6 +420,7 @@ a { color: inherit; text-decoration: none; }
+ .cta-band h2 { font-family: 'Baloo 2', sans-serif; font-weight: 800; font-size: clamp(30px, 4.6vw, 52px); line-height: 1.02; letter-spacing: -0.015em; }
+ .cta-band > .wrap > p:not(.chapter) { font-size: 17px; opacity: .92; margin-top: 12px; }
+ .cta-band__links { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 34px; }
++.cta-band__links--five { grid-template-columns: repeat(5, 1fr); }
+ .cta-band__links a { position: relative; display: flex; flex-direction: column; min-height: 114px; padding: 20px; border: 1px solid rgba(255,255,255,.27); border-radius: 15px; background: rgba(9,13,36,.09); transition: transform var(--dur-reveal), background var(--dur-ack); }
+ .cta-band__links a:hover { transform: translateY(-4px); background: rgba(9,13,36,.17); }
+ .cta-band__links small { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: .12em; opacity: .7; }
+@@ -396,6 +449,11 @@ a { color: inherit; text-decoration: none; }
+   .who, .does, .arcade { padding: 72px 0; }
+   .who__row, .studio-promo__row { flex-direction: column; }
+   .widget-promo__row { grid-template-columns: 1fr; gap: 38px; }
++  .music-promo__row { grid-template-columns: 1fr; gap: 38px; }
++  .music-promo__art { min-height: 390px; }
++  .music-hero__inner { grid-template-columns: 1fr; }
++  .music-hero__mark { display: none; }
++  .music-card--wide { display: block; }
+   /* column direction makes flex-basis:0 a HEIGHT basis — reset it, and reserve the
+      image's 3:2 box so the lazy-loading card can't collapse to its border */
+   .studio-promo__art, .studio-promo__copy { flex: 0 0 auto; width: 100%; }
+@@ -434,6 +492,16 @@ a { color: inherit; text-decoration: none; }
+   .hero__cta { flex-wrap: wrap; }
+   .hero__unmute { bottom: 22px; right: 22px; }
+   .widget-promo { padding: 72px 0; }
++  .music-promo { padding: 72px 0; }
++  .music-promo__art { min-height: 330px; }
++  .music-promo__record { width: 235px; right: 4%; top: 38px; }
++  .music-promo__signal, .music-promo__label { left: 24px; }
++  .subnav__inner { min-height: 76px; }
++  .subnav nav > a:first-child { display: none; }
++  .music-hero { padding: 78px 0 70px; }
++  .music-grid { grid-template-columns: 1fr; }
++  .music-card--wide { grid-column: auto; }
++  .music-channel { flex-direction: column; align-items: flex-start; padding: 28px 24px; }
+   .widget-promo__row { gap: 32px; }
+   .widget-promo__art { border-radius: 18px; }
+   .ecosystem-nav { overflow-x: auto; scrollbar-width: none; }
