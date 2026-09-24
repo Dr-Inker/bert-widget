@@ -32,7 +32,7 @@ Section tabs in Create and Tools stay visible while their content scrolls, inclu
 
 The app-shell features above were first published on 2026-09-09 as signed v0.5.0 (version code 15), from source `938d9d30a85025bf10caad01bcb3f4cbf72f23ae`. The existing signing identity and package are retained. Host and publication checks are recorded in [the release evidence](../docs/evidence/2026-09-09/release-0.5.0/README.md); real-device journeys remain UNVERIFIED.
 
-The development `local.properties` points at `/opt/android-sdk` on this server and is ignored by Git. Other machines should create it with their Android SDK location.
+The development `local.properties` points at `/opt/android-sdk` on this server (a symlink into `/mnt/data/offload-root/` since 2026-09-24; path unchanged) and is ignored by Git. Other machines should create it with their Android SDK location.
 
 Debug builds use `http://10.0.2.2:8787/v1/bert/quote` and `http://10.0.2.2:8787/v1/bert/activity`. The native QA script supplies labelled fixtures for both paths; the regular Node service currently serves only the quote route, so activity is unavailable when using that service alone. Release builds use `https://berthalla.io/widget/api/quote` and `https://berthalla.io/status.json` respectively. The public activity document has no native API stability guarantee; parsing failure preserves the saved update.
 
