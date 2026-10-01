@@ -36,11 +36,11 @@
  .bert-app .frame{width:100%;aspect-ratio:1;margin:auto 0}
  .bert-app .frame:not([data-screen=playing]){aspect-ratio:auto;height:100%;margin:0}
  /* Portrait title: art on top (drawn by the canvas), full-width game menu in the dark ground below it. */
- .bert-app .frame #title-screen{justify-content:flex-end;padding:0 7% max(28px,env(safe-area-inset-bottom))}
+ .bert-app .frame #title-screen{justify-content:flex-end;padding:0 7% max(18px,env(safe-area-inset-bottom))}
  .bert-app .frame #title-screen .title-menu{margin-top:0;width:100%;align-items:stretch}
- .bert-app .frame #title-screen .actions{flex-direction:column;align-items:stretch;gap:12px}
- .bert-app .frame #title-screen .button{font-size:15px;padding:15px 18px;min-height:52px}
- .bert-app .frame #title-screen .small-note{text-align:center;margin-top:16px}
+ .bert-app .frame #title-screen .actions{flex-direction:column;align-items:stretch;gap:10px}
+ .bert-app .frame #title-screen .button{font-size:15px;padding:12px 18px;min-height:48px}
+ .bert-app .frame #title-screen .small-note{text-align:center;margin-top:10px;line-height:1.5}
  .bert-app .screen{padding:7%}
  .bert-app .title{font-size:clamp(36px,10vw,56px);letter-spacing:-1px}
  .bert-app .deck{font-size:15px;max-width:310px;line-height:1.6}
@@ -271,7 +271,7 @@ const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches,coarse=matc
 const keyMap={ArrowLeft:'left',KeyA:'left',ArrowRight:'right',KeyD:'right',Space:'jump',KeyZ:'jump',ArrowUp:'jump',KeyW:'jump',ShiftLeft:'run',ShiftRight:'run',KeyX:'run',KeyF:'bark',KeyC:'bark'};
 function clearInput(){keyState={};touchState={};input={};document.querySelectorAll('.pressed').forEach(b=>b.classList.remove('pressed'));g.jumpWas=false;g.barkWas=false;const run=document.querySelector('[data-control=run]');run.textContent='RUN';run.setAttribute('aria-pressed','false');}
 function mergedInput(){const state={...touchState};for(const [code,down]of Object.entries(keyState))if(down&&keyMap[code])state[keyMap[code]]=true;return state;}
-function show(which){screen=which;document.documentElement.dataset.screen=which;if(which!=='playing'&&audioCtx)audioCtx.suspend().catch(()=>{});if(which==='playing')initAudio();$('frame').dataset.screen=which;resize();for(const id of ['title','map','pause','help','result'])$(id+'-screen').hidden=id!==which;$('hud').hidden=which!=='playing';$('touch-controls').style.visibility=which==='playing'?'visible':'hidden';$('toast').hidden=true;clearInput();if(which==='pause')$('pause-screen').querySelector('.deck').textContent=g.world.theme.story;// A touch device has no keyboard focus to show; an auto-focused title button only draws a stray ring.
+function show(which){screen=which;document.documentElement.dataset.screen=which;if(which!=='playing'&&audioCtx)audioCtx.suspend().catch(()=>{});if(which==='playing')initAudio();$('frame').dataset.screen=which;for(const id of ['title','map','pause','help','result'])$(id+'-screen').hidden=id!==which;resize();$('hud').hidden=which!=='playing';$('touch-controls').style.visibility=which==='playing'?'visible':'hidden';$('toast').hidden=true;clearInput();if(which==='pause')$('pause-screen').querySelector('.deck').textContent=g.world.theme.story;// A touch device has no keyboard focus to show; an auto-focused title button only draws a stray ring.
   if(which!=='playing'&&!(coarse&&which==='title')){const first=$(which+'-screen')?.querySelector('button:not(:disabled)');first?.focus({preventScroll:true});}lastTime=0;accumulator=0;}
 function start(index){g=createGame(index);g.viewWidth=canvas.width;lastMusic=-1;persistRun();show('playing');initAudio();notify(THEMES[index].subtitle,210);updateHud();}
 function maxUnlocked(){let n=0;while(n<5&&progress.worlds[n])n++;return n;}
@@ -301,7 +301,9 @@ window.BertAppGame=Object.freeze({pause:suspendGame,back(){if(screen==='playing'
 for(const button of document.querySelectorAll('[data-control]')){const control=button.dataset.control;const ids=new Set();button.addEventListener('pointerdown',e=>{if(screen!=='playing')return;e.preventDefault();button.setPointerCapture(e.pointerId);ids.add(e.pointerId);if(control==='run'){touchState.run=!touchState.run;button.classList.toggle('pressed',touchState.run);button.textContent=touchState.run?'RUN ON':'RUN';button.setAttribute('aria-pressed',String(touchState.run));}else{touchState[control]=true;button.classList.add('pressed');}initAudio();});const release=e=>{ids.delete(e.pointerId);if(control==='run')return;touchState[control]=ids.size>0;button.classList.toggle('pressed',ids.size>0);};button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);button.addEventListener('contextmenu',e=>e.preventDefault());}
 function resize(){const fw=$('frame').clientWidth,fh=$('frame').clientHeight;
   // Tall title frames render at the portrait key art's native 288px width; everything else is 360px tall.
-  if(screen==='title'&&fh>fw*1.1){canvas.width=288;canvas.height=Math.max(360,Math.round(288*fh/fw));}else{canvas.width=Math.round(360*fw/fh);canvas.height=360;}
+  // The menu sits below the art, so widen the canvas (shrinking the art) when the frame is too short for both.
+  if(screen==='title'&&fh>fw*1.1){const menu=$('title-screen').querySelector('.title-menu'),need=menu?menu.offsetHeight+28:0,room=Math.max(160,fh-need);
+    canvas.width=Math.max(288,Math.ceil(fw*360/room));canvas.height=Math.max(360,Math.round(canvas.width*fh/fw));}else{canvas.width=Math.round(360*fw/fh);canvas.height=360;}
   ctx.imageSmoothingEnabled=false;g.viewWidth=canvas.width;}
 new ResizeObserver(resize).observe($('frame'));resize();
 function initAudio(){if(muted)return;try{if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.12;master.connect(audioCtx.destination);}if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}catch{muted=true;updateSound();}}
