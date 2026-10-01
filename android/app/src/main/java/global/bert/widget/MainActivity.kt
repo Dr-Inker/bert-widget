@@ -106,7 +106,10 @@ private fun BERTScreen(lifecycle: Lifecycle) {
         if (activityRefreshing) return
         activityRefreshing = true
         try {
-            activityState = ActivityState.Available(activityRepository.refresh())
+            val activity = activityRepository.refresh()
+            activityState = ActivityState.Available(activity)
+            // Read here, so it is not news for a later dispatch alert.
+            activity.dispatch?.let { BERTAlertStore(context.applicationContext).markDispatchSeen(it) }
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
@@ -170,7 +173,7 @@ internal fun BERTApp(
                     if (!largeText) AppHeader(destination)
                     val tabPadding = if (largeText) 12.dp else 16.dp
                     if (destination == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalize"), createTab, tabPadding) { createTab = it }
-                    else SectionTabs(listOf("Market", "Holdings"), toolsTab, tabPadding) { toolsTab = it }
+                    else SectionTabs(listOf("Market", "Holdings", "Alerts"), toolsTab, tabPadding) { toolsTab = it }
                 }
             }
             savedScreens.SaveableStateProvider(screenKey) {
@@ -209,8 +212,11 @@ internal fun BERTScreenContent(
 private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, position: BERTPosition, now: Long,
                         refreshing: Boolean, tab: String,
                         refresh: () -> Unit, savePosition: (BERTPosition) -> Unit) {
-    if (tab == "Market") MarketScreen(state, history, now, refreshing, refresh)
-    else HoldingsScreen(position, state, now, savePosition)
+    when (tab) {
+        "Market" -> MarketScreen(state, history, now, refreshing, refresh)
+        "Alerts" -> AlertsScreen(state)
+        else -> HoldingsScreen(position, state, now, savePosition)
+    }
 }
 
 @Composable

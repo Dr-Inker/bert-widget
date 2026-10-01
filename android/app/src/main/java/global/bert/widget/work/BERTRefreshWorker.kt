@@ -12,6 +12,10 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import global.bert.widget.alerts.BERTNotifier
+import global.bert.widget.data.BERTActivityRepository
+import global.bert.widget.data.BERTAlertRules
+import global.bert.widget.data.BERTAlertStore
 import global.bert.widget.data.BERTMarketHistoryRepository
 import global.bert.widget.data.BERTQuote
 import global.bert.widget.data.BERTQuoteRepository
@@ -21,10 +25,27 @@ import global.bert.widget.widget.updateAllBERTWidgets
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
 
+/** Evaluates switched-on alerts against the freshly stored quote and (when needed) Bert's activity feed. */
+internal suspend fun checkAlerts(context: Context, now: Long = System.currentTimeMillis()) {
+    val store = BERTAlertStore(context)
+    val settings = store.settings()
+    if (!settings.anyEnabled) return
+    val activity = if (settings.tournament || settings.dispatch) {
+        try { BERTActivityRepository(context).refresh() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { BERTActivityRepository(context).load() }
+    } else null
+    val (notices, memory) = BERTAlertRules.evaluate(settings, store.memory(), BERTQuoteRepository(context).load(), activity, now)
+    // Memory only advances for notices that were actually shown (or need no showing), so a missing
+    // permission does not silently consume an alert.
+    if (notices.isEmpty() || BERTNotifier.post(context, notices) > 0) store.saveMemory(memory)
+}
+
 class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result = try {
         BERTQuoteRepository(applicationContext).refresh()
+        checkAlerts(applicationContext)
         // Best effort: the sparkline falls back to cached history plus device quotes.
         try { BERTMarketHistoryRepository(applicationContext).refresh() }
         catch (cancelled: CancellationException) { throw cancelled }
@@ -39,9 +60,9 @@ class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
     companion object {
         private const val PERIODIC_WORK = "bert-periodic-quote-refresh"
 
-        /** Background refresh exists only for placed widgets; the open app refreshes itself. */
+        /** Background refresh runs for placed widgets or switched-on alerts; the open app refreshes itself. */
         fun syncSchedule(context: Context) {
-            if (hasPlacedWidgets(context)) schedule(context)
+            if (hasPlacedWidgets(context) || BERTAlertStore(context).settings().anyEnabled) schedule(context)
             else WorkManager.getInstance(context).cancelUniqueWork(PERIODIC_WORK)
         }
 

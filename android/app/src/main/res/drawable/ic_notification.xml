@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Monochrome paw for the status bar (Android tints small icons; colour art would render as a blob). -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="24" android:viewportHeight="24">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M12,13.2c-2.7,0 -5.2,2.4 -5.2,4.6c0,1.5 1.2,2.4 2.6,2.4c1,0 1.7,-0.5 2.6,-0.5s1.6,0.5 2.6,0.5c1.4,0 2.6,-0.9 2.6,-2.4C17.2,15.6 14.7,13.2 12,13.2z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M7.2,8.8a1.9,2.4 0,1 0,3.8 0a1.9,2.4 0,1 0,-3.8 0z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M13,8.8a1.9,2.4 0,1 0,3.8 0a1.9,2.4 0,1 0,-3.8 0z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M3.6,12.6a1.7,2.1 0,1 0,3.4 0a1.7,2.1 0,1 0,-3.4 0z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M17,12.6a1.7,2.1 0,1 0,3.4 0a1.7,2.1 0,1 0,-3.4 0z"/>
+</vector>

@@ -243,6 +243,23 @@ class BERTUiTest {
         capture("home-tournament")
     }
 
+    @Test fun alertsTabSavesSwitchesAndPriceLevels() {
+        // Saving alerts schedules background refresh; the host test application does not initialise WorkManager itself.
+        runCatching { androidx.work.WorkManager.initialize(compose.activity.applicationContext, androidx.work.Configuration.Builder().build()) }
+        app(quote = QuoteState.Available(BERTQuote(0.0154, 1.6, null, null, null, "fresh", 1_789_000_000_000 - 30_000, "dexscreener", "raydium",
+            "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY")))
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Alerts", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("BERT is $0.0154 now.").performScrollTo().assertIsDisplayed()
+        compose.onNode(hasContentDescription("Tournament ending") and isToggleable()).performClick()
+        val store = BERTAlertStore(compose.activity)
+        assertTrue(store.settings().tournament)
+        compose.onNodeWithText("Alert above (USD)").performScrollTo().performTextInput("0.02")
+        compose.onNodeWithText("Save price alerts").performScrollTo().performClick()
+        assertEquals(0.02, store.settings().priceAbove!!, 0.0)
+        capture("alerts")
+    }
+
     @Test fun activityAndCaptionCreationRender() {
         app(ActivityState.Available(BERTActivity(1_789_000_000_000,
             "The town is quiet. My hat is not. A very good day to make something.", "curious", null)))
