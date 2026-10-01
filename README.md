@@ -6,7 +6,7 @@ Home / Explore / Create / Tools brings together Bert's latest dispatch and tourn
 
 A separately installable **BERT Preview** can be built with `tools/check-android-preview.sh`. See [the visual review](docs/evidence/2026-09-08/review.html) and [device acceptance journeys](docs/DEVICE-REVIEW.md). This preview is local and debug-signed.
 
-The signed Android v0.7.0 release is live at [berthalla.io/app](https://berthalla.io/app/). This repository contains the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-09-09/release-0.6.0/README.md); physical-device journeys remain unverified.
+The signed Android v0.7.0 release is live at [berthalla.io/app](https://berthalla.io/app/). This repository contains the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-10-01/release-0.7.0/README.md), including an in-place upgrade from 0.6.0 verified on a Samsung S25 Ultra (Android 16).
 
 The token identity is pinned by mint rather than ticker:
 
