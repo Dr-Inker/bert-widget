@@ -3,4 +3,5 @@
     <string name="app_name">BERT Preview</string>
     <string name="widget_compact_name">BERT Preview · Compact</string>
     <string name="widget_market_name">BERT Preview · Market</string>
+    <string name="widget_daily_name">BERT Preview · Bert</string>
 </resources>

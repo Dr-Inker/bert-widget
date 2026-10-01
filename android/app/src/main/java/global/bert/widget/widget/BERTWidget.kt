@@ -369,11 +369,15 @@ class BERTMarketWidgetReceiver : BERTWidgetReceiverBase() {
     override val glanceAppWidget: GlanceAppWidget = BERTMarketWidget()
 }
 
+class BERTDailyWidgetReceiver : BERTWidgetReceiverBase() {
+    override val glanceAppWidget: GlanceAppWidget = BERTDailyWidget()
+}
+
 suspend fun updateAllBERTWidgets(context: Context, scheduleStaleRender: Boolean = true) {
     // Scheduled first so a failed render cannot leave an earlier quote's timer in place.
     if (scheduleStaleRender) BERTWidgetStaleRenderWorker.schedule(context, BERTQuoteRepository(context).load())
     val manager = GlanceAppWidgetManager(context)
-    for (widget in listOf(BERTWidget(), BERTMarketWidget())) {
+    for (widget in listOf(BERTWidget(), BERTMarketWidget(), BERTDailyWidget())) {
         for (id in manager.getGlanceIds(widget.javaClass)) {
             // Bumping the revision makes a live session reload its data rather than recompose stale values.
             updateAppWidgetState(context, id) { it[REVISION] = (it[REVISION] ?: 0) + 1 }

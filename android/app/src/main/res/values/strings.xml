@@ -5,5 +5,7 @@
     <string name="widget_compact_name">BERT · Compact</string>
     <string name="widget_compact_description">BERT price and 24-hour change in a compact 2×2 widget.</string>
     <string name="widget_market_name">BERT · Market</string>
+    <string name="widget_daily_name">BERT · Bert</string>
+    <string name="widget_daily_description">Bert\'s mood, his latest update and the tournament countdown. No market data.</string>
     <string name="widget_market_description">BERT price, market cap, volume and liquidity in a wide 4×2 widget.</string>
 </resources>

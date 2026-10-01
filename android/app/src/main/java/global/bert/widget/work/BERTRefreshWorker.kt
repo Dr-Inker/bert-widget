@@ -19,11 +19,21 @@ import global.bert.widget.data.BERTAlertStore
 import global.bert.widget.data.BERTMarketHistoryRepository
 import global.bert.widget.data.BERTQuote
 import global.bert.widget.data.BERTQuoteRepository
+import global.bert.widget.widget.BERTDailyWidgetReceiver
 import global.bert.widget.widget.BERTMarketWidgetReceiver
 import global.bert.widget.widget.BERTWidgetReceiver
 import global.bert.widget.widget.updateAllBERTWidgets
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
+
+/** The Bert widget shows Bert's feed, so keep it current while one is placed. */
+internal suspend fun refreshActivityForDailyWidget(context: Context) {
+    val manager = AppWidgetManager.getInstance(context) ?: return
+    if (manager.getAppWidgetIds(ComponentName(context, BERTDailyWidgetReceiver::class.java)).isEmpty()) return
+    try { BERTActivityRepository(context).refresh() }
+    catch (cancelled: CancellationException) { throw cancelled }
+    catch (_: Exception) { }
+}
 
 /** Evaluates switched-on alerts against the freshly stored quote and (when needed) Bert's activity feed. */
 internal suspend fun checkAlerts(context: Context, now: Long = System.currentTimeMillis()) {
@@ -31,6 +41,7 @@ internal suspend fun checkAlerts(context: Context, now: Long = System.currentTim
     val settings = store.settings()
     if (!settings.anyEnabled) return
     val activity = if (settings.tournament || settings.dispatch) {
+        // Refreshed below for the Bert widget too; this read uses the stored copy when that already ran.
         try { BERTActivityRepository(context).refresh() }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { BERTActivityRepository(context).load() }
@@ -45,6 +56,7 @@ class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result = try {
         BERTQuoteRepository(applicationContext).refresh()
+        refreshActivityForDailyWidget(applicationContext)
         checkAlerts(applicationContext)
         // Best effort: the sparkline falls back to cached history plus device quotes.
         try { BERTMarketHistoryRepository(applicationContext).refresh() }
@@ -82,7 +94,7 @@ class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
 
         fun hasPlacedWidgets(context: Context): Boolean {
             val manager = AppWidgetManager.getInstance(context) ?: return false
-            return listOf(BERTWidgetReceiver::class.java, BERTMarketWidgetReceiver::class.java).any {
+            return listOf(BERTWidgetReceiver::class.java, BERTMarketWidgetReceiver::class.java, BERTDailyWidgetReceiver::class.java).any {
                 manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty()
             }
         }

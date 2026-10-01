@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.sp
 import global.bert.widget.theme.BERTThemePack
 import global.bert.widget.theme.BERTThemeStore
 import global.bert.widget.theme.BERTWallpaperInstaller
+import global.bert.widget.widget.BERTDailyWidgetReceiver
 import global.bert.widget.widget.BERTMarketWidgetReceiver
 import global.bert.widget.widget.BERTWidgetReceiver
 import global.bert.widget.widget.updateAllBERTWidgets
@@ -181,11 +182,12 @@ internal fun WidgetSetup(context: Context) {
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(22.dp)) {
         Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             SectionLabel("HOME-SCREEN WIDGETS")
-            Text("Choose the quick price view or the full market desk.", color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+            Text("Bert himself, the quick price view or the full market desk.", color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
                 maxItemsInEachRow = if (stackActions) 1 else 2, modifier = Modifier.fillMaxWidth()) {
                 WidgetButton("Compact", "2×2", Modifier.weight(1f)) { pinWidget(context, BERTWidgetReceiver::class.java) }
                 WidgetButton("Market", "4×2", Modifier.weight(1f)) { pinWidget(context, BERTMarketWidgetReceiver::class.java) }
+                WidgetButton("Bert", "4×2", Modifier.weight(1f)) { pinWidget(context, BERTDailyWidgetReceiver::class.java) }
             }
             Text("If your launcher does not support one-tap placement, long-press the home screen and choose Widgets → BERT.", color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
         }

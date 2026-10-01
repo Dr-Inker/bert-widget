@@ -96,7 +96,7 @@ class BERTWidgetRenderTest {
     }
 
     /** Every visible text fits: one line, not ellipsized, fully inside the widget bounds. */
-    private fun problems(r: Rendered): List<String> {
+    private fun problems(r: Rendered, multiline: Set<String> = emptySet()): List<String> {
         val loc = IntArray(2); val rootLoc = IntArray(2); r.root.getLocationInWindow(rootLoc)
         return r.texts.mapNotNull { tv ->
             tv.getLocationInWindow(loc)
@@ -106,9 +106,12 @@ class BERTWidgetRenderTest {
             val ellipsized = layout != null && (0 until lines).any { layout.getEllipsisCount(it) > 0 }
             val widest = layout?.let { l -> (0 until lines).maxOfOrNull { l.getLineWidth(it) } } ?: 0f
             val clippedH = widest > tv.width - tv.totalPaddingLeft - tv.totalPaddingRight + 1
+            // Lines laid out beyond the view's own height are cut mid-glyph without any ellipsis.
+            val overflowsBox = layout != null && layout.height > tv.height - tv.totalPaddingTop - tv.totalPaddingBottom + 1
             val outside = left < 0 || top < 0 || left + tv.width > r.root.width || top + tv.height > r.root.height || clippedByAncestor(tv)
-            val issue = listOfNotNull("wraps to $lines lines".takeIf { lines > 1 }, "ellipsized".takeIf { ellipsized },
-                "clipped".takeIf { clippedH }, "outside widget".takeIf { outside })
+            val prose = tv.text.toString() in multiline // e.g. Bert's dispatch: wrapping and a final ellipsis are intended
+            val issue = listOfNotNull("wraps to $lines lines".takeIf { lines > 1 && !prose }, "ellipsized".takeIf { ellipsized && !prose },
+                "clipped".takeIf { clippedH }, "taller than its box".takeIf { overflowsBox }, "outside widget".takeIf { outside })
             if (issue.isEmpty()) null else "'${tv.text}': ${issue.joinToString()}"
         }
     }
@@ -145,5 +148,19 @@ class BERTWidgetRenderTest {
         val green = android.graphics.Color.parseColor("#45E09A"); val red = android.graphics.Color.parseColor("#FF6B7A")
         assertTrue(green in colours(rising = true) && red !in colours(rising = true))
         assertTrue(red in colours(rising = null))
+    }
+
+    @Test fun bertWidgetFitsAtEverySizeWithDispatchAndTournament() {
+        val dispatch = "woofmornin. the ladybug holds the screen door like the wind can wait its turn, and the mayor is in no hurry either."
+        val now = System.currentTimeMillis()
+        val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", "content").put("latest_post", dispatch)
+            .put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + (60L * 24 + 7) * 3_600_000).toString())
+                .put("status", "live").put("pool", 250).put("top", org.json.JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
+        context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()
+        val report = listOf(120 to 110, 180 to 180, 250 to 110, 320 to 150, 360 to 200).associate { (w, h) ->
+            "bert ${w}x$h" to problems(render(BERTDailyWidget(), w, h, "bert-${w}x$h"), multiline = setOf(dispatch))
+        }
+        println("WIDGET REPORT bert: $report")
+        assertTrue(report.toString(), report.values.all { it.isEmpty() })
     }
 }

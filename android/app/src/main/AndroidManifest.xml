@@ -45,6 +45,15 @@
             <meta-data android:name="android.appwidget.provider" android:resource="@xml/bert_widget_info" />
         </receiver>
         <receiver
+            android:name=".widget.BERTDailyWidgetReceiver"
+            android:exported="false"
+            android:label="@string/widget_daily_name">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data android:name="android.appwidget.provider" android:resource="@xml/bert_daily_widget_info" />
+        </receiver>
+        <receiver
             android:name=".widget.BERTMarketWidgetReceiver"
             android:exported="false"
             android:label="@string/widget_market_name">

@@ -55,7 +55,7 @@ def main():
     check("global.bert.widget.preview.captions" in authorities, "Caption provider must use the preview namespace")
     check(all(a.startswith("global.bert.widget.preview.") for a in authorities), "Provider authority collides with another app")
     check('"androidx.activity.ComponentActivity"' not in manifest, "Host-test activity must not ship in the preview")
-    for label in ["BERT Preview · Compact", "BERT Preview · Market"]:
+    for label in ["BERT Preview · Compact", "BERT Preview · Market", "BERT Preview · Bert"]:
         check(label in resources, "Preview widget label missing: " + label)
     check("CN=Android Debug" in signature, "Preview must use the Android debug signing identity")
     with zipfile.ZipFile(args.apk) as apk:
