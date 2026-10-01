@@ -30,8 +30,7 @@ struct BERTQuoteClient: Sendable {
             throw ClientError.server(status: http.statusCode)
         }
 
-        let decoder = JSONDecoder()
-        decoder.dateDecodingStrategy = .iso8601
+        let decoder = BERTJSON.decoder()
         let envelope = try decoder.decode(BERTQuoteEnvelope.self, from: data)
         guard envelope.asset.chain == "solana",
               envelope.asset.mint == Self.expectedMint else {

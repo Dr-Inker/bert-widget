@@ -29,3 +29,11 @@ The companion app also bundles the Mayor Purple, Woofhub Night, and Berthalla Ni
 ## Distribution status
 
 No IPA, TestFlight build, or App Store listing has been produced. Apple Developer team access, final bundle identifiers, App Group registration, signing profiles, and a macOS/Xcode validation pass are still required.
+
+## October 1, 2026 fix (not compiled)
+
+The quote service sends `observedAt` with fractional seconds, which `JSONDecoder.dateDecodingStrategy = .iso8601`
+rejects, so this client could not decode a single quote. `Shared/BERTJSON.swift` now decodes both fractional and whole
+seconds (and writes fractional), and `isStale` also turns true once a quote is 30 minutes old, matching Android. No
+macOS/Xcode toolchain was available, so these changes are unverified until the project is built and run.
+

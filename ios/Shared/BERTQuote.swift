@@ -35,7 +35,12 @@ struct BERTQuoteEnvelope: Codable, Equatable, Sendable {
         let warning: String?
     }
 
-    var isStale: Bool { meta.freshness != "fresh" }
+    /// Matches Android: delayed when the service says so or when the observation is 30 minutes old.
+    var isStale: Bool { isStale(at: Date()) }
+
+    func isStale(at now: Date) -> Bool {
+        meta.freshness != "fresh" || now.timeIntervalSince(source.observedAt) >= 30 * 60 || source.observedAt.timeIntervalSince(now) > 60
+    }
 
     static let preview = BERTQuoteEnvelope(
         asset: .init(
