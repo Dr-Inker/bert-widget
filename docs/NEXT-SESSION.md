@@ -1,5 +1,36 @@
 # Next session — BERT app
 
+## START HERE (memo left 1 October 2026, end of session)
+
+**State:** v0.8.0 (code 19) is live at https://berthalla.io/app/ and on the owner's S25. GitHub `main` = this release.
+All improvements from the October 1 critique are shipped except retiring the price server. The owner plans to upload
+to Google Play next.
+
+**Waiting on the owner:**
+1. Play Console upload from `C:\Users\Sjpch\BERT-Play\` on the drinkerlabs PC (`bert-0.8.0.aab`, `mapping-0.8.0.txt`,
+   graphics, `LISTING.md`). Offer to walk through it.
+2. A contact email for the Play listing (not chosen yet; do not use the owner's personal address without asking).
+3. Decide whether berthalla.io/app keeps serving APKs or points to Play once Play re-signs the app (Play and
+   sideloaded installs cannot update each other).
+
+**For me to do:**
+- ~15 October 2026: count `/widget/api/quote` + `/widget/api/history` requests with vs without `?via=fallback` in
+  `/var/log/nginx/access.log`; propose retiring `bert-widget.service` if untagged (pre-0.7) traffic has faded.
+- After Play review: fix anything Play flags; keep `docs/play/LISTING.md` in step.
+- iOS fractional-date fix is uncompiled; needs Xcode.
+
+**Working setup:**
+- Repo `/opt/bert-widget` is the production checkout (the quote/history service runs from it). Develop in the
+  worktree `/opt/bert-widget-direct` (branch `v080`, = `main`), gate with `tools/check-mobile-game.sh`, then
+  fast-forward. Website releases stage in `/opt/bert-widget-site-release` and fast-forward `/opt/berthalla`
+  (preserve the uncommitted homepage/Music edits there; check their hashes).
+- Game: `/opt/bert-platformer` (`master`, private GitHub). App-only; bundle builds into
+  `android/app/src/main/assets/games/lost-trail/`.
+- Device: S25 via `ssh pc` + `C:\Users\Sjpch\platform-tools\adb.exe -s R5CY13S5TRD`. The owner often watches this
+  session on that phone: ask them to unlock/put it down, guard taps to BERT's package, restore any settings changed.
+- Release recipe: see the v0.8.0 evidence README and `DEPLOYMENT.md` (version bump → gate → signed APK + AAB →
+  verify + check-apk → stamp site → device upgrade → publish → public checks → records → push).
+
 ## v0.8.0 published — October 1; Google Play next
 
 Live at https://berthalla.io/app/ (code 19). Everything from the October 1 improvement list is done except retiring
