@@ -14,6 +14,11 @@ to Google Play next.
    sideloaded installs cannot update each other).
 
 **For me to do:**
+- **First: redesign the Bert widget** (owner, on the S25 at a large 4×2 size: "looks empty and weird"). Text is a fixed
+  14sp, so big widgets show two small lines and a void; no Bert art beyond a 30dp avatar; mood pill uses the purple theme
+  accent. Plan: full-height Bert portrait on the left (reuse caption-card art), dispatch that scales with the space
+  (≈14–20sp) and is vertically centred, orange mood pill, tidy tournament footer, subtle gradient. Add a render-test check
+  that fails when a large share of the widget is empty, render 120×110 → 400×220, then device-check on the S25.
 - ~15 October 2026: count `/widget/api/quote` + `/widget/api/history` requests with vs without `?via=fallback` in
   `/var/log/nginx/access.log`; propose retiring `bert-widget.service` if untagged (pre-0.7) traffic has faded.
 - After Play review: fix anything Play flags; keep `docs/play/LISTING.md` in step.
