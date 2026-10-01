@@ -10,7 +10,7 @@ import android.graphics.Shader
 import global.bert.widget.data.BERTPriceSample
 
 object BERTSparkline {
-    fun render(samples: List<BERTPriceSample>, width: Int = 600, height: Int = 180): Bitmap? {
+    fun render(samples: List<BERTPriceSample>, width: Int = 600, height: Int = 180, rising: Boolean? = null): Bitmap? {
         if (samples.size < 2 || width <= 0 || height <= 0) return null
         val prices = samples.map { it.priceUsd }
         val minimum = prices.min()
@@ -21,8 +21,8 @@ object BERTSparkline {
         val inset = 8f
         val drawableWidth = width - inset * 2
         val drawableHeight = height - inset * 2
-        val rising = samples.last().priceUsd >= samples.first().priceUsd
-        val lineColor = Color.parseColor(if (rising) "#45E09A" else "#FF6B7A")
+        val up = rising ?: (samples.last().priceUsd >= samples.first().priceUsd)
+        val lineColor = Color.parseColor(if (up) "#45E09A" else "#FF6B7A")
 
         fun x(sample: BERTPriceSample) = inset + ((sample.observedAtEpochMillis - start).toFloat() / duration) * drawableWidth
         fun y(sample: BERTPriceSample) = inset + (1f - ((sample.priceUsd - minimum) / range).toFloat()) * drawableHeight

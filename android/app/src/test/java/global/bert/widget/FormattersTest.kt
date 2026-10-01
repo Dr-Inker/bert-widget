@@ -23,6 +23,8 @@ class FormattersTest {
             assertEquals("As of 15:12", formatObservedAt(observed, observed + 3 * 3_600_000L, Locale.US))
             assertEquals("As of 1 Oct 15:12", formatObservedAt(observed, observed + 24 * 3_600_000L, Locale.US))
             assertEquals("As of 3:12 PM", formatObservedAt(observed, observed, Locale.US, use24Hour = false))
+            assertEquals("As of 1 Oct", formatObservedAt(observed, observed + 24 * 3_600_000L, Locale.US, dateOnlyWhenOld = true))
+            assertEquals("As of 15:12", formatObservedAt(observed, observed + 3_600_000L, Locale.US, dateOnlyWhenOld = true))
         } finally {
             TimeZone.setDefault(zone)
         }

@@ -20,7 +20,11 @@ import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
 import androidx.glance.appwidget.SizeMode
 import androidx.glance.appwidget.provideContent
-import androidx.glance.appwidget.updateAll
+import androidx.glance.appwidget.GlanceAppWidgetManager
+import androidx.glance.appwidget.state.updateAppWidgetState
+import androidx.glance.currentState
+import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.compose.runtime.remember
 import androidx.glance.background
 import androidx.glance.layout.Alignment
 import androidx.glance.layout.Box
@@ -60,13 +64,15 @@ open class BERTWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
-        val quote = BERTQuoteRepository(context).load()
-        val holdings = BERTHoldingsStore(context).load()
-        val sparkline = BERTSparkline.render(
-            BERTPriceHistory.combine(BERTMarketHistoryRepository(context).load(), BERTPriceHistory(context).load()),
-        )
-        val palette = WidgetPalette.from(BERTThemeStore(context).load())
         provideContent {
+            // Data is read inside the composition, keyed on a revision that updateAllBERTWidgets bumps. Values read
+            // before provideContent would stay frozen while Glance keeps a session alive between updates.
+            val revision = currentState(REVISION) ?: 0
+            val data = remember(revision) { WidgetData.load(context) }
+            val quote = data.quote
+            val holdings = data.holdings
+            val sparkline = data.sparkline
+            val palette = data.palette
             CompositionLocalProvider(LocalWidgetPalette provides palette) {
                 val size = LocalSize.current
                 val market = size.width >= 240.dp
@@ -75,8 +81,9 @@ open class BERTWidget : GlanceAppWidget() {
                         .background(ColorProvider(palette.background))
                         .clickable(actionStartActivity<MainActivity>()),
                 ) {
-                    if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 180.dp)
-                    else CompactWidgetContent(quote, sparkline)
+                    // Sizes below are pinned by BERTWidgetRenderTest, which renders every text at launcher sizes.
+                    if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 200.dp, narrow = size.width < 290.dp)
+                    else CompactWidgetContent(quote, sparkline, narrow = size.width < 150.dp, short = size.height < 165.dp)
                 }
             }
         }
@@ -84,10 +91,10 @@ open class BERTWidget : GlanceAppWidget() {
 }
 
 @Composable
-private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.Bitmap?) {
+private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.Bitmap?, narrow: Boolean, short: Boolean) {
     val palette = LocalWidgetPalette.current
     Column(modifier = GlanceModifier.fillMaxSize().padding(8.dp)) {
-        WidgetHeader(compact = true, quote = quote)
+        WidgetHeader(compact = true, quote = quote, showName = !narrow)
         Spacer(GlanceModifier.height(4.dp))
         if (quote == null) {
             UnavailableWidgetContent(compact = true)
@@ -109,39 +116,44 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
                 style = TextStyle(color = ColorProvider(palette.muted), fontSize = 8.sp, fontWeight = FontWeight.Bold),
             )
         }
-        Spacer(GlanceModifier.height(9.dp))
-        if (sparkline == null) {
-            Box(
-                modifier = GlanceModifier.fillMaxWidth().height(64.dp).background(ColorProvider(palette.panel)),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text("COLLECTING PRICE HISTORY", style = eyebrowStyle(size = 8))
-            }
+        if (short) {
+            // Price and freshness matter more than the chart when the widget is resized small.
+            Spacer(GlanceModifier.defaultWeight())
         } else {
-            Image(
-                provider = ImageProvider(sparkline),
-                contentDescription = "BERT price history",
-                modifier = GlanceModifier.fillMaxWidth().height(64.dp),
-                contentScale = ContentScale.FillBounds,
-            )
+            Spacer(GlanceModifier.height(8.dp))
+            if (sparkline == null) {
+                Box(
+                    modifier = GlanceModifier.fillMaxWidth().defaultWeight().background(ColorProvider(palette.panel)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text("NO HISTORY YET", style = eyebrowStyle(size = 8))
+                }
+            } else {
+                Image(
+                    provider = ImageProvider(sparkline),
+                    contentDescription = "BERT price history",
+                    modifier = GlanceModifier.fillMaxWidth().defaultWeight(),
+                    contentScale = ContentScale.FillBounds,
+                )
+            }
+            Spacer(GlanceModifier.height(6.dp))
         }
-        Spacer(GlanceModifier.defaultWeight())
         Text(
-            freshnessLabel(quote),
+            freshnessLabel(quote, narrow),
             style = TextStyle(color = ColorProvider(if (quote.isStale) Amber else palette.muted), fontSize = 8.sp, fontWeight = FontWeight.Medium),
         )
     }
 }
 
 @Composable
-private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: Boolean) {
+private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: Boolean, narrow: Boolean) {
     val palette = LocalWidgetPalette.current
-    Row(modifier = GlanceModifier.fillMaxSize().padding(vertical = if (spacious) 12.dp else 8.dp, horizontal = 8.dp)) {
+    Row(modifier = GlanceModifier.fillMaxSize().padding(vertical = if (spacious) 12.dp else 6.dp, horizontal = 8.dp)) {
         Spacer(GlanceModifier.width(3.dp).fillMaxHeight().background(ColorProvider(palette.accent)))
         Spacer(GlanceModifier.width(11.dp))
         Column(modifier = GlanceModifier.fillMaxSize()) {
             WidgetHeader(compact = false, quote = quote, spacious = spacious)
-            Spacer(GlanceModifier.height(if (spacious) 10.dp else 5.dp))
+            Spacer(GlanceModifier.height(if (spacious) 8.dp else 3.dp))
             if (quote == null) {
                 UnavailableWidgetContent(compact = false)
                 return@Column
@@ -150,18 +162,18 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
                         formatPrice(quote.priceUsd),
-                        style = TextStyle(color = ColorProvider(palette.text), fontSize = if (spacious) 30.sp else 25.sp, fontWeight = FontWeight.Bold),
+                        style = TextStyle(color = ColorProvider(palette.text), fontSize = if (spacious) 30.sp else if (narrow) 22.sp else 25.sp, fontWeight = FontWeight.Bold),
                     )
                     Text(
                         "${trendArrow(quote.change24hPct)} ${formatPercent(quote.change24hPct)} · 24H",
                         style = TextStyle(color = ColorProvider(changeColor(quote)), fontSize = if (spacious) 14.sp else 12.sp, fontWeight = FontWeight.Bold),
                     )
                 }
-                Spacer(GlanceModifier.width(12.dp))
-                HoldingsCapsule(quote, holdings, spacious)
+                Spacer(GlanceModifier.width(if (narrow) 8.dp else 12.dp))
+                HoldingsCapsule(quote, holdings, spacious, narrow)
             }
             if (spacious) {
-                Spacer(GlanceModifier.height(14.dp))
+                Spacer(GlanceModifier.height(10.dp))
                 Row(modifier = GlanceModifier.fillMaxWidth()) {
                     WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight(), panel = true)
                     Spacer(GlanceModifier.width(8.dp))
@@ -184,21 +196,23 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
 }
 
 @Composable
-private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean = false) {
+private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean = false, showName: Boolean = true) {
     val palette = LocalWidgetPalette.current
     Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         Image(
             provider = ImageProvider(R.drawable.bert_token),
             contentDescription = "BERT token",
-            modifier = GlanceModifier.width(if (compact) 26.dp else if (spacious) 34.dp else 28.dp)
-                .height(if (compact) 26.dp else if (spacious) 34.dp else 28.dp),
+            modifier = GlanceModifier.width(if (compact) 26.dp else if (spacious) 30.dp else 24.dp)
+                .height(if (compact) 26.dp else if (spacious) 30.dp else 24.dp),
             contentScale = ContentScale.Crop,
         )
-        Spacer(GlanceModifier.width(9.dp))
-        Text(
-            "BERT",
-            style = TextStyle(color = ColorProvider(palette.text), fontSize = if (compact) 13.sp else if (spacious) 17.sp else 15.sp, fontWeight = FontWeight.Bold),
-        )
+        if (showName) {
+            Spacer(GlanceModifier.width(9.dp))
+            Text(
+                "BERT",
+                style = TextStyle(color = ColorProvider(palette.text), fontSize = if (compact) 13.sp else if (spacious) 17.sp else 15.sp, fontWeight = FontWeight.Bold),
+            )
+        }
         Spacer(GlanceModifier.defaultWeight())
         Text(
             when { quote == null -> "● NO QUOTE"; quote.isStale -> "● DELAYED"; else -> "● UPDATED" },
@@ -212,12 +226,12 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
 }
 
 @Composable
-private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boolean) {
+private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boolean, narrow: Boolean) {
     val palette = LocalWidgetPalette.current
     Column(
-        modifier = GlanceModifier.width(if (spacious) 154.dp else 142.dp)
+        modifier = GlanceModifier.width(if (spacious) 154.dp else if (narrow) 108.dp else 142.dp)
             .background(ColorProvider(palette.panel))
-            .padding(horizontal = if (spacious) 14.dp else 11.dp, vertical = if (spacious) 10.dp else 6.dp),
+            .padding(horizontal = if (spacious) 14.dp else if (narrow) 8.dp else 11.dp, vertical = if (spacious) 10.dp else 6.dp),
     ) {
         Text("YOUR POSITION", style = eyebrowStyle(color = palette.text, size = 8))
         Text(
@@ -244,7 +258,7 @@ private fun UnavailableWidgetContent(compact: Boolean) {
 @Composable
 private fun WidgetMetric(label: String, value: Double?, modifier: GlanceModifier = GlanceModifier, panel: Boolean = false) {
     val palette = LocalWidgetPalette.current
-    Column(modifier = if (panel) modifier.background(ColorProvider(palette.panel)).padding(horizontal = 10.dp, vertical = 9.dp) else modifier) {
+    Column(modifier = if (panel) modifier.background(ColorProvider(palette.panel)).padding(horizontal = 10.dp, vertical = 7.dp) else modifier) {
         Text(label, style = eyebrowStyle(size = 8))
         Text(formatCompactUsd(value), style = TextStyle(color = ColorProvider(palette.text), fontSize = if (panel) 14.sp else 12.sp, fontWeight = FontWeight.Bold))
     }
@@ -281,9 +295,11 @@ private fun trendArrow(change: Double?) = when {
 
 // Absolute time: a widget can sit on screen long after it was rendered, so "updated now" would go false.
 @Composable
-private fun freshnessLabel(quote: BERTQuote): String {
+private fun freshnessLabel(quote: BERTQuote, narrow: Boolean = false): String {
     val use24Hour = DateFormat.is24HourFormat(LocalContext.current)
-    return "${if (quote.isStale) "DELAYED · " else ""}${formatObservedAt(quote.observedAtEpochMillis, use24Hour = use24Hour)}".uppercase()
+    // Narrow widgets already show "● DELAYED" in the header, so the footer keeps only the observation date.
+    val prefix = if (quote.isStale && !narrow) "DELAYED · " else ""
+    return "$prefix${formatObservedAt(quote.observedAtEpochMillis, use24Hour = use24Hour, dateOnlyWhenOld = narrow)}".uppercase()
 }
 
 @Composable
@@ -329,6 +345,20 @@ abstract class BERTWidgetReceiverBase : GlanceAppWidgetReceiver() {
     }
 }
 
+private class WidgetData(val quote: BERTQuote?, val holdings: Double?, val sparkline: android.graphics.Bitmap?, val palette: WidgetPalette) {
+    companion object {
+        fun load(context: Context): WidgetData {
+            val quote = BERTQuoteRepository(context).load()
+            val history = BERTPriceHistory.combine(BERTMarketHistoryRepository(context).load(), BERTPriceHistory(context).load())
+            // The chart takes its colour from the same 24h change the widget prints next to it.
+            val sparkline = BERTSparkline.render(history, rising = quote?.change24hPct?.let { it >= 0 })
+            return WidgetData(quote, BERTHoldingsStore(context).load(), sparkline, WidgetPalette.from(BERTThemeStore(context).load()))
+        }
+    }
+}
+
+internal val REVISION = intPreferencesKey("bert_widget_revision")
+
 class BERTWidgetReceiver : BERTWidgetReceiverBase() {
     override val glanceAppWidget: GlanceAppWidget = BERTWidget()
 }
@@ -342,6 +372,12 @@ class BERTMarketWidgetReceiver : BERTWidgetReceiverBase() {
 suspend fun updateAllBERTWidgets(context: Context, scheduleStaleRender: Boolean = true) {
     // Scheduled first so a failed render cannot leave an earlier quote's timer in place.
     if (scheduleStaleRender) BERTWidgetStaleRenderWorker.schedule(context, BERTQuoteRepository(context).load())
-    BERTWidget().updateAll(context)
-    BERTMarketWidget().updateAll(context)
+    val manager = GlanceAppWidgetManager(context)
+    for (widget in listOf(BERTWidget(), BERTMarketWidget())) {
+        for (id in manager.getGlanceIds(widget.javaClass)) {
+            // Bumping the revision makes a live session reload its data rather than recompose stale values.
+            updateAppWidgetState(context, id) { it[REVISION] = (it[REVISION] ?: 0) + 1 }
+            widget.update(context, id)
+        }
+    }
 }

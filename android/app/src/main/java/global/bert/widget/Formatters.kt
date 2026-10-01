@@ -55,13 +55,14 @@ fun formatObservedAt(
     nowEpochMillis: Long = System.currentTimeMillis(),
     locale: Locale = Locale.getDefault(),
     use24Hour: Boolean = true,
+    dateOnlyWhenOld: Boolean = false,
 ): String {
     val observed = Calendar.getInstance().apply { timeInMillis = observedAtEpochMillis }
     val now = Calendar.getInstance().apply { timeInMillis = nowEpochMillis }
     val sameDay = observed.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
         observed.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
     val time = if (use24Hour) "HH:mm" else "h:mm a"
-    val pattern = if (sameDay) time else "d MMM $time"
+    val pattern = if (sameDay) time else if (dateOnlyWhenOld) "d MMM" else "d MMM $time"
     return "As of ${SimpleDateFormat(pattern, locale).format(Date(observedAtEpochMillis))}"
 }
 
