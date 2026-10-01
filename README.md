@@ -6,7 +6,7 @@ Home / Explore / Create / Tools brings together Bert's latest dispatch and tourn
 
 A separately installable **BERT Preview** can be built with `tools/check-android-preview.sh`. See [the visual review](docs/evidence/2026-09-08/review.html) and [device acceptance journeys](docs/DEVICE-REVIEW.md). This preview is local and debug-signed.
 
-The signed Android v0.7.1 release is live at [berthalla.io/app](https://berthalla.io/app/). This repository contains the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-10-01/release-0.7.1/README.md), including in-place upgrades from 0.6.0 and 0.7.0 verified on a Samsung S25 Ultra (Android 16).
+The signed Android v0.8.0 release is live at [berthalla.io/app](https://berthalla.io/app/). This repository contains the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-10-01/release-0.8.0/README.md), including in-place upgrades from 0.6.0, 0.7.0 and 0.7.1 verified on a Samsung S25 Ultra (Android 16).
 
 The token identity is pinned by mint rather than ticker:
 
@@ -71,7 +71,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
 - Android package: `global.bert.widget`
-- Current Android version: `0.7.1` (`versionCode` 18)
+- Current Android version: `0.8.0` (`versionCode` 19)
 - Minimum Android: 8.0 / API 26
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.

@@ -1,7 +1,9 @@
 # Google Play listing — BERT
 
-Everything to paste into the Play Console. Graphics are in this folder; the upload artifact is the
-signed app bundle described in `DEPLOYMENT.md` (Play App Signing: the existing release key acts as the upload key).
+Everything to paste into the Play Console. Graphics are in this folder. Upload artifact: the v0.8.0 app bundle
+(`/opt/bert-widget-qa/release-0.8.0/staged/bert-0.8.0.aab`, also copied to the drinkerlabs PC at
+`C:\\Users\\Sjpch\\BERT-Play\\`), signed with the existing release key, which Play App Signing uses as the upload key.
+Upload `mapping-0.8.0.txt` alongside it so crash reports are readable.
 
 ## Store listing
 

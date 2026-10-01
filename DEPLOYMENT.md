@@ -249,3 +249,13 @@ Use content hashes in updated JavaScript/CSS query parameters. The initial reuse
 - Device upgrade 0.7.0 → 0.7.1 verified on the S25 Ultra. Evidence:
   [release 0.7.1](docs/evidence/2026-10-01/release-0.7.1/README.md). Rollback: `/opt/bert-widget-qa/release-0.7.1/previous`.
 
+## v0.8.0 Android release record — 2026-10-01
+
+- Alerts, Bert widget, caption cards v2, orange accent, fullscreen landscape game, Play readiness.
+- App source `3d563539acae649100915d3bd80c46b3575c3181`; game `35c37db`; website `1d6a689`.
+- APK code 19, 5,152,908 bytes, SHA-256 `51818fa0536196336fd0f13c5ddb09279e39933a966efcb98d532eef24ade18d`.
+- Play app bundle built with `:app:bundleRelease` and signed with the existing release key (the Play upload key); keep
+  `mapping.txt` with it. Listing, graphics and data-safety answers: `docs/play/LISTING.md`.
+- Service and nginx: one `Cache-Control` per API response, errors `no-store`. Evidence:
+  [release 0.8.0](docs/evidence/2026-10-01/release-0.8.0/README.md). Rollback: `/opt/bert-widget-qa/release-0.8.0/previous`.
+
