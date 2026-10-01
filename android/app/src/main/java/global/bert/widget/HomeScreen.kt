@@ -2,6 +2,7 @@ package global.bert.widget
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -18,6 +19,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import global.bert.widget.data.ActivityState
+import global.bert.widget.data.BERTEvent
+import global.bert.widget.data.BERTStanding
 import global.bert.widget.data.EventPhase
 import java.time.Instant
 import java.time.ZoneId
@@ -83,27 +86,14 @@ internal fun HomeScreen(state: ActivityState, now: Long, refreshing: Boolean, re
         }
     }
 
+    if (state is ActivityState.Available) state.activity.event?.let { event ->
+        TournamentCard(event, now, delayed = state.updateDelayed || state.activity.isStaleAt(now), updatedAt = state.activity.updatedAtEpochMillis)
+    }
+
     SectionLabel("A LITTLE BERT IN YOUR DAY")
     FeatureLink("Make something BERT", "Create a caption card, draw a scene or personalize your phone.", BERTSymbol.CREATE) { navigate(BERTDestination.CREATE) }
     FeatureLink("Find your next adventure", "Games, music and the rest of Bert’s world.", BERTSymbol.EXPLORE) { navigate(BERTDestination.EXPLORE) }
 
-    if (state is ActivityState.Available) {
-        state.activity.event?.let { event ->
-            val phase = event.phaseAt(now, state.updateDelayed || state.activity.isStaleAt(now))
-            Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(22.dp)) {
-                Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatusPill(phase.label, if (phase == EventPhase.OPEN) Green else Muted)
-                    Text(event.name, color = Cream, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                    val endDate = DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm 'UTC'").withZone(ZoneId.of("UTC"))
-                        .format(Instant.ofEpochMilli(event.endsAtEpochMillis))
-                    Text("Scheduled end $endDate", color = Muted, fontSize = 13.sp)
-                    if (phase == EventPhase.UNCONFIRMED) Text("Check the game for the current tournament status.", color = Amber, fontSize = 13.sp)
-                    Text("Flappy Bert · tap, flap, try again.", color = Cream, lineHeight = 21.sp)
-                    OutlinedButton(onClick = { openBERTLink(context, BERTLink.FLAPPY) }) { Text("Play in Telegram ↗") }
-                }
-            }
-        }
-    }
     FeatureLink("Your BERT tools", "Market data and your private holdings record.", BERTSymbol.TOOLS) { navigate(BERTDestination.TOOLS) }
 }
 
@@ -119,3 +109,63 @@ internal fun FeatureLink(title: String, description: String, symbol: BERTSymbol,
         }
     }
 }
+
+/** "Ends in 2 days 7h", "Ends in 3h 12m", "Ends in 4m" — computed on the device clock. */
+internal fun formatTimeLeft(endsAt: Long, now: Long): String {
+    val minutes = ((endsAt - now) / 60_000).coerceAtLeast(0)
+    val days = minutes / 1_440
+    val hours = minutes % 1_440 / 60
+    return when {
+        days >= 2 -> "Ends in $days days ${hours}h"
+        days == 1L -> "Ends in 1 day ${hours}h"
+        minutes >= 60 -> "Ends in ${minutes / 60}h ${minutes % 60}m"
+        else -> "Ends in ${minutes}m"
+    }
+}
+
+@Composable
+private fun TournamentCard(event: BERTEvent, now: Long, delayed: Boolean, updatedAt: Long) {
+    val context = LocalContext.current
+    val phase = event.phaseAt(now, delayed)
+    val ended = phase == EventPhase.ENDED
+    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(22.dp),
+        border = BorderStroke(1.dp, if (phase == EventPhase.OPEN) Green.copy(alpha = 0.35f) else Cream.copy(alpha = 0.1f))) {
+        Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                StatusPill(phase.label, if (phase == EventPhase.OPEN) Green else Muted)
+                if (!ended && phase != EventPhase.UNCONFIRMED) StatusPill(formatTimeLeft(event.endsAtEpochMillis, now).uppercase(), AccentText)
+            }
+            Text(event.name, color = Cream, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+            val sponsor = event.sponsor?.replace(Regex("dr\\.?\\s*inker\\s*labs", RegexOption.IGNORE_CASE), "DrInkerLABS")
+            Text(listOfNotNull("Flappy Bert tournament", sponsor?.let { "sponsored by $it" }).joinToString(" · "), color = Muted, fontSize = 13.sp)
+            event.pool?.let { Text("${'$'}$it prize pool · top 5 paid", color = Amber, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
+            if (event.standings.isNotEmpty()) {
+                SectionLabel(if (ended) "FINAL STANDINGS" else "LEADERBOARD")
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    event.standings.forEach { row -> StandingRow(row, leader = row.rank == 1) }
+                }
+                if (delayed) {
+                    val minutes = ((now - updatedAt) / 60_000).coerceAtLeast(0)
+                    Text("Standings as of ${if (minutes < 60) "${minutes}m" else "${minutes / 60}h"} ago", color = Amber, fontSize = 12.sp)
+                }
+            }
+            if (phase == EventPhase.UNCONFIRMED) Text("Check the game for the current tournament status.", color = Amber, fontSize = 13.sp)
+            val endDate = DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm 'UTC'").withZone(ZoneId.of("UTC")).format(Instant.ofEpochMilli(event.endsAtEpochMillis))
+            Text("${if (ended) "Ended" else "Scheduled end"} $endDate", color = Muted, fontSize = 12.sp)
+            if (!ended) Button(onClick = { openBERTLink(context, BERTLink.FLAPPY) }) { Text("Play in Telegram ↗") }
+        }
+    }
+}
+
+@Composable
+private fun StandingRow(row: BERTStanding, leader: Boolean) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(if (leader) Amber.copy(alpha = 0.12f) else PanelStrong)
+        .padding(horizontal = 12.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("${row.rank}", color = if (leader) Amber else Muted, fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.width(18.dp))
+        Text(row.name, color = Cream, fontSize = 15.sp, fontWeight = if (leader) FontWeight.Bold else FontWeight.Medium,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Text("${row.score}", color = Cream, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+        row.prizeUsd?.let { Text("${'$'}$it", color = Amber, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.widthIn(min = 40.dp)) }
+    }
+}
+

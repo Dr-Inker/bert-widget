@@ -71,4 +71,37 @@ class BERTActivityTest {
         assertEquals(EventPhase.ENDED, BERTEvent("Fixture", now + 1000, "closed").phaseAt(now, false))
         assertEquals(EventPhase.UPCOMING, BERTEvent("Fixture", now + 1000, "scheduled").phaseAt(now, false))
     }
+
+    private val standingsFixture = """{
+        "updated_at":1788888601,
+        "flappy":{"name":"The Autumn Arc","ends_at":"2026-12-01T00:00:00Z","status":"live","sponsor":"Dr. Inker LABS","pool":250,
+          "top":[
+            {"rank":2,"name":"DrInker","score":115,"prize":60},
+            {"rank":1,"name":"LamexCrypt","score":143,"prize":100},
+            {"rank":3,"name":"\u202Eevil\u202C name\u0007","score":114,"prize":40},
+            {"rank":4,"name":"${"x".repeat(80)}","score":112,"prize":30},
+            {"rank":5,"name":"Hameed","score":-3,"prize":20},
+            {"rank":5,"name":"Fallback","score":108.5,"prize":20},
+            {"rank":6,"name":"   ","score":100},
+            {"rank":7,"name":"Seventh","score":99,"prize":null}
+          ]}
+    }"""
+
+    @Test fun `standings are bounded, sorted and stripped of control and bidi characters`() {
+        val event = BERTActivity.parse(standingsFixture, now).event!!
+        assertEquals(250, event.pool)
+        assertEquals("Dr. Inker LABS", event.sponsor)
+        assertEquals(listOf(1, 2, 3, 4, 7), event.standings.map { it.rank })
+        assertEquals("LamexCrypt", event.standings.first().name)
+        assertEquals("evil name", event.standings[2].name)
+        assertEquals(32, event.standings[3].name.length)
+        assertNull(event.standings.last().prizeUsd)
+    }
+
+    @Test fun `a malformed standings list never hides the tournament`() {
+        val activity = BERTActivity.parse(fixture.replace("\"status\":\"live\",", "\"status\":\"live\",\"top\":\"oops\",\"pool\":-5,"), now)
+        assertEquals("Fixture tournament", activity.event!!.name)
+        assertTrue(activity.event.standings.isEmpty())
+        assertNull(activity.event.pool)
+    }
 }

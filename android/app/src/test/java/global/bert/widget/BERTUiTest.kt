@@ -225,6 +225,24 @@ class BERTUiTest {
         compose.onNodeWithText("BERT amount").assertExists()
     }
 
+    @Test fun tournamentCardShowsCountdownPoolAndStandingsUnderTheDispatch() {
+        val now = 1_789_000_000_000
+        val event = BERTEvent("The Autumn Arc", now + (2 * 24 + 7) * 3_600_000L, "live", pool = 250, sponsor = "Dr. Inker LABS",
+            standings = listOf(BERTStanding(1, "LamexCrypt", 143, 100), BERTStanding(2, "DrInker", 115, 60),
+                BERTStanding(3, "Md. Shaiful Islam", 114, 40), BERTStanding(4, "De_general", 112, 30), BERTStanding(5, "Hameed", 108, 20)))
+        app(ActivityState.Available(BERTActivity(now - 60_000, "woofmornin.", "content", event)))
+        compose.onNodeWithText("ENDS IN 2 DAYS 7H").assertExists()
+        compose.onNodeWithText("${'$'}250 prize pool · top 5 paid").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Flappy Bert tournament · sponsored by DrInkerLABS").assertExists()
+        compose.onNodeWithText("LamexCrypt").performScrollTo().assertIsDisplayed()
+        // The card sits above the evergreen feature links.
+        val card = compose.onNodeWithText("The Autumn Arc").getUnclippedBoundsInRoot()
+        val links = compose.onNodeWithText("A LITTLE BERT IN YOUR DAY").getUnclippedBoundsInRoot()
+        assertTrue(card.bottom < links.top)
+        compose.onNodeWithText("Hameed").performScrollTo()
+        capture("home-tournament")
+    }
+
     @Test fun activityAndCaptionCreationRender() {
         app(ActivityState.Available(BERTActivity(1_789_000_000_000,
             "The town is quiet. My hat is not. A very good day to make something.", "curious", null)))

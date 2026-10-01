@@ -32,4 +32,14 @@ class FormattersTest {
         assertEquals("24h ago", formatWindowStart(24 * 3_600_000L))
         assertEquals("1h ago", formatWindowStart(3_600_000L))
     }
+
+    @Test fun `tournament countdown reads naturally and never goes negative`() {
+        val now = 1_000_000_000L
+        assertEquals("Ends in 60 days 7h", formatTimeLeft(now + (60 * 24 + 7) * 3_600_000L, now))
+        assertEquals("Ends in 1 day 0h", formatTimeLeft(now + 24 * 3_600_000L, now))
+        assertEquals("Ends in 3h 12m", formatTimeLeft(now + (3 * 60 + 12) * 60_000L, now))
+        assertEquals("Ends in 4m", formatTimeLeft(now + 4 * 60_000L, now))
+        assertEquals("Ends in 0m", formatTimeLeft(now - 60_000L, now))
+    }
 }
+
