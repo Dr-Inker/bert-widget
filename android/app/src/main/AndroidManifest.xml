@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.SET_WALLPAPER" />
     <!-- Only requested when the person switches an alert on (Tools → Alerts). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <!-- WorkManager declares foreground-service support that BERT never uses (no expedited or long-running
+         work); removing it keeps the Play foreground-service declaration out of scope. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
 
     <application
         android:name=".BERTApplication"
@@ -26,6 +29,7 @@
             android:grantUriPermissions="true">
             <meta-data android:name="android.support.FILE_PROVIDER_PATHS" android:resource="@xml/caption_paths" />
         </provider>
+        <service android:name="androidx.work.impl.foreground.SystemForegroundService" tools:node="remove" />
         <activity android:name=".LostTrailActivity" android:exported="false"
             android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
             android:label="Super Bert World" />
