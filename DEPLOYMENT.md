@@ -230,3 +230,14 @@ Use content hashes in updated JavaScript/CSS query parameters. The initial reuse
 - Homepage/Music changes preserved; no service/nginx changes or GitHub publication. Previous
   versioned APKs retained. Rollback files: `/opt/bert-widget-qa/release-0.6.0/previous`.
 - Physical-device installation/performance and OS lifecycle/system bars remain UNVERIFIED.
+
+## v0.7.0 Android release record — 2026-10-01
+
+- Owner asked for the release ("yes please") after the critique, hardening and title-screen work.
+- App source `08ee234e350f5e02609fc23905a12445271502fb`; game source `084dcb02dec8608a48cedd7634af2ef952ac42e1`.
+- Website source `fdf802e`, published by scoped fast-forward; homepage/style/Music preserved byte for byte.
+- Package `global.bert.widget`, version code 17, 5,117,036 bytes, SHA-256
+  `15bcaffe10fb127602a7074af7fb57518be1a7a9d9fb4aa665c3582cef916a06`; existing certificate retained.
+- Physical-device upgrade from 0.6.0 verified on an S25 Ultra (Android 16). Evidence:
+  [release 0.7.0](docs/evidence/2026-10-01/release-0.7.0/README.md). Rollback: `/opt/bert-widget-qa/release-0.7.0/previous`.
+
