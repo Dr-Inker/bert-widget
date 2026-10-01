@@ -1,0 +1,56 @@
+{
+  "checkedAt": "2026-10-01T19:26:53.932209+00:00",
+  "sourceSha": "5497b2e80ceadd8c456bd40540520f7790e34605",
+  "websiteSha": "09d70cf0423426ddcc87edb66ebb5171dcc65654",
+  "release": {
+    "version": "0.7.1",
+    "versionCode": 18,
+    "minimumAndroid": "8.0",
+    "releaseDate": "2026-10-01",
+    "sizeBytes": 5133728,
+    "sha256": "37f38a98f649671a45391a31ef7831938cd11956851ddad094a8cffcf8bf54d4",
+    "signingCertificateSha256": "f911463d6c89bf6927ac1ef9230412ba73ef2791ddb97c4ee4d457c082da995c",
+    "permissions": [
+      "android.permission.INTERNET",
+      "android.permission.ACCESS_NETWORK_STATE",
+      "android.permission.SET_WALLPAPER",
+      "android.permission.WAKE_LOCK",
+      "android.permission.RECEIVE_BOOT_COMPLETED",
+      "android.permission.FOREGROUND_SERVICE",
+      "global.bert.widget.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+    ],
+    "download": "https://berthalla.io/widget/download/bert-widget-0.7.1.apk?sha=37f38a98",
+    "sourceRevision": "5497b2e80ceadd8c456bd40540520f7790e34605"
+  },
+  "downloads": [
+    {
+      "url": "https://berthalla.io/widget/download/bert-widget-0.7.1.apk?sha=37f38a98",
+      "sha256": "37f38a98f649671a45391a31ef7831938cd11956851ddad094a8cffcf8bf54d4",
+      "sizeBytes": 5133728
+    },
+    {
+      "url": "https://berthalla.io/widget/download/bert-widget.apk?sha=37f38a98",
+      "sha256": "37f38a98f649671a45391a31ef7831938cd11956851ddad094a8cffcf8bf54d4",
+      "sizeBytes": 5133728
+    }
+  ],
+  "quotes": [
+    {
+      "route": "api/quote",
+      "observedAt": "2026-10-01T19:26:53.835Z",
+      "meta": {
+        "freshness": "fresh",
+        "ageSeconds": 0
+      }
+    },
+    {
+      "route": "v1/bert/quote",
+      "observedAt": "2026-10-01T19:26:53.835Z",
+      "meta": {
+        "freshness": "fresh",
+        "ageSeconds": 0
+      }
+    }
+  ],
+  "protectedFiles": 3
+}

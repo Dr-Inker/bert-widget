@@ -1,6 +1,6 @@
 # Next session — BERT app
 
-## v0.7.0 published — October 1
+## v0.7.1 published — October 1 (0.7.0 earlier the same day)
 
 Live at https://berthalla.io/app/ (APK 5,117,036 bytes, SHA-256 `15bcaffe…`, code 17). Release source is
 `main` (fast-forwarded from the `direct-sources` branch). Full record:
@@ -19,7 +19,7 @@ Live at https://berthalla.io/app/ (APK 5,117,036 bytes, SHA-256 `15bcaffe…`, c
 - **Game:** The Lost Trail is app-only (browser copy retired 2026-10-01). New title screen at platformer
   `084dcb0`; bundle provenance is checked byte for byte by `tools/qa/lost-trail-browser.mjs`.
 
-### Tier 2 — done on branch `tier2` (not released), mobile gate PASS at `6deacc7`
+### Tier 2 — RELEASED as v0.7.1 (app `5497b2e`, website `09d70cf`)
 
 - Home tournament card (countdown, prize pool, top 5, final standings; untrusted names sanitised).
 - Widgets fit at every launcher size; `BERTWidgetRenderTest` renders the real Glance widgets to RemoteViews on the
@@ -27,8 +27,7 @@ Live at https://berthalla.io/app/ (APK 5,117,036 bytes, SHA-256 `15bcaffe…`, c
   header/footer and 360x200 market footer). Widget data loads inside the composition keyed on a revision that
   `updateAllBERTWidgets` bumps; sparkline colour follows the 24h change.
 - The Lost Trail portrait play fills the screen (platformer `35c37db`), larger HUD, single Pause.
-- **Before releasing:** device-check on the S25 — place both widgets, change holdings in the app and confirm the
-  widget updates within seconds (the Glance live-session reload cannot be proven on the host), and play in portrait.
+- Device-checked on the S25 before release (widget in-session reload, tournament card, portrait play, 0.7.0 → 0.7.1 upgrade).
 
 ### Original Tier 2 list (October 1 critique)
 

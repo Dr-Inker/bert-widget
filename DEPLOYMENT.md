@@ -241,3 +241,11 @@ Use content hashes in updated JavaScript/CSS query parameters. The initial reuse
 - Physical-device upgrade from 0.6.0 verified on an S25 Ultra (Android 16). Evidence:
   [release 0.7.0](docs/evidence/2026-10-01/release-0.7.0/README.md). Rollback: `/opt/bert-widget-qa/release-0.7.0/previous`.
 
+## v0.7.1 Android release record — 2026-10-01
+
+- Tier 2 follow-up to 0.7.0: Home tournament card, widgets fit at every launcher size, full-height portrait game.
+- App source `5497b2e80ceadd8c456bd40540520f7790e34605`; game `35c37dbf7dcd2d8ed802fcf24874fd4c68d9b52b`; website `09d70cf`.
+- Version code 18, 5,133,728 bytes, SHA-256 `37f38a98f649671a45391a31ef7831938cd11956851ddad094a8cffcf8bf54d4`.
+- Device upgrade 0.7.0 → 0.7.1 verified on the S25 Ultra. Evidence:
+  [release 0.7.1](docs/evidence/2026-10-01/release-0.7.1/README.md). Rollback: `/opt/bert-widget-qa/release-0.7.1/previous`.
+
