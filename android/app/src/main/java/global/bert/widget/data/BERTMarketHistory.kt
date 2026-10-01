@@ -4,28 +4,40 @@ import android.content.Context
 import global.bert.widget.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import kotlin.coroutines.cancellation.CancellationException
 import org.json.JSONObject
-import java.net.HttpURLConnection
-import java.net.URL
 
 /** Server-provided 24-hour price history (5-minute closes), cached for offline display. */
-class BERTMarketHistoryRepository(context: Context) {
+class BERTMarketHistoryRepository(
+    private val context: Context,
+    private val http: BERTHttp = BERTHttp.DEFAULT,
+    private val directBase: String = BuildConfig.BERT_DIRECT_HISTORY_BASE,
+    private val serverUrl: String = BuildConfig.BERT_HISTORY_URL,
+) {
     private val preferences = context.getSharedPreferences("bert_market_history", Context.MODE_PRIVATE)
 
+    /**
+     * Fetches GeckoTerminal directly for the pool of the latest quote; the Berthalla server is the fallback.
+     * A cold GeckoTerminal response can take 10-20 s, hence the long read timeout on a background call.
+     */
     suspend fun refresh(nowEpochMillis: Long = System.currentTimeMillis()): List<BERTPriceSample> = withContext(Dispatchers.IO) {
-        val connection = URL(BuildConfig.BERT_HISTORY_URL).openConnection() as HttpURLConnection
-        try {
-            connection.connectTimeout = 5_000
-            connection.readTimeout = 8_000
-            connection.setRequestProperty("Accept", "application/json")
-            if (connection.responseCode !in 200..299) error("History service returned HTTP ${connection.responseCode}")
-            val raw = connection.inputStream.use { BERTQuoteRepository.readUtf8WithLimit(it, MAX_RESPONSE_BYTES) }
-            val samples = parse(raw, nowEpochMillis)
-            preferences.edit().putString(KEY, raw).apply()
-            samples
-        } finally {
-            connection.disconnect()
-        }
+        val direct = directBase.isNotEmpty()
+        val pool = BERTQuoteRepository(context).load()?.pairAddress
+        val directResult = if (direct && pool != null) {
+            try {
+                val raw = http.get(BERTDirectSources.historyUrl(directBase, pool), BERTDirectSources.MAX_HISTORY_BYTES, 30_000)
+                val envelope = BERTDirectSources.historyEnvelope(raw, pool, nowEpochMillis)
+                envelope to parse(envelope, nowEpochMillis)
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                null
+            }
+        } else null
+        val (envelope, samples) = directResult
+            ?: http.get(fallbackUrl(serverUrl, direct), MAX_RESPONSE_BYTES, 8_000).let { it to parse(it, nowEpochMillis) }
+        preferences.edit().putString(KEY, envelope).apply()
+        samples
     }
 
     fun load(nowEpochMillis: Long = System.currentTimeMillis()): List<BERTPriceSample> =

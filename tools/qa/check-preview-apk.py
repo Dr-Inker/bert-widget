@@ -60,7 +60,8 @@ def main():
     check("CN=Android Debug" in signature, "Preview must use the Android debug signing identity")
     with zipfile.ZipFile(args.apk) as apk:
         dex = b"\n".join(apk.read(name) for name in apk.namelist() if re.fullmatch(r"classes\d*\.dex", name))
-    endpoints = ["https://berthalla.io/widget/api/quote", "https://berthalla.io/widget/api/history", "https://berthalla.io/status.json"]
+    endpoints = ["https://berthalla.io/widget/api/quote", "https://berthalla.io/widget/api/history", "https://berthalla.io/status.json",
+                 "https://api.dexscreener.com/token-pairs/v1/solana/", "https://api.geckoterminal.com/api/v2"]
     for endpoint in endpoints:
         check(endpoint.encode() in dex, "Public endpoint missing from packaged code: " + endpoint)
     check(b"10.0.2.2:8787" not in dex, "Emulator fixture endpoint found in packaged code")

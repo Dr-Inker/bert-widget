@@ -52,6 +52,8 @@ The Android companion app and Jetpack Glance widget provide:
 
 The v0.4.0 app adds Theme Studio with Mayor Purple, Woofhub Night, and Berthalla Nights phone-theme systems. Each pack includes distinct Home and Lock Screen artwork plus a matching widget palette. The Compact widget still fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed APK supports Android 8.0 and newer.
 
+Market data comes straight from the public DEX Screener (quote) and GeckoTerminal (24-hour history) APIs, so those services see the phone's IP address when it refreshes. The Berthalla quote service is used only when a direct request fails or no longer validates; those requests carry `?via=fallback`. No holdings, history or identifiers are sent anywhere.
+
 Background refresh runs only while at least one widget is placed; without widgets, the app refreshes while it is open. Widgets show an absolute "as of" time and switch to delayed when a quote passes 30 minutes, including offline.
 
 ## iOS client

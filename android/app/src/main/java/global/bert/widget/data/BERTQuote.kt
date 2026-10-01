@@ -11,6 +11,8 @@ data class BERTQuote(
     val sourceName: String,
     val dex: String,
     val pairUrl: String,
+    /** Case-preserved pool address; null for quotes saved before it was stored. */
+    val pairAddress: String? = null,
 ) {
     val isStale: Boolean get() = isStaleAt(System.currentTimeMillis())
 

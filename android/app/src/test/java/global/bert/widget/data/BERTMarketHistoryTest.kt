@@ -52,8 +52,10 @@ class BERTMarketHistoryTest {
         assertEquals(device, BERTPriceHistory.combine(emptyList(), device, now))
     }
 
-    @Test fun `a full day of 5-minute closes is kept`() {
-        val market = (0 until 289).map { BERTPriceSample(now - it * 300_000L, 1.0 + it) }
-        assertEquals(289, BERTPriceHistory.combine(market, emptyList(), now).size)
+    @Test fun `a full day of 5-minute closes is kept, including by the 24H chart window`() {
+        val market = (0 until 288).map { BERTPriceSample(now - it * 300_000L, 1.0 + it) }
+        assertEquals(288, BERTPriceHistory.combine(market, emptyList(), now).size)
+        assertEquals(288, BERTChartWindow.DAY.samples(market, now).size)
+        assertEquals(13, BERTChartWindow.HOUR.samples(market, now).size) // both window edges included
     }
 }

@@ -16,6 +16,9 @@ android {
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
         buildConfigField("String", "BERT_HISTORY_URL", "\"https://berthalla.io/widget/api/history\"")
+        // Phones query the public market APIs directly; the Berthalla URLs above are the fallback.
+        buildConfigField("String", "BERT_DIRECT_QUOTE_URL", "\"https://api.dexscreener.com/token-pairs/v1/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump\"")
+        buildConfigField("String", "BERT_DIRECT_HISTORY_BASE", "\"https://api.geckoterminal.com/api/v2\"")
     }
 
     val releaseKeystore = file(providers.gradleProperty("BERT_RELEASE_KEYSTORE").getOrElse("/etc/bert-widget/bert-widget-release.jks"))
@@ -48,6 +51,9 @@ android {
             buildConfigField("String", "BERT_QUOTE_URL", "\"http://10.0.2.2:8787/v1/bert/quote\"")
             buildConfigField("String", "BERT_ACTIVITY_URL", "\"http://10.0.2.2:8787/v1/bert/activity\"")
             buildConfigField("String", "BERT_HISTORY_URL", "\"http://10.0.2.2:8787/v1/bert/history\"")
+            // Emulator fixtures exercise the server path only.
+            buildConfigField("String", "BERT_DIRECT_QUOTE_URL", "\"\"")
+            buildConfigField("String", "BERT_DIRECT_HISTORY_BASE", "\"\"")
         }
         create("preview") {
             isDebuggable = true
@@ -55,6 +61,10 @@ android {
             applicationIdSuffix = ".preview"
             versionNameSuffix = "-preview"
             matchingFallbacks += "debug"
+            // Shrunk like release so device review exercises the same R8 output users get.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
             // Keep default public HTTPS endpoints and main's cleartext restriction.
             // Debug's emulator fixtures and test activity manifest are not included.
         }
