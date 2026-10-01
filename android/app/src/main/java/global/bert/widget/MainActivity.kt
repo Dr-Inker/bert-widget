@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -172,8 +173,8 @@ internal fun BERTApp(
                     // text sizes, prioritize its content over a repeated pinned heading.
                     if (!largeText) AppHeader(destination)
                     val tabPadding = if (largeText) 12.dp else 16.dp
-                    if (destination == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalize"), createTab, tabPadding) { createTab = it }
-                    else SectionTabs(listOf("Market", "Holdings", "Alerts"), toolsTab, tabPadding) { toolsTab = it }
+                    if (destination == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalize"), createTab, tabPadding, singleRow = true) { createTab = it }
+                    else SectionTabs(listOf("Market", "Holdings", "Alerts"), toolsTab, tabPadding, singleRow = true) { toolsTab = it }
                 }
             }
             savedScreens.SaveableStateProvider(screenKey) {
@@ -220,8 +221,12 @@ private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, posit
 }
 
 @Composable
-internal fun SectionTabs(tabs: List<String>, selected: String, horizontalPadding: Dp = 16.dp, select: (String) -> Unit) {
-    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+internal fun SectionTabs(tabs: List<String>, selected: String, horizontalPadding: Dp = 16.dp, singleRow: Boolean = false, select: (String) -> Unit) {
+    // Pinned section tabs stay one row (scrolling sideways at large text) so they never push content down;
+    // option pickers wrap so every choice stays visible.
+    val rowModifier = if (singleRow) Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()) else Modifier.fillMaxWidth()
+    FlowRow(rowModifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+        maxLines = if (singleRow) 1 else Int.MAX_VALUE) {
         tabs.forEach { tab ->
             Surface(color = if (tab == selected) PanelStrong else Navy, shape = RoundedCornerShape(14.dp),
                 border = BorderStroke(1.dp, if (tab == selected) AccentText else Muted.copy(alpha = 0.35f))) {
