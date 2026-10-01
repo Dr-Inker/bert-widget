@@ -1,5 +1,32 @@
 # Next session — BERT app
 
+## v0.7.0 published — October 1
+
+Live at https://berthalla.io/app/ (APK 5,117,036 bytes, SHA-256 `15bcaffe…`, code 17). Release source is
+`main` (fast-forwarded from the `direct-sources` branch). Full record:
+[release evidence](evidence/2026-10-01/release-0.7.0/README.md) and `DEPLOYMENT.md`.
+
+- **Phone-direct data:** quotes from DEX Screener and 24h history from GeckoTerminal; the Berthalla routes
+  (`/widget/api/quote`, `/widget/api/history`) are now fallback, tagged `?via=fallback` in nginx logs. Old
+  installs (≤0.6.0) still poll the server untagged. Retire `bert-widget.service` only after untagged traffic
+  has faded and tagged fallback stays rare.
+- **Production checkout:** `/opt/bert-widget` runs the quote/history service from its working tree
+  (`WorkingDirectory=/opt/bert-widget`). Do server work in a git worktree and fast-forward only after tests.
+- **Device testing:** owner's Samsung S25 Ultra (Android 16) via adb on the drinkerlabs PC
+  (`ssh pc`, `C:\Users\Sjpch\platform-tools\adb.exe -s R5CY13S5TRD`). The owner often watches the session on
+  that phone; ask them to put it down/unlock before driving it, and never apply wallpapers unasked. A
+  minified `preview` build (`:app:assemblePreview`) installs beside the real app.
+- **Game:** The Lost Trail is app-only (browser copy retired 2026-10-01). New title screen at platformer
+  `084dcb0`; bundle provenance is checked byte for byte by `tools/qa/lost-trail-browser.mjs`.
+
+### Next (Tier 2, from the October 1 critique)
+
+1. Market widget overflows at its 240dp minimum (`BERTWidget.kt` fixed 142dp holdings capsule) and the compact
+   layout clips its footer at the 120dp minimum height. Needs widget rendering tests.
+2. Widget data is loaded outside `provideContent` (possible stale recomposition in a live Glance session).
+3. Live tournament card on Home from `status.json` (`flappy.top`, `pool`, countdown).
+4. The Lost Trail in portrait: playfield letterboxed (~40% empty), HUD text ~9px, duplicate Pause controls.
+
 ## Mobile Lost Trail — v0.6.0 published, September 9
 
 The owner's request to add bert-platformer to the Bert app with Figma MCP is complete for
