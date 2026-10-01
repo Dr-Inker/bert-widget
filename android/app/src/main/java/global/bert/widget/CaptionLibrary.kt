@@ -16,20 +16,23 @@ internal class CaptionLibrary(context: Context) {
     private val root = File(context.filesDir, "caption-library")
 
     fun list(): List<SavedCaption> = synchronized(lock) {
-        root.listFiles().orEmpty().mapNotNull { directory ->
-            if (!directory.isDirectory || !validId.matches(directory.name)) return@mapNotNull null
-            runCatching {
-                val metadata = File(directory, "card.json")
-                require(metadata.length() in 1..MAX_METADATA_BYTES)
-                val json = JSONObject(metadata.readText())
-                val caption = json.getString("caption")
-                val palette = json.getInt("palette")
-                val savedAt = json.getLong("savedAt")
-                require(json.getInt("version") == 1 && isValidSavedCaption(caption) && palette in 0..2 && savedAt > 0)
-                require(File(directory, "card.png").length() in 1..MAX_IMAGE_BYTES)
-                SavedCaption(directory.name, caption, palette, savedAt)
-            }.getOrNull()
-        }.sortedByDescending { it.savedAt }
+        root.listFiles().orEmpty().mapNotNull(::readEntry).sortedByDescending { it.savedAt }
+    }
+
+    /** Validates one card directory, so opening or thumbnailing a card reads only that card. */
+    private fun readEntry(directory: File): SavedCaption? {
+        if (!directory.isDirectory || !validId.matches(directory.name)) return null
+        return runCatching {
+            val metadata = File(directory, "card.json")
+            require(metadata.length() in 1..MAX_METADATA_BYTES)
+            val json = JSONObject(metadata.readText())
+            val caption = json.getString("caption")
+            val palette = json.getInt("palette")
+            val savedAt = json.getLong("savedAt")
+            require(json.getInt("version") == 1 && isValidSavedCaption(caption) && palette in 0..2 && savedAt > 0)
+            require(File(directory, "card.png").length() in 1..MAX_IMAGE_BYTES)
+            SavedCaption(directory.name, caption, palette, savedAt)
+        }.getOrNull()
     }
 
     fun save(card: RenderedCaption): SavedCaption = synchronized(lock) {
@@ -57,7 +60,7 @@ internal class CaptionLibrary(context: Context) {
 
     fun open(id: String): RenderedCaption = synchronized(lock) {
         require(validId.matches(id))
-        val entry = list().firstOrNull { it.id == id } ?: error("This card is unavailable.")
+        val entry = readEntry(File(root, id)) ?: error("This card is unavailable.")
         val file = File(File(root, id), "card.png")
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.path, options)
@@ -67,7 +70,7 @@ internal class CaptionLibrary(context: Context) {
 
     fun thumbnail(id: String): Bitmap = synchronized(lock) {
         require(validId.matches(id))
-        require(list().any { it.id == id })
+        requireNotNull(readEntry(File(root, id)))
         val file = File(File(root, id), "card.png")
         val options = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(file.path, options)

@@ -6,11 +6,13 @@ import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.webkit.RenderProcessGoneDetail
 import android.webkit.WebResourceRequest
 import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import android.widget.Toast
 import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.OnBackPressedCallback
@@ -41,6 +43,7 @@ internal object LostTrailContent {
 class LostTrailActivity : ComponentActivity() {
     internal lateinit var gameView: WebView
     private var backgrounded = false
+    private var rendererGone = false
 
     @SuppressLint("SetJavaScriptEnabled") // Trusted, packaged game requires JS; no external content is admitted.
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,10 +71,21 @@ class LostTrailActivity : ComponentActivity() {
                 override fun onPageFinished(view: WebView, url: String) {
                     if (backgrounded) pauseGame()
                 }
+                // Without this, a renderer killed for memory takes the whole app process with it.
+                // Progress lives in the game's saved lanterns, so closing back to Explore loses nothing.
+                override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
+                    (view.parent as? ViewGroup)?.removeView(view)
+                    view.destroy()
+                    rendererGone = true
+                    Toast.makeText(this@LostTrailActivity, "The game stopped unexpectedly. Your saved lanterns are safe.", Toast.LENGTH_LONG).show()
+                    if (!isFinishing) finish()
+                    return true
+                }
             }
         }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
+                if (rendererGone) { finish(); return }
                 gameView.evaluateJavascript("window.BertAppGame ? window.BertAppGame.back() : false") { handled ->
                     if (handled != "true" && !isFinishing) finish()
                 }
@@ -83,7 +97,7 @@ class LostTrailActivity : ComponentActivity() {
                     Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
                         Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                             TextButton(onClick = { pauseGame(); finish() }) { Text("‹ Back to Bert", color = Cream) }
-                            TextButton(onClick = { gameView.evaluateJavascript("window.BertAppGame?.pause()", null) }) { Text("Pause", color = AccentText) }
+                            TextButton(onClick = { pauseGame() }) { Text("Pause", color = AccentText) }
                         }
                         AndroidView(factory = { gameView }, modifier = Modifier.weight(1f).fillMaxWidth())
                     }
@@ -94,22 +108,24 @@ class LostTrailActivity : ComponentActivity() {
         gameView.loadUrl(LostTrailContent.URL)
     }
 
-    internal fun pauseGame() { gameView.evaluateJavascript("window.BertAppGame?.pause()", null) }
+    internal fun pauseGame() { if (!rendererGone) gameView.evaluateJavascript("window.BertAppGame?.pause()", null) }
     override fun onPause() {
         backgrounded = true
         pauseGame()
-        gameView.onPause()
+        if (!rendererGone) gameView.onPause()
         super.onPause()
     }
     override fun onResume() {
         super.onResume()
-        gameView.onResume()
+        if (!rendererGone) gameView.onResume()
         if (backgrounded) pauseGame() // WebView.onPause alone does not stop JavaScript.
         backgrounded = false
     }
     override fun onDestroy() {
-        (gameView.parent as? ViewGroup)?.removeView(gameView)
-        gameView.destroy()
+        if (!rendererGone) {
+            (gameView.parent as? ViewGroup)?.removeView(gameView)
+            gameView.destroy()
+        }
         super.onDestroy()
     }
 }

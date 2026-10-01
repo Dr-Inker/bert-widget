@@ -1,6 +1,6 @@
 # BERT Theme Studio artwork
 
-Production artwork for the Theme Studio. Every pack has a clock-safe Lock master and a quieter, icon-safe Home master. Production PNGs are rendered at 1440×3200 into `android/app/src/main/res/drawable-nodpi`; lightweight JPEG previews keep the Compose gallery responsive.
+Production artwork for the Theme Studio. Every pack has a clock-safe Lock master and a quieter, icon-safe Home master. Production masters are rendered at 1440×3200 and shipped as WebP (quality 92) in `android/app/src/main/res/raw`, streamed to Android's wallpaper service without decoding; lightweight JPEG previews keep the Compose gallery responsive.
 
 ## Packs
 

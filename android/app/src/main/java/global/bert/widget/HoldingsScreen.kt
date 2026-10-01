@@ -97,7 +97,14 @@ private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save
                 value = amount, onValueChange = { amount = it }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("BERT amount") }, placeholder = { Text("250000") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), isError = amountError,
-                supportingText = { Text(if (amountError) "Enter zero or more, using a decimal point." else "Use a decimal point, e.g. 250000.5") },
+                supportingText = {
+                    // Echo the interpretation so a grouping slip (1.500 meant as 1,500) is visible before saving.
+                    Text(when {
+                        amountError -> "Enter zero or more, using a decimal point."
+                        parsedAmount != null -> "Saves as ${parsedAmount.toBigDecimal().stripTrailingZeros().toPlainString()} BERT"
+                        else -> "Use a decimal point, e.g. 250000.5"
+                    })
+                },
             )
             OutlinedTextField(
                 value = cost, onValueChange = { cost = it }, modifier = Modifier.fillMaxWidth(),

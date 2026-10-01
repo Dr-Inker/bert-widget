@@ -12,8 +12,11 @@ data class BERTPriceSample(
 class BERTPriceHistory(context: Context) {
     private val preferences = context.getSharedPreferences(PREFERENCES, Context.MODE_PRIVATE)
 
-    fun record(quote: BERTQuote) {
-        val updated = normalize(load() + BERTPriceSample(quote.observedAtEpochMillis, quote.priceUsd))
+    fun record(quote: BERTQuote, nowEpochMillis: Long = System.currentTimeMillis()) = synchronized(lock) {
+        // The app and the refresh worker both record; the lock keeps one from dropping the other's sample.
+        // A server clock ahead of the device's would otherwise produce samples load() filters as future.
+        val observedAt = minOf(quote.observedAtEpochMillis, nowEpochMillis)
+        val updated = normalize(load(nowEpochMillis) + BERTPriceSample(observedAt, quote.priceUsd), nowEpochMillis)
         val encoded = JSONArray().apply {
             updated.forEach { sample ->
                 put(JSONObject().put("t", sample.observedAtEpochMillis).put("p", sample.priceUsd))
@@ -41,6 +44,7 @@ class BERTPriceHistory(context: Context) {
         private const val KEY = "samples"
         private const val WINDOW_MILLIS = 24L * 60L * 60L * 1_000L
         private const val MAX_SAMPLES = 192
+        private val lock = Any()
 
         internal fun normalize(
             samples: List<BERTPriceSample>,

@@ -98,6 +98,15 @@ npm run verify:release -- android/app/build/outputs/apk/release/app-release.apk 
 This gate verifies the APK signature, pinned signing certificate, package, increasing version code, version
 name, SHA-256, manifest consistency, effective cleartext-network setting and backup prohibition.
 
+Release builds are minified with R8 and resource shrinking. The development gate builds only the debug
+variant, so it cannot catch a shrinker regression. Before publishing a minified release:
+
+- Keep `android/app/build/outputs/mapping/release/mapping.txt` next to the staged APK. Without it, crash
+  stack traces from that release cannot be deobfuscated.
+- Run `:app:lintRelease :app:assembleRelease`, then launch the signed APK on a device or emulator. Open each
+  tab, place both widgets, start The Lost Trail and apply a Home and a Lock wallpaper. Wallpapers are
+  streamed to `WallpaperManager.setStream` as WebP; check this on API 26–27 and API 34 or newer.
+
 Install `deploy/nginx-widget-security.conf` as `/etc/nginx/snippets/bert-widget-security.conf`, include it in
 every widget location, then run `nginx -t` before reloading Nginx. The include must be repeated in locations
 that set `Cache-Control`, because Nginx does not inherit parent `add_header` directives once a child location

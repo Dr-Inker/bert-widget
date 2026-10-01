@@ -1,6 +1,9 @@
 package global.bert.widget
 
 import java.text.NumberFormat
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import kotlin.math.max
 
@@ -13,10 +16,11 @@ fun formatPercent(value: Double?): String = value?.let {
 } ?: "—"
 
 fun formatCompactUsd(value: Double?): String = value?.let {
+    // Each threshold is where the smaller unit would round up to 1000 (999,950 is $1.0M, not $1000.0K).
     when {
-        it >= 1_000_000_000 -> "${'$'}${String.format(Locale.US, "%.1fB", it / 1_000_000_000)}"
-        it >= 1_000_000 -> "${'$'}${String.format(Locale.US, "%.1fM", it / 1_000_000)}"
-        it >= 1_000 -> "${'$'}${String.format(Locale.US, "%.1fK", it / 1_000)}"
+        it >= 999_950_000 -> "${'$'}${String.format(Locale.US, "%.1fB", it / 1_000_000_000)}"
+        it >= 999_950 -> "${'$'}${String.format(Locale.US, "%.1fM", it / 1_000_000)}"
+        it >= 999.5 -> "${'$'}${String.format(Locale.US, "%.1fK", it / 1_000)}"
         else -> "${'$'}${String.format(Locale.US, "%.0f", it)}"
     }
 } ?: "—"
@@ -41,3 +45,25 @@ fun formatAge(observedAtEpochMillis: Long, nowEpochMillis: Long = System.current
         else -> "Updated ${minutes / 1_440}d ago"
     }
 }
+
+/**
+ * Absolute observation time for surfaces that are not re-rendered continuously (home-screen widgets).
+ * Unlike [formatAge], it stays true however long the rendered text sits on screen.
+ */
+fun formatObservedAt(
+    observedAtEpochMillis: Long,
+    nowEpochMillis: Long = System.currentTimeMillis(),
+    locale: Locale = Locale.getDefault(),
+    use24Hour: Boolean = true,
+): String {
+    val observed = Calendar.getInstance().apply { timeInMillis = observedAtEpochMillis }
+    val now = Calendar.getInstance().apply { timeInMillis = nowEpochMillis }
+    val sameDay = observed.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
+        observed.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
+    val time = if (use24Hour) "HH:mm" else "h:mm a"
+    val pattern = if (sameDay) time else "d MMM $time"
+    return "As of ${SimpleDateFormat(pattern, locale).format(Date(observedAtEpochMillis))}"
+}
+
+/** Relative axis label for a chart window edge: "24h ago", "6h ago", "1h ago". */
+fun formatWindowStart(durationMillis: Long): String = "${durationMillis / 3_600_000}h ago"

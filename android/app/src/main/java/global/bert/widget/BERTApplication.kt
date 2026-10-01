@@ -6,6 +6,7 @@ import global.bert.widget.work.BERTRefreshWorker
 class BERTApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        BERTRefreshWorker.schedule(this)
+        // Also cancels the job left behind by earlier versions, which scheduled it for every install.
+        BERTRefreshWorker.syncSchedule(this)
     }
 }

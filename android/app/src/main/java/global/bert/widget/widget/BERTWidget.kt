@@ -1,6 +1,7 @@
 package global.bert.widget.widget
 
 import android.content.Context
+import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.compositionLocalOf
@@ -11,6 +12,7 @@ import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
 import androidx.glance.Image
 import androidx.glance.ImageProvider
+import androidx.glance.LocalContext
 import androidx.glance.LocalSize
 import androidx.glance.action.actionStartActivity
 import androidx.glance.action.clickable
@@ -42,7 +44,7 @@ import global.bert.widget.data.BERTHoldingsStore
 import global.bert.widget.data.BERTPriceHistory
 import global.bert.widget.data.BERTQuote
 import global.bert.widget.data.BERTQuoteRepository
-import global.bert.widget.formatAge
+import global.bert.widget.formatObservedAt
 import global.bert.widget.formatCompactUsd
 import global.bert.widget.formatHoldingsUsd
 import global.bert.widget.formatPercent
@@ -50,6 +52,8 @@ import global.bert.widget.formatPrice
 import global.bert.widget.formatTokenAmount
 import global.bert.widget.theme.BERTThemePack
 import global.bert.widget.theme.BERTThemeStore
+import global.bert.widget.work.BERTRefreshWorker
+import global.bert.widget.work.BERTWidgetStaleRenderWorker
 
 open class BERTWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
@@ -68,14 +72,6 @@ open class BERTWidget : GlanceAppWidget() {
                         .background(ColorProvider(palette.background))
                         .clickable(actionStartActivity<MainActivity>()),
                 ) {
-                    if (!market && palette.showAmbient) {
-                        Image(
-                            provider = ImageProvider(R.drawable.bert_widget_ambient),
-                            contentDescription = null,
-                            modifier = GlanceModifier.fillMaxWidth().height(26.dp),
-                            contentScale = ContentScale.FillBounds,
-                        )
-                    }
                     if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 180.dp)
                     else CompactWidgetContent(quote, sparkline)
                 }
@@ -280,8 +276,12 @@ private fun trendArrow(change: Double?) = when {
     else -> "↘"
 }
 
-private fun freshnessLabel(quote: BERTQuote): String =
-    "${if (quote.isStale) "DELAYED · " else ""}${formatAge(quote.observedAtEpochMillis)}".uppercase()
+// Absolute time: a widget can sit on screen long after it was rendered, so "updated now" would go false.
+@Composable
+private fun freshnessLabel(quote: BERTQuote): String {
+    val use24Hour = DateFormat.is24HourFormat(LocalContext.current)
+    return "${if (quote.isStale) "DELAYED · " else ""}${formatObservedAt(quote.observedAtEpochMillis, use24Hour = use24Hour)}".uppercase()
+}
 
 @Composable
 private fun eyebrowStyle(color: Color? = null, size: Int = 9) =
@@ -293,7 +293,6 @@ private data class WidgetPalette(
     val text: Color,
     val muted: Color,
     val accent: Color,
-    val showAmbient: Boolean,
 ) {
     companion object {
         fun from(theme: BERTThemePack) = WidgetPalette(
@@ -302,7 +301,6 @@ private data class WidgetPalette(
             text = Color(theme.textArgb),
             muted = Color(theme.mutedArgb),
             accent = Color(theme.accentArgb),
-            showAmbient = false,
         )
     }
 }
@@ -315,17 +313,32 @@ private val Green = Color(0xFF45E09A)
 internal val Red = Color(0xFFFF7583)
 private val Amber = Color(0xFFFFC857)
 
-class BERTWidgetReceiver : GlanceAppWidgetReceiver() {
+/** Starts background refresh with the first placed widget and stops it after the last is removed. */
+abstract class BERTWidgetReceiverBase : GlanceAppWidgetReceiver() {
+    override fun onEnabled(context: Context) {
+        super.onEnabled(context)
+        BERTRefreshWorker.schedule(context)
+    }
+
+    override fun onDisabled(context: Context) {
+        super.onDisabled(context)
+        BERTRefreshWorker.syncSchedule(context)
+    }
+}
+
+class BERTWidgetReceiver : BERTWidgetReceiverBase() {
     override val glanceAppWidget: GlanceAppWidget = BERTWidget()
 }
 
 class BERTMarketWidget : BERTWidget()
 
-class BERTMarketWidgetReceiver : GlanceAppWidgetReceiver() {
+class BERTMarketWidgetReceiver : BERTWidgetReceiverBase() {
     override val glanceAppWidget: GlanceAppWidget = BERTMarketWidget()
 }
 
-suspend fun updateAllBERTWidgets(context: Context) {
+suspend fun updateAllBERTWidgets(context: Context, scheduleStaleRender: Boolean = true) {
+    // Scheduled first so a failed render cannot leave an earlier quote's timer in place.
+    if (scheduleStaleRender) BERTWidgetStaleRenderWorker.schedule(context, BERTQuoteRepository(context).load())
     BERTWidget().updateAll(context)
     BERTMarketWidget().updateAll(context)
 }

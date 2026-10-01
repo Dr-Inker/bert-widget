@@ -2,16 +2,16 @@ package global.bert.widget.theme
 
 import android.app.WallpaperManager
 import android.content.Context
-import android.graphics.BitmapFactory
 import androidx.annotation.DrawableRes
+import androidx.annotation.RawRes
 import global.bert.widget.R
 
 enum class BERTThemePack(
     val id: String,
     val displayName: String,
     val subtitle: String,
-    @DrawableRes val homeWallpaperRes: Int,
-    @DrawableRes val lockWallpaperRes: Int,
+    @RawRes val homeWallpaperRes: Int,
+    @RawRes val lockWallpaperRes: Int,
     @DrawableRes val previewRes: Int,
     val backgroundArgb: Long,
     val panelArgb: Long,
@@ -23,8 +23,8 @@ enum class BERTThemePack(
         id = "mayor-purple",
         displayName = "Mayor Purple",
         subtitle = "BERT.GLOBAL · BIG ENERGY",
-        homeWallpaperRes = R.drawable.wallpaper_mayor_purple_home,
-        lockWallpaperRes = R.drawable.wallpaper_mayor_purple_lock,
+        homeWallpaperRes = R.raw.wallpaper_mayor_purple_home,
+        lockWallpaperRes = R.raw.wallpaper_mayor_purple_lock,
         previewRes = R.drawable.preview_mayor_purple,
         backgroundArgb = 0xFF4D0B8C,
         panelArgb = 0xFF6E23B7,
@@ -36,8 +36,8 @@ enum class BERTThemePack(
         id = "woofhub-night",
         displayName = "Woofhub Night",
         subtitle = "POWERED BY BERT",
-        homeWallpaperRes = R.drawable.wallpaper_woofhub_night_home,
-        lockWallpaperRes = R.drawable.wallpaper_woofhub_night_lock,
+        homeWallpaperRes = R.raw.wallpaper_woofhub_night_home,
+        lockWallpaperRes = R.raw.wallpaper_woofhub_night_lock,
         previewRes = R.drawable.preview_woofhub_night,
         backgroundArgb = 0xFF0C0712,
         panelArgb = 0xFF2A143A,
@@ -49,8 +49,8 @@ enum class BERTThemePack(
         id = "berthalla-nights",
         displayName = "Berthalla Nights",
         subtitle = "THE BERT ECOSYSTEM",
-        homeWallpaperRes = R.drawable.wallpaper_berthalla_nights_home,
-        lockWallpaperRes = R.drawable.wallpaper_berthalla_nights_lock,
+        homeWallpaperRes = R.raw.wallpaper_berthalla_nights_home,
+        lockWallpaperRes = R.raw.wallpaper_berthalla_nights_lock,
         previewRes = R.drawable.preview_berthalla_nights,
         backgroundArgb = 0xFF061126,
         panelArgb = 0xFF15314F,
@@ -83,16 +83,13 @@ object BERTWallpaperInstaller {
 
     fun apply(context: Context, theme: BERTThemePack, destination: Int): Int {
         val resource = if (destination == LOCK) theme.lockWallpaperRes else theme.homeWallpaperRes
-        val bitmap = requireNotNull(BitmapFactory.decodeResource(context.resources, resource)) {
-            "Unable to decode ${theme.displayName} wallpaper"
+        // The packaged WebP is handed over as-is; decoding it here would hold ~18 MB of ARGB
+        // and make WallpaperManager re-encode it.
+        val wallpaperId = context.resources.openRawResource(resource).use { stream ->
+            WallpaperManager.getInstance(context).setStream(stream, null, false, destination)
         }
-        try {
-            val wallpaperId = WallpaperManager.getInstance(context).setBitmap(bitmap, null, false, destination)
-            check(wallpaperId > 0) { "Android did not apply the wallpaper" }
-            return wallpaperId
-        } finally {
-            bitmap.recycle()
-        }
+        check(wallpaperId > 0) { "Android did not apply the wallpaper" }
+        return wallpaperId
     }
 
     internal fun applyPair(context: Context, theme: BERTThemePack): WallpaperApplyResult =

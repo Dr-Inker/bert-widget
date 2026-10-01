@@ -146,8 +146,9 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long) {
                     samples.forEach { drawCircle(lineColor, 2.5.dp.toPx(), point(it)) }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(clock.format(Date(cutoff)), color = Muted, fontSize = 12.sp)
-                    Text(clock.format(Date(now)), color = Muted, fontSize = 12.sp)
+                    // A clock time at each edge reads "00:26 → 00:26" across a 24-hour window.
+                    Text(formatWindowStart(window.durationMillis), color = Muted, fontSize = 12.sp)
+                    Text("Now", color = Muted, fontSize = 12.sp)
                 }
                 Text("Observed low ${formatPrice(low)} · high ${formatPrice(high)}", color = Cream, fontSize = 12.sp)
                 Text("${samples.size} observations · ${clock.format(Date(samples.first().observedAtEpochMillis))}–${clock.format(Date(samples.last().observedAtEpochMillis))}", color = Muted, fontSize = 12.sp)
