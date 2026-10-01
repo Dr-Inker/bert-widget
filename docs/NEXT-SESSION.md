@@ -19,7 +19,18 @@ Live at https://berthalla.io/app/ (APK 5,117,036 bytes, SHA-256 `15bcaffe…`, c
 - **Game:** The Lost Trail is app-only (browser copy retired 2026-10-01). New title screen at platformer
   `084dcb0`; bundle provenance is checked byte for byte by `tools/qa/lost-trail-browser.mjs`.
 
-### Next (Tier 2, from the October 1 critique)
+### Tier 2 — done on branch `tier2` (not released), mobile gate PASS at `6deacc7`
+
+- Home tournament card (countdown, prize pool, top 5, final standings; untrusted names sanitised).
+- Widgets fit at every launcher size; `BERTWidgetRenderTest` renders the real Glance widgets to RemoteViews on the
+  host and fails on wrapped/ellipsized/clipped text (it caught the 240x120 market price split, 120x120 compact
+  header/footer and 360x200 market footer). Widget data loads inside the composition keyed on a revision that
+  `updateAllBERTWidgets` bumps; sparkline colour follows the 24h change.
+- The Lost Trail portrait play fills the screen (platformer `35c37db`), larger HUD, single Pause.
+- **Before releasing:** device-check on the S25 — place both widgets, change holdings in the app and confirm the
+  widget updates within seconds (the Glance live-session reload cannot be proven on the host), and play in portrait.
+
+### Original Tier 2 list (October 1 critique)
 
 1. Market widget overflows at its 240dp minimum (`BERTWidget.kt` fixed 142dp holdings capsule) and the compact
    layout clips its footer at the 120dp minimum height. Needs widget rendering tests.
