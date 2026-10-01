@@ -111,6 +111,7 @@ private fun BERTScreen(lifecycle: Lifecycle) {
             activityState = ActivityState.Available(activity)
             // Read here, so it is not news for a later dispatch alert.
             activity.dispatch?.let { BERTAlertStore(context.applicationContext).markDispatchSeen(it) }
+            updateWidgets() // the Bert widget shows this feed
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {

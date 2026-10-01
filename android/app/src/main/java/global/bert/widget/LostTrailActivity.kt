@@ -2,6 +2,12 @@ package global.bert.widget
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.res.Configuration
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import android.content.Intent
 import android.graphics.Color
 import android.net.Uri
@@ -93,10 +99,18 @@ class LostTrailActivity : ComponentActivity() {
         })
         setContent {
             BERTTheme {
+                // Sideways, the game gets the whole height: system bars hide (a swipe shows them briefly) and the
+                // app bar is dropped; Back still leaves through the game's own pause handling.
+                val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
+                LaunchedEffect(landscape) {
+                    val controller = WindowCompat.getInsetsController(window, window.decorView)
+                    controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                    if (landscape) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
+                }
                 Scaffold(containerColor = Navy, contentWindowInsets = WindowInsets.safeDrawing) { padding ->
                     Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
                         // The game's own HUD has Pause; a second native Pause here only duplicated it.
-                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp)) {
+                        if (!landscape) Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp)) {
                             TextButton(onClick = { pauseGame(); finish() }) { Text("‹ Back to Bert", color = Cream) }
                         }
                         AndroidView(factory = { gameView }, modifier = Modifier.weight(1f).fillMaxWidth())

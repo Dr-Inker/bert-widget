@@ -62,9 +62,11 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
     if (selectedId != null) {
         TextButton(onClick = backToCollection, enabled = !busy) { Text("Back to collection") }
         card?.let { ready ->
-            Image(ready.bitmap.asImageBitmap(), "Saved caption card: ${ready.caption}",
-                Modifier.fillMaxWidth(if (ready.bitmap.height > ready.bitmap.width) 0.62f else 1f)
-                    .aspectRatio(ready.bitmap.width.toFloat() / ready.bitmap.height).clip(RoundedCornerShape(20.dp)))
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                Image(ready.bitmap.asImageBitmap(), "Saved caption card: ${ready.caption}",
+                    Modifier.fillMaxWidth(if (ready.bitmap.height > ready.bitmap.width) 0.62f else 1f)
+                        .aspectRatio(ready.bitmap.width.toFloat() / ready.bitmap.height).clip(RoundedCornerShape(20.dp)))
+            }
             Text(ready.caption, color = Cream, fontSize = 17.sp, lineHeight = 24.sp)
             Button(onClick = {
                 busy = true; error = null
