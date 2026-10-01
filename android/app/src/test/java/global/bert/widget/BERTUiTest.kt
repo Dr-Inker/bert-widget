@@ -301,7 +301,13 @@ class BERTUiTest {
             history.last().priceUsd, 1.63, 15_067_640.0, 136_801.0, 1_178_452.0, "fresh", now - 30_000, "dexscreener", "raydium",
             "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
         ))
-        app(quote = quote, history = history)
+        val event = BERTEvent("The Autumn Arc", now + (60 * 24 + 7) * 3_600_000L, "live", pool = 250, sponsor = "Dr. Inker LABS",
+            standings = listOf(BERTStanding(1, "LamexCrypt", 143, 100), BERTStanding(2, "DrInker", 115, 60),
+                BERTStanding(3, "Md. Shaiful Islam", 114, 40), BERTStanding(4, "De_general", 112, 30), BERTStanding(5, "Hameed", 108, 20)))
+        app(ActivityState.Available(BERTActivity(now - 60_000, "woofmornin. the ladybug holds the screen door like the wind can wait its turn.", "content", event)),
+            quote = quote, history = history)
+        compose.onNodeWithText("The Autumn Arc").assertExists()
+        capture("marketing-home")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("24h ago").assertExists()
         compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertDoesNotExist()

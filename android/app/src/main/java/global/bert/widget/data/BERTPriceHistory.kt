@@ -16,7 +16,13 @@ class BERTPriceHistory(context: Context) {
         // The app and the refresh worker both record; the lock keeps one from dropping the other's sample.
         // A server clock ahead of the device's would otherwise produce samples load() filters as future.
         val observedAt = minOf(quote.observedAtEpochMillis, nowEpochMillis)
-        val updated = normalize(load(nowEpochMillis) + BERTPriceSample(observedAt, quote.priceUsd), nowEpochMillis)
+        val existing = load(nowEpochMillis)
+        // A clamped (server-ahead) observation loses its unique timestamp, so the same cached quote fetched twice
+        // would otherwise be stored twice; treat a repeat of the latest price within a minute as the same sample.
+        val last = existing.lastOrNull()
+        if (observedAt != quote.observedAtEpochMillis && last != null && last.priceUsd == quote.priceUsd &&
+            observedAt - last.observedAtEpochMillis < 60_000L) return@synchronized
+        val updated = normalize(existing + BERTPriceSample(observedAt, quote.priceUsd), nowEpochMillis)
         val encoded = JSONArray().apply {
             updated.forEach { sample ->
                 put(JSONObject().put("t", sample.observedAtEpochMillis).put("p", sample.priceUsd))

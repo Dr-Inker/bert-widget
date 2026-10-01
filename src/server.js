@@ -53,6 +53,8 @@ function json(response, status, body, extraHeaders = {}) {
   response.writeHead(status, {
     "content-type": "application/json; charset=utf-8",
     "x-content-type-options": "nosniff",
+    // The service owns Cache-Control (nginx must not add another); errors are never cacheable.
+    "cache-control": "no-store",
     ...extraHeaders,
   });
   response.end(`${JSON.stringify(body)}\n`);

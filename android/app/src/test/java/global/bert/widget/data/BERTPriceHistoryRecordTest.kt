@@ -38,4 +38,13 @@ class BERTPriceHistoryRecordTest {
         threads.forEach(Thread::join)
         assertEquals(160, history.load(now).size)
     }
+
+    @Test fun `a server-ahead quote fetched twice is stored once`() {
+        val history = BERTPriceHistory(RuntimeEnvironment.getApplication())
+        val now = 100L * 24 * 3_600_000L
+        val ahead = quote(now + 5 * 60_000L, 2.0)
+        history.record(ahead, now)
+        history.record(ahead, now + 20_000L)
+        assertEquals(1, history.load(now + 20_000L).size)
+    }
 }

@@ -132,6 +132,7 @@ test("serves history over HTTP and reports 503 when unavailable", async () => {
       const response = await fetch(`http://127.0.0.1:${server.address().port}/v1/bert/history`);
       assert.equal(response.status, status);
       if (status === 200) assert.match(response.headers.get("cache-control"), /max-age=120/);
+      else assert.equal(response.headers.get("cache-control"), "no-store");
     } finally {
       await new Promise((resolve) => server.close(resolve));
     }

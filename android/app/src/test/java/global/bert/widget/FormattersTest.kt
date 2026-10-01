@@ -43,5 +43,11 @@ class FormattersTest {
         assertEquals("Ends in 4m", formatTimeLeft(now + 4 * 60_000L, now))
         assertEquals("Ends in 0m", formatTimeLeft(now - 60_000L, now))
     }
-}
 
+    @Test fun `entered amounts keep every digit and gain grouping`() {
+        assertEquals("3,000,000", formatExactTokenAmount(3_000_000.0))
+        assertEquals("1.5", formatExactTokenAmount(1.500))
+        assertEquals("0.001", formatExactTokenAmount(0.001))
+        assertEquals("250,000.123456", formatExactTokenAmount(250_000.123456))
+    }
+}

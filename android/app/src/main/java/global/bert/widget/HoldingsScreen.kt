@@ -101,7 +101,7 @@ private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save
                     // Echo the interpretation so a grouping slip (1.500 meant as 1,500) is visible before saving.
                     Text(when {
                         amountError -> "Enter zero or more, using a decimal point."
-                        parsedAmount != null -> "Saves as ${parsedAmount.toBigDecimal().stripTrailingZeros().toPlainString()} BERT"
+                        parsedAmount != null -> "Saves as ${formatExactTokenAmount(parsedAmount)} BERT"
                         else -> "Use a decimal point, e.g. 250000.5"
                     })
                 },

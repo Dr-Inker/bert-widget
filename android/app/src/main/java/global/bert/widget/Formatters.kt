@@ -66,5 +66,9 @@ fun formatObservedAt(
     return "As of ${SimpleDateFormat(pattern, locale).format(Date(observedAtEpochMillis))}"
 }
 
+/** Every significant digit of an entered amount, grouped for reading: 3000000 → "3,000,000", 0.001 → "0.001". */
+fun formatExactTokenAmount(value: Double): String =
+    java.text.DecimalFormat("#,##0.##################", java.text.DecimalFormatSymbols(Locale.US)).format(value.toBigDecimal().stripTrailingZeros())
+
 /** Relative axis label for a chart window edge: "24h ago", "6h ago", "1h ago". */
 fun formatWindowStart(durationMillis: Long): String = "${durationMillis / 3_600_000}h ago"
