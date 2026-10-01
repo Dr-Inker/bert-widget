@@ -270,6 +270,29 @@ class BERTUiTest {
         capture("create-large")
     }
 
+    // Landing-page captures: a fresh quote and a recorded 24-hour price curve (review fixture, not live data).
+    @Test fun marketingCapturesShowHealthyMarketAndExplore() {
+        val now = 1_789_000_000_000
+        val fixture = org.json.JSONObject(requireNotNull(javaClass.classLoader).getResource("history-sample.json").readText())
+        val points = fixture.getJSONArray("minutesBeforeNow")
+        val history = (0 until points.length()).map { i ->
+            val point = points.getJSONArray(i)
+            BERTPriceSample(now - point.getLong(0) * 60_000, point.getDouble(1))
+        }
+        val quote = QuoteState.Available(BERTQuote(
+            history.last().priceUsd, 1.63, 15_067_640.0, 136_801.0, 1_178_452.0, "fresh", now - 30_000, "dexscreener", "raydium",
+            "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+        ))
+        app(quote = quote, history = history)
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("24h ago").assertExists()
+        compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertDoesNotExist()
+        capture("marketing-tools")
+        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
+        capture("marketing-explore")
+    }
+
     @Test fun coldOfflineHomeKeepsAllDestinationsUsable() {
         app()
         compose.onNodeWithText("Bert’s update couldn’t load.").assertIsDisplayed()

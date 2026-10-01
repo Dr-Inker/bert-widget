@@ -57,7 +57,8 @@ try{
   await page.locator('#pause-map').tap();assert.equal(await page.evaluate(()=>BertAppGame.back()),true);
   assert.equal((await page.evaluate(()=>__QA.read())).screen,'pause');
   await page.reload();await page.waitForFunction(()=>__QA?.ready());await page.evaluate(()=>__QA.manual());
-  assert.match(await page.locator('#start').innerText(),/Continue/);await page.locator('#start').tap();
+  // textContent, not innerText: the title menu renders labels uppercase with CSS; the label itself must still offer to continue.
+  assert.match(await page.locator('#start').textContent(),/Continue/);await page.locator('#start').tap();
   state=await page.evaluate(()=>__QA.read());assert.equal(state.p.hp,3);assert.equal(state.p.x,state.checkpoint.x);
   result.layouts.push({width,height,frame,toast,gameAreaFraction:frame.width*frame.height/(width*height),controls,restored:state});await context.close();
  }
