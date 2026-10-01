@@ -34,6 +34,8 @@
 @media(orientation:portrait){
  .bert-app body{justify-content:space-between}
  .bert-app .frame{width:100%;aspect-ratio:1;margin:auto 0}
+ /* Play fills the space above the controls; the canvas shows extra sky rather than empty bands. */
+ .bert-app .frame[data-screen=playing]{aspect-ratio:auto;flex:1 1 0;min-height:0;margin:0}
  .bert-app .frame:not([data-screen=playing]){aspect-ratio:auto;height:100%;margin:0}
  /* Portrait title: art on top (drawn by the canvas), full-width game menu in the dark ground below it. */
  .bert-app .frame #title-screen{justify-content:flex-end;padding:0 7% max(18px,env(safe-area-inset-bottom))}
@@ -55,9 +57,9 @@
  .bert-app .hud{top:0;left:0;right:0;gap:3px}
  .bert-app .hud-left{padding:8px 6px}
  .bert-app .hud-right{padding:0;gap:0}
- .bert-app .hud-world{font-size:10px;letter-spacing:0}
- .bert-app .hud-stats{font-size:12px;gap:8px}
- .bert-app .icon-button{font-size:11px;padding:3px}
+ .bert-app .hud-world{font-size:12px;letter-spacing:0}
+ .bert-app .hud-stats{font-size:14px;gap:10px}
+ .bert-app .icon-button{font-size:13px;padding:3px}
  .bert-app .map-grid{grid-template-columns:repeat(2,1fr)}
  .bert-app .world-card{min-height:112px;padding:12px}
  .bert-app .world-card .name{font-size:18px;margin:12px 0 8px}
@@ -303,7 +305,9 @@ function resize(){const fw=$('frame').clientWidth,fh=$('frame').clientHeight;
   // Tall title frames render at the portrait key art's native 288px width; everything else is 360px tall.
   // The menu sits below the art, so widen the canvas (shrinking the art) when the frame is too short for both.
   if(screen==='title'&&fh>fw*1.1){const menu=$('title-screen').querySelector('.title-menu'),need=menu?menu.offsetHeight+28:0,room=Math.max(160,fh-need);
-    canvas.width=Math.max(288,Math.ceil(fw*360/room));canvas.height=Math.max(360,Math.round(canvas.width*fh/fw));}else{canvas.width=Math.round(360*fw/fh);canvas.height=360;}
+    canvas.width=Math.max(288,Math.ceil(fw*360/room));canvas.height=Math.max(360,Math.round(canvas.width*fh/fw));}
+  // Tall play frames keep the 360px-wide world view and show extra sky above it instead of empty bands.
+  else if(screen!=='title'&&fh>fw*1.05){canvas.width=360;canvas.height=Math.round(360*fh/fw);}else{canvas.width=Math.round(360*fw/fh);canvas.height=360;}
   ctx.imageSmoothingEnabled=false;g.viewWidth=canvas.width;}
 new ResizeObserver(resize).observe($('frame'));resize();
 function initAudio(){if(muted)return;try{if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();master=audioCtx.createGain();master.gain.value=.12;master.connect(audioCtx.destination);}if(audioCtx.state==='suspended')audioCtx.resume().catch(()=>{});}catch{muted=true;updateSound();}}
@@ -315,8 +319,10 @@ function sprite(key,x,foot,frame=0,{flip=false,scale=1,alpha=1}={}){const a=ART[
 function box(x,y,w,h,color){ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
 function line(x,y,x2,y2,color,width=1){ctx.strokeStyle=color;ctx.lineWidth=width;ctx.beginPath();ctx.moveTo(Math.round(x),Math.round(y));ctx.lineTo(Math.round(x2),Math.round(y2));ctx.stroke();}
 function textAt(text,x,y,size=8,color='#e8e5cf',align='center'){ctx.font=`${size}px ui-monospace,monospace`;ctx.textAlign=align;ctx.fillStyle='#0a1724';ctx.fillText(text,Math.round(x)+1,Math.round(y)+1);ctx.fillStyle=color;ctx.fillText(text,Math.round(x),Math.round(y));}
-function background(){const width=canvas.width,t=g.world.theme,key=t.id+'Sky',a=ART[key];box(0,0,width,360,t.sky);if(images[key]){const drawW=Math.max(width+200,Math.round(360*a.w/a.h)),off=-(g.camera/(g.world.width-width))*(drawW-width);ctx.drawImage(images[key],0,0,a.w,a.h,Math.round(off),0,drawW,360);}
-  box(0,0,width,360,'#0c1a2b45');
+function background(){const width=canvas.width,t=g.world.theme,key=t.id+'Sky',a=ART[key],extra=Math.max(0,canvas.height-360),h=360+extra;
+  // On tall portrait canvases the panorama covers the whole frame, including the band above the 360px world.
+  box(0,-extra,width,h,t.sky);if(images[key]){const drawW=Math.max(width+200,Math.round(h*a.w/a.h)),off=-(g.camera/(g.world.width-width))*(drawW-width);ctx.drawImage(images[key],0,0,a.w,a.h,Math.round(off),-extra,drawW,h);}
+  box(0,-extra,width,h,'#0c1a2b45');
   // Slow mist binds the panorama to the playable foreground without obscuring its edges.
   for(let i=0;i<4;i++){const y=201+i*24;box(0,y,width,20,`rgba(13,26,43,${.045+i*.012})`);}
   if(!reduced){for(let i=0;i<28;i++){const x=((i*139-g.camera*.24+displayTick*(g.world.index===2?.32:.035))%(width+40)+width+40)%(width+40)-20,y=84+(i*47)%175+Math.sin(displayTick*.016+i)*5;const c=g.world.index===3?'#ecac6677':g.world.index===5?'#c8f7ea77':'#dbddb46b';box(x,y,g.world.index===2?3:1,1,c);}}
@@ -390,7 +396,9 @@ function drawTitle(){const W=canvas.width,H=canvas.height,portrait=W<400,key=por
   const lx=portrait?Math.round((W-l1.width)/2):ax+26,ly=portrait?16:26,cx=portrait?W/2:lx+l1.width/2,blockH=l1.height+l2.height+sub.height;
   ctx.save();const gr=ctx.createRadialGradient(cx,ly+blockH/2,10,cx,ly+blockH/2,l1.width*.75);gr.addColorStop(0,'rgba(8,12,26,.62)');gr.addColorStop(1,'rgba(8,12,26,0)');ctx.fillStyle=gr;ctx.fillRect(0,0,W,ly+blockH+60);ctx.restore();
   ctx.drawImage(l1,lx,ly);ctx.drawImage(l2,portrait?Math.round((W-l2.width)/2):lx,ly+l1.height-2);ctx.drawImage(sub,portrait?Math.round((W-sub.width)/2):lx+2,ly+l1.height+l2.height+2);}
-function draw(){if(!assetsReady)return;ctx.imageSmoothingEnabled=false;if(screen==='title'){drawTitle();return;}ctx.save();if(g.shake&&!reduced&&screen==='playing')ctx.translate(Math.sin(g.tick*3)*g.shake*.25,Math.cos(g.tick*4)*g.shake*.15);background();ctx.save();ctx.translate(-Math.round(g.camera),0);terrain();objects();foreground();characters();ctx.restore();ctx.restore();}
+function draw(){if(!assetsReady)return;ctx.imageSmoothingEnabled=false;if(screen==='title'){drawTitle();return;}ctx.save();
+  // The world is 360px tall; a taller portrait canvas gets a sky band above it, and the world sits at the bottom.
+  const extra=canvas.height-360;if(extra>0)ctx.translate(0,extra);if(g.shake&&!reduced&&screen==='playing')ctx.translate(Math.sin(g.tick*3)*g.shake*.25,Math.cos(g.tick*4)*g.shake*.15);background();ctx.save();ctx.translate(-Math.round(g.camera),0);terrain();objects();foreground();characters();ctx.restore();ctx.restore();}
 function frame(time){if(!lastTime)lastTime=time;const elapsed=Math.min(100,time-lastTime);lastTime=time;if(!manual){accumulator+=elapsed;let n=0;while(accumulator>=1000/60&&n<6){tick();accumulator-=1000/60;n++;}}displayTick++;draw();requestAnimationFrame(frame);}
 awaitReady();async function awaitReady(){try{await ready;show('title');draw();requestAnimationFrame(frame);}catch(error){const deck=$('title-screen').querySelector('.deck');deck.textContent='The trail artwork could not load. Please reload to try again.';deck.classList.remove('sr-only');console.error(error);}}
 // QA hooks are available only through the explicit URL flag. Route tests feed the same input reducer.

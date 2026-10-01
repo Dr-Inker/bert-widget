@@ -95,9 +95,9 @@ class LostTrailActivity : ComponentActivity() {
             BERTTheme {
                 Scaffold(containerColor = Navy, contentWindowInsets = WindowInsets.safeDrawing) { padding ->
                     Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding)) {
-                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        // The game's own HUD has Pause; a second native Pause here only duplicated it.
+                        Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp)) {
                             TextButton(onClick = { pauseGame(); finish() }) { Text("‹ Back to Bert", color = Cream) }
-                            TextButton(onClick = { pauseGame() }) { Text("Pause", color = AccentText) }
                         }
                         AndroidView(factory = { gameView }, modifier = Modifier.weight(1f).fillMaxWidth())
                     }
