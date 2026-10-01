@@ -35,7 +35,7 @@ internal fun LostTrailCard() {
     val context = LocalContext.current
     Card(onClick = { openLostTrail(context) }, colors = CardDefaults.cardColors(containerColor = Panel),
         shape = RoundedCornerShape(24.dp), border = BorderStroke(1.dp, Amber.copy(alpha = 0.35f))) {
-        Image(painterResource(R.drawable.lost_trail), contentDescription = "Bert on the Lantern Orchard trail", contentScale = ContentScale.Crop,
+        Image(painterResource(R.drawable.lost_trail), contentDescription = "Bert at the garden gate, looking down the Lost Trail", contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f))
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("SUPER BERT WORLD", color = Amber, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)

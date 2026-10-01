@@ -1,9 +1,9 @@
 {
   "sourceRepository": "bert-platformer",
-  "sourceSha": "36ec959f2a4ac9b200def91687c892a030e73e5e",
-  "sha256": "965c2cbefe715bd9e3181a7ca5bebed237ba30343b48a131a8897a4d39ad0f20",
-  "bytes": 314143,
+  "sourceSha": "dc24e5fe115051ceadeeae7634439c8794c2afda",
+  "sha256": "c07e43cecb71f7a2cd949cf771747d5333aa0904935d766a58768ae540e42146",
+  "bytes": 567551,
   "buildCommand": "node tools/build-expedition.mjs",
-  "art": "Owner-approved Bert and 20 completed PixelLab jobs; see platformer manifest",
-  "thumbnail": "Platformer release world-1.png, source 412c4f6c7591b71e3ca2d618230d2c3c96a898dd"
+  "art": "Owner-approved Bert, 22 completed PixelLab jobs (incl. title key art) and the title Bert pixelated from the canonical reference; see platformer manifest",
+  "thumbnail": "Title key art (platformer jobs/title-landscape) with the title Bert, 2x nearest-neighbour, platformer source dc24e5fe115051ceadeeae7634439c8794c2afda"
 }

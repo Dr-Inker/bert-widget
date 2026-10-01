@@ -10,6 +10,8 @@ const root=path.resolve(import.meta.dirname,'../..');
 const html=fs.readFileSync(root+'/android/app/src/main/assets/games/lost-trail/index.html');
 const manifest=JSON.parse(fs.readFileSync(root+'/android/app/src/main/assets/games/lost-trail/provenance.json'));
 const hash=createHash('sha256').update(html).digest('hex');assert.equal(hash,manifest.sha256);
+// The bundled file must be the game repository's committed build at the pinned source, byte for byte.
+assert.deepEqual(html,execFileSync('git',['show',`${manifest.sourceSha}:index.html`],{cwd:'/opt/bert-platformer',maxBuffer:16*1024*1024}),'Bundled game differs from the pinned platformer build');
 const dir=process.env.EVIDENCE_DIR||'/tmp/bert-mobile-game';fs.mkdirSync(dir,{recursive:true});
 const url='https://appassets.androidplatform.net/lost-trail/index.html?app';
 const csp="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'";
