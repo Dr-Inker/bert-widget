@@ -106,7 +106,7 @@ internal fun renderCaption(context: Context, caption: String, palette: Int, styl
             }
             canvas.drawRect(0f, H - bandHeight - 220f, W.toFloat(), H - bandHeight, shade)
             canvas.drawRect(0f, H - bandHeight, W.toFloat(), H.toFloat(), Paint().apply { color = band })
-            val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF9E85.toInt().takeIf { p == 0 } ?: 0xFFB8452B.toInt(); textSize = 30f; typeface = bold; textAlign = Paint.Align.CENTER; letterSpacing = 0.12f }
+            val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF9433.toInt().takeIf { p == 0 } ?: 0xFFB8452B.toInt(); textSize = 30f; typeface = bold; textAlign = Paint.Align.CENTER; letterSpacing = 0.12f }
             canvas.drawText("A NOTE FROM BERT", W / 2f, H - bandHeight + 40f, label)
             textPaint.color = foreground
             val boxTop = H - bandHeight + 76f

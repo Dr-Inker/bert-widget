@@ -17,8 +17,10 @@ internal val Panel = Color(0xFF0D2942)
 internal val PanelStrong = Color(0xFF123957)
 internal val Cream = Color(0xFFFFF5DF)
 internal val Muted = Color(0xFF9CB0C5)
-internal val Orange = Color(0xFFF25836)
-internal val AccentText = Color(0xFFFF9E85)
+// One orange for actions, labels and links (owner preferred orange over the earlier salmon). It is light enough
+// for text on every navy surface (8.0 / 6.8 / 5.5:1, 4.6:1 inside a tinted status pill), which #F25836 is not.
+internal val Orange = Color(0xFFFF9433)
+internal val AccentText = Orange
 internal val Green = Color(0xFF45E09A)
 internal val Red = Color(0xFFFF6B7A)
 internal val Amber = Color(0xFFFFC857)
