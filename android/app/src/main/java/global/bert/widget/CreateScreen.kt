@@ -45,6 +45,10 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
     val scope = rememberCoroutineScope()
     var caption by rememberSaveable { mutableStateOf("woofmornin. the mayor is in.") }
     var palette by rememberSaveable { mutableIntStateOf(0) }
+    var artIndex by rememberSaveable { mutableIntStateOf(0) }
+    var layoutIndex by rememberSaveable { mutableIntStateOf(0) }
+    var formatIndex by rememberSaveable { mutableIntStateOf(0) }
+    val style = CardStyle(CardArt.entries[artIndex], CardLayout.entries[layoutIndex], CardFormat.entries[formatIndex])
     val library = remember { CaptionLibrary(context.applicationContext) }
     var sharing by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
@@ -55,29 +59,34 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
     val overLimit = characterCount > CAPTION_CHARACTER_LIMIT
     val text = caption.trim()
     val canRender = !overLimit && text.isNotEmpty()
-    var saved by remember(text, palette) { mutableStateOf(false) }
+    var saved by remember(text, palette, style) { mutableStateOf(false) }
     var previewError by remember { mutableStateOf(false) }
-    val rendered by produceState<RenderedCaption?>(null, text, palette, canRender) {
+    val rendered by produceState<RenderedCaption?>(null, text, palette, style, canRender) {
         previewError = false
         value = null
         if (!canRender) return@produceState
         delay(200)
         try {
-            value = withContext(Dispatchers.Default) { renderCaption(context.applicationContext, text, palette) }
+            value = withContext(Dispatchers.Default) { renderCaption(context.applicationContext, text, palette, style) }
         } catch (cancelled: CancellationException) {
             throw cancelled
         } catch (_: Exception) {
             previewError = true
         }
     }
-    val ready = rendered?.takeIf { canRender && it.caption == text && it.palette == palette }
+    val ready = rendered?.takeIf { canRender && it.caption == text && it.palette == palette && it.style == style }
+    // Story cards keep their true 9:16 shape at a narrower width so the preview stays on screen.
+    val previewModifier = Modifier.fillMaxWidth(if (style.format == CardFormat.STORY) 0.62f else 1f)
+        .aspectRatio(style.format.width.toFloat() / style.format.height).clip(RoundedCornerShape(20.dp))
 
     Text("Your words. Bert’s face.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
     Text("Make a card for the pack. No account needed.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
     if (ready != null) {
-        Image(ready.bitmap.asImageBitmap(), "Caption card preview: $text", Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(20.dp)))
+        Box(Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) {
+            Image(ready.bitmap.asImageBitmap(), "Caption card preview: $text", previewModifier)
+        }
     } else {
-        Surface(color = Panel, modifier = Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(20.dp))) {
+        Box(Modifier.fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) { Surface(color = Panel, modifier = previewModifier) {
             Box(contentAlignment = androidx.compose.ui.Alignment.Center) {
                 val message = when {
                     overLimit -> "Shorten your caption to see the preview."
@@ -87,7 +96,7 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
                 }
                 Text(message, color = Muted, modifier = Modifier.padding(20.dp))
             }
-        }
+        } }
     }
     OutlinedTextField(
         value = caption,
@@ -111,6 +120,13 @@ private fun CaptionCardCreator(openSaved: () -> Unit) {
         minLines = 2, maxLines = 4,
         modifier = Modifier.fillMaxWidth(),
     )
+    SectionLabel("BERT")
+    SectionTabs(CardArt.entries.map { it.label }, style.art.label) { label -> artIndex = CardArt.entries.indexOfFirst { it.label == label } }
+    SectionLabel("LAYOUT")
+    SectionTabs(CardLayout.entries.map { it.label }, style.layout.label) { label -> layoutIndex = CardLayout.entries.indexOfFirst { it.label == label } }
+    SectionLabel("SIZE")
+    SectionTabs(CardFormat.entries.map { it.label }, style.format.label) { label -> formatIndex = CardFormat.entries.indexOfFirst { it.label == label } }
+    SectionLabel("COLOURS")
     SectionTabs(listOf("Midnight", "Cream", "Lilac"), listOf("Midnight", "Cream", "Lilac")[palette]) {
         palette = listOf("Midnight", "Cream", "Lilac").indexOf(it)
     }

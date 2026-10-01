@@ -62,7 +62,9 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
     if (selectedId != null) {
         TextButton(onClick = backToCollection, enabled = !busy) { Text("Back to collection") }
         card?.let { ready ->
-            Image(ready.bitmap.asImageBitmap(), "Saved caption card: ${ready.caption}", Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(20.dp)))
+            Image(ready.bitmap.asImageBitmap(), "Saved caption card: ${ready.caption}",
+                Modifier.fillMaxWidth(if (ready.bitmap.height > ready.bitmap.width) 0.62f else 1f)
+                    .aspectRatio(ready.bitmap.width.toFloat() / ready.bitmap.height).clip(RoundedCornerShape(20.dp)))
             Text(ready.caption, color = Cream, fontSize = 17.sp, lineHeight = 24.sp)
             Button(onClick = {
                 busy = true; error = null
@@ -101,7 +103,8 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
                 Card(onClick = { selectedId = entry.id; error = null }, colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
                     Row(Modifier.fillMaxWidth().padding(14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         Box(Modifier.size(76.dp).clip(RoundedCornerShape(12.dp)).background(PanelStrong), contentAlignment = Alignment.Center) {
-                            if (thumbnail != null) Image(requireNotNull(thumbnail).asImageBitmap(), null, Modifier.fillMaxSize().testTag("saved-card-thumbnail"))
+                            if (thumbnail != null) Image(requireNotNull(thumbnail).asImageBitmap(), null, Modifier.fillMaxSize().testTag("saved-card-thumbnail"),
+                                contentScale = androidx.compose.ui.layout.ContentScale.Crop)
                             else BERTIcon(BERTSymbol.CREATE, Muted)
                         }
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) {
