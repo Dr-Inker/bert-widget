@@ -59,10 +59,12 @@ private fun BERTScreen(lifecycle: Lifecycle) {
     val repository = remember { BERTQuoteRepository(context.applicationContext) }
     val activityRepository = remember { BERTActivityRepository(context.applicationContext) }
     val historyStore = remember { BERTPriceHistory(context.applicationContext) }
+    val marketHistoryRepository = remember { BERTMarketHistoryRepository(context.applicationContext) }
     val holdingsStore = remember { BERTHoldingsStore(context.applicationContext) }
     val scope = rememberCoroutineScope()
     var state by remember { mutableStateOf<QuoteState>(repository.load()?.let { QuoteState.Available(it) } ?: QuoteState.Loading) }
     var history by remember { mutableStateOf(historyStore.load()) }
+    var marketHistory by remember { mutableStateOf(marketHistoryRepository.load()) }
     var position by remember { mutableStateOf(holdingsStore.loadPosition()) }
     var refreshing by remember { mutableStateOf(false) }
     var activityState by remember { mutableStateOf<ActivityState>(activityRepository.load()?.let { ActivityState.Available(it) } ?: ActivityState.Loading) }
@@ -93,6 +95,13 @@ private fun BERTScreen(lifecycle: Lifecycle) {
         }
     }
 
+    suspend fun refreshMarketHistory() {
+        // Optional enrichment: on failure the chart keeps the cached server history plus device quotes.
+        try { marketHistory = marketHistoryRepository.refresh() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { marketHistory = marketHistoryRepository.load() }
+    }
+
     suspend fun refreshActivity() {
         if (activityRefreshing) return
         activityRefreshing = true
@@ -112,10 +121,12 @@ private fun BERTScreen(lifecycle: Lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
             launch { while (true) { now = System.currentTimeMillis(); delay(15_000) } }
             launch { while (true) { refreshActivity(); delay(5 * 60_000) } }
+            launch { while (true) { refreshMarketHistory(); delay(5 * 60_000) } }
             while (true) { refresh(); delay(60_000) }
         }
     }
-    BERTApp(state, activityState, history, position, now, refreshing, activityRefreshing,
+    val chartHistory = remember(marketHistory, history, now) { BERTPriceHistory.combine(marketHistory, history, now) }
+    BERTApp(state, activityState, chartHistory, position, now, refreshing, activityRefreshing,
         refresh = { scope.launch { refresh() } },
         refreshActivity = { scope.launch { refreshActivity() } },
         savePosition = {

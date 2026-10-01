@@ -41,6 +41,7 @@ import androidx.glance.unit.ColorProvider
 import global.bert.widget.MainActivity
 import global.bert.widget.R
 import global.bert.widget.data.BERTHoldingsStore
+import global.bert.widget.data.BERTMarketHistoryRepository
 import global.bert.widget.data.BERTPriceHistory
 import global.bert.widget.data.BERTQuote
 import global.bert.widget.data.BERTQuoteRepository
@@ -61,7 +62,9 @@ open class BERTWidget : GlanceAppWidget() {
     override suspend fun provideGlance(context: Context, id: GlanceId) {
         val quote = BERTQuoteRepository(context).load()
         val holdings = BERTHoldingsStore(context).load()
-        val sparkline = BERTSparkline.render(BERTPriceHistory(context).load())
+        val sparkline = BERTSparkline.render(
+            BERTPriceHistory.combine(BERTMarketHistoryRepository(context).load(), BERTPriceHistory(context).load()),
+        )
         val palette = WidgetPalette.from(BERTThemeStore(context).load())
         provideContent {
             CompositionLocalProvider(LocalWidgetPalette provides palette) {

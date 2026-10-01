@@ -12,6 +12,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -119,14 +120,14 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long) {
                 }
             }
             if (samples.size < 2) {
-                Text("Building your history", color = Cream, fontSize = 20.sp, fontWeight = FontWeight.Bold)
-                Text("${samples.size} of 2 observations collected in this range. History grows as quotes refresh on this device.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
+                Text("No recent prices yet", color = Cream, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Text("The chart fills in as soon as BERT can reach the market.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
             } else {
                 val low = samples.minOf { it.priceUsd }
                 val high = samples.maxOf { it.priceUsd }
                 val lineColor = movementColor(samples.last().priceUsd - samples.first().priceUsd)
                 val cutoff = now - window.durationMillis
-                val summary = "${samples.size} observed prices over the selected ${window.label} window. Low ${formatPrice(low)}, high ${formatPrice(high)}. Gaps over 30 minutes are not connected."
+                val summary = "${samples.size} prices over the selected ${window.label} window. Low ${formatPrice(low)}, high ${formatPrice(high)}. Gaps over 30 minutes are not connected."
                 Canvas(Modifier.fillMaxWidth().height(150.dp).semantics { contentDescription = summary }) {
                     val inset = 6.dp.toPx()
                     val range = (high - low).takeIf { it > 0 } ?: (high * 0.01)
@@ -138,22 +139,28 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long) {
                         val y = inset + fraction * (size.height - 2 * inset)
                         drawLine(Muted.copy(alpha = 0.15f), Offset(inset, y), Offset(size.width - inset, y), 1.dp.toPx())
                     }
-                    samples.zipWithNext().forEach { (a, b) ->
+                    val joined = BooleanArray(samples.size)
+                    samples.zipWithNext().forEachIndexed { index, (a, b) ->
                         if (b.observedAtEpochMillis - a.observedAtEpochMillis <= 30 * 60_000L) {
-                            drawLine(lineColor, point(a), point(b), 2.dp.toPx())
+                            drawLine(lineColor, point(a), point(b), 2.dp.toPx(), cap = StrokeCap.Round)
+                            joined[index] = true
+                            joined[index + 1] = true
                         }
                     }
-                    samples.forEach { drawCircle(lineColor, 2.5.dp.toPx(), point(it)) }
+                    // Dots only where a line cannot show the price: isolated samples and the latest one.
+                    samples.forEachIndexed { index, sample ->
+                        if (!joined[index] || index == samples.lastIndex) drawCircle(lineColor, 3.dp.toPx(), point(sample))
+                    }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                     // A clock time at each edge reads "00:26 → 00:26" across a 24-hour window.
                     Text(formatWindowStart(window.durationMillis), color = Muted, fontSize = 12.sp)
                     Text("Now", color = Muted, fontSize = 12.sp)
                 }
-                Text("Observed low ${formatPrice(low)} · high ${formatPrice(high)}", color = Cream, fontSize = 12.sp)
-                Text("${samples.size} observations · ${clock.format(Date(samples.first().observedAtEpochMillis))}–${clock.format(Date(samples.last().observedAtEpochMillis))}", color = Muted, fontSize = 12.sp)
+                Text("Low ${formatPrice(low)} · high ${formatPrice(high)}", color = Cream, fontSize = 12.sp)
+                Text("${samples.size} prices · ${clock.format(Date(samples.first().observedAtEpochMillis))}–${clock.format(Date(samples.last().observedAtEpochMillis))}", color = Muted, fontSize = 12.sp)
             }
-            Text("Collected on this device, up to 24 hours. Gaps over 30 minutes stay visible; this is not a full exchange chart.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+            Text("5-minute prices from GeckoTerminal, plus the latest quotes on this device.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
         }
     }
 }

@@ -13,6 +13,10 @@ export const CONFIG = Object.freeze({
   freshTtlMs: readPositiveInteger("FRESH_TTL_MS", 60_000),
   staleTtlMs: readPositiveInteger("STALE_TTL_MS", 30 * 60_000),
   upstreamUrl: `https://api.dexscreener.com/token-pairs/v1/${BERT.chain}/${BERT.mint}`,
+  historyUpstreamBase: "https://api.geckoterminal.com/api/v2",
+  historyUpstreamTimeoutMs: readPositiveInteger("HISTORY_UPSTREAM_TIMEOUT_MS", 30_000),
+  historyFreshTtlMs: readPositiveInteger("HISTORY_FRESH_TTL_MS", 5 * 60_000),
+  historyStaleTtlMs: readPositiveInteger("HISTORY_STALE_TTL_MS", 60 * 60_000),
 });
 
 function readPositiveInteger(name, fallback) {

@@ -12,17 +12,23 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import global.bert.widget.data.BERTMarketHistoryRepository
 import global.bert.widget.data.BERTQuote
 import global.bert.widget.data.BERTQuoteRepository
 import global.bert.widget.widget.BERTMarketWidgetReceiver
 import global.bert.widget.widget.BERTWidgetReceiver
 import global.bert.widget.widget.updateAllBERTWidgets
 import java.util.concurrent.TimeUnit
+import kotlin.coroutines.cancellation.CancellationException
 
 class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result = try {
         BERTQuoteRepository(applicationContext).refresh()
+        // Best effort: the sparkline falls back to cached history plus device quotes.
+        try { BERTMarketHistoryRepository(applicationContext).refresh() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { }
         updateAllBERTWidgets(applicationContext)
         Result.success()
     } catch (_: Exception) {

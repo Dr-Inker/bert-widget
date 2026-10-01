@@ -46,6 +46,27 @@ class BERTPriceHistory(context: Context) {
         private const val MAX_SAMPLES = 192
         private val lock = Any()
 
+        private const val MAX_COMBINED_SAMPLES = 400
+
+        /**
+         * Server history plus this device's quotes newer than its last point, inside the trailing 24 hours.
+         * The device samples keep the line current between 5-minute candles and while the server is unreachable.
+         */
+        fun combine(
+            market: List<BERTPriceSample>,
+            device: List<BERTPriceSample>,
+            nowEpochMillis: Long = System.currentTimeMillis(),
+        ): List<BERTPriceSample> {
+            val lastMarket = market.maxOfOrNull { it.observedAtEpochMillis } ?: Long.MIN_VALUE
+            val cutoff = nowEpochMillis - WINDOW_MILLIS
+            return (market + device.filter { it.observedAtEpochMillis > lastMarket }).asSequence()
+                .filter { it.observedAtEpochMillis in cutoff..nowEpochMillis && it.priceUsd.isFinite() && it.priceUsd > 0 }
+                .associateBy { it.observedAtEpochMillis }
+                .values
+                .sortedBy { it.observedAtEpochMillis }
+                .takeLast(MAX_COMBINED_SAMPLES)
+        }
+
         internal fun normalize(
             samples: List<BERTPriceSample>,
             nowEpochMillis: Long = samples.maxOfOrNull { it.observedAtEpochMillis } ?: System.currentTimeMillis(),

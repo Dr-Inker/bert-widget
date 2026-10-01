@@ -15,6 +15,7 @@ android {
         versionName = "0.6.0"
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
+        buildConfigField("String", "BERT_HISTORY_URL", "\"https://berthalla.io/widget/api/history\"")
     }
 
     val releaseKeystore = file(providers.gradleProperty("BERT_RELEASE_KEYSTORE").getOrElse("/etc/bert-widget/bert-widget-release.jks"))
@@ -46,6 +47,7 @@ android {
         debug {
             buildConfigField("String", "BERT_QUOTE_URL", "\"http://10.0.2.2:8787/v1/bert/quote\"")
             buildConfigField("String", "BERT_ACTIVITY_URL", "\"http://10.0.2.2:8787/v1/bert/activity\"")
+            buildConfigField("String", "BERT_HISTORY_URL", "\"http://10.0.2.2:8787/v1/bert/history\"")
         }
         create("preview") {
             isDebuggable = true

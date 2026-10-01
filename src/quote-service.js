@@ -56,16 +56,16 @@ export class QuoteService {
   }
 }
 
-async function readJsonWithLimit(response, maxBytes) {
+export async function readJsonWithLimit(response, maxBytes, sourceName = "DEX Screener") {
   const declaredLength = response.headers.get("content-length");
   if (declaredLength !== null) {
     const length = Number(declaredLength);
     if (!Number.isSafeInteger(length) || length < 0 || length > maxBytes) {
-      throw new UpstreamError("DEX Screener response exceeded the size limit");
+      throw new UpstreamError(`${sourceName} response exceeded the size limit`);
     }
   }
 
-  if (!response.body) throw new UpstreamError("DEX Screener returned an empty response");
+  if (!response.body) throw new UpstreamError(`${sourceName} returned an empty response`);
   const reader = response.body.getReader();
   const chunks = [];
   let received = 0;
@@ -76,7 +76,7 @@ async function readJsonWithLimit(response, maxBytes) {
       received += value.byteLength;
       if (received > maxBytes) {
         await reader.cancel("response too large");
-        throw new UpstreamError("DEX Screener response exceeded the size limit");
+        throw new UpstreamError(`${sourceName} response exceeded the size limit`);
       }
       chunks.push(value);
     }
@@ -93,7 +93,7 @@ async function readJsonWithLimit(response, maxBytes) {
   try {
     return JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
   } catch (error) {
-    throw new UpstreamError(error instanceof SyntaxError ? "DEX Screener returned invalid JSON" : "DEX Screener returned invalid UTF-8");
+    throw new UpstreamError(`${sourceName} returned ${error instanceof SyntaxError ? "invalid JSON" : "invalid UTF-8"}`);
   }
 }
 
@@ -109,7 +109,7 @@ function envelope(quote, freshness, now, warning = null) {
   };
 }
 
-function safeError(error) {
+export function safeError(error) {
   if (error instanceof Error) return error.message.slice(0, 160);
   return "Upstream refresh failed";
 }

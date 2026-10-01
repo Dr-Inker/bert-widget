@@ -10,6 +10,9 @@ Rollout completed (2026-09-09): `/app/`, homepage links and the exact legacy lan
 - `/widget`, `/widget/`, `/widget/index.html` — permanent redirects to `/app/`
 - `/widget/api/quote` — canonical production endpoint
 - `/widget/v1/bert/quote` — compatibility quote endpoint
+- `/widget/api/history` — 24 hours of 5-minute BERT closes from GeckoTerminal for the pool the quote
+  service selects. Cold upstream responses take 10–20 s, so the service answers from its cache and
+  refreshes in the background; only an empty cache waits (up to 30 s).
 - `/widget/download/bert-widget.apk` — signed Android release
 
 The landing HTML lives at `website/app/index.html` in the separate Berthalla website repository. Shared assets, release metadata and APK downloads remain under `website/widget/`; installed-app API and download URLs do not change. The page links back to the public source repository and release history; keep those transparency links current whenever the repository or release process changes.
@@ -41,6 +44,7 @@ systemctl is-active bert-widget.service
 curl -fsS http://127.0.0.1:8787/healthz
 curl -fsS https://berthalla.io/widget/api/quote
 curl -fsS https://berthalla.io/widget/v1/bert/quote
+curl -fsS https://berthalla.io/widget/api/history
 ```
 
 Treat the public checks as required, not optional. The Android client preserves its last valid quote when a

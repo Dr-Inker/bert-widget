@@ -122,7 +122,7 @@ class BERTUiTest {
             measurements.put(measureLabel(label))
         }
         compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertExists()
-        compose.onNode(hasContentDescription("5 observed prices", substring = true)).performScrollTo()
+        compose.onNode(hasContentDescription("5 prices over", substring = true)).performScrollTo()
         capture("market-ranges$suffix")
         for (label in listOf("1H", "6H", "24H")) {
             val target = compose.onNode(hasText(label) and hasClickAction()).fetchSemanticsNode().touchBoundsInRoot
@@ -179,9 +179,9 @@ class BERTUiTest {
             compose.onNodeWithText(label).assertIsSelected()
             compose.onNodeWithContentDescription(summary).assertExists()
         }
-        checkChart("24H", "5 observed prices over the selected 24H window. Low $0.003, high $0.008. Gaps over 30 minutes are not connected.")
-        checkChart("6H", "4 observed prices over the selected 6H window. Low $0.003, high $0.005. Gaps over 30 minutes are not connected.")
-        checkChart("1H", "2 observed prices over the selected 1H window. Low $0.004, high $0.0042. Gaps over 30 minutes are not connected.")
+        checkChart("24H", "5 prices over the selected 24H window. Low $0.003, high $0.008. Gaps over 30 minutes are not connected.")
+        checkChart("6H", "4 prices over the selected 6H window. Low $0.003, high $0.005. Gaps over 30 minutes are not connected.")
+        checkChart("1H", "2 prices over the selected 1H window. Low $0.004, high $0.0042. Gaps over 30 minutes are not connected.")
         capture("market-one-hour")
         compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Market", useUnmergedTree = true).performClick()
