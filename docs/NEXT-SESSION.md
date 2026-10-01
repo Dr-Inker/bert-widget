@@ -1,5 +1,21 @@
 # Next session — BERT app
 
+## v0.8.0 published — October 1; Google Play next
+
+Live at https://berthalla.io/app/ (code 19). Everything from the October 1 improvement list is done except retiring
+the price server (measure first). Play kit: `docs/play/` and the drinkerlabs PC at `C:\Users\Sjpch\BERT-Play\`
+(app bundle, mapping, icon, feature graphic, 9:16 screenshots, `LISTING.md` with data-safety and declaration answers).
+
+- **Owner, for Play:** create the app in Play Console, upload `bert-0.8.0.aab` (+ `mapping-0.8.0.txt`), paste the
+  listing, set the contact email, and answer the declarations per `LISTING.md`. The existing release key is the upload
+  key; Play App Signing will hold the app-signing key.
+- **Sideload users:** berthalla.io/app keeps serving signed APKs. A Play install and a sideloaded APK share the package
+  name; once Play re-signs with its own app-signing key, the two cannot update each other — decide whether the website
+  should point to Play after launch.
+- **Price server retirement:** count `/widget/api/quote` and `/widget/api/history` hits with and without `?via=fallback`
+  in `/var/log/nginx/access.log` over a week or two before stopping `bert-widget.service`.
+- **iOS:** date fix is uncompiled; build in Xcode before trusting it.
+
 ## v0.7.1 published — October 1 (0.7.0 earlier the same day)
 
 Live at https://berthalla.io/app/ (APK 5,117,036 bytes, SHA-256 `15bcaffe…`, code 17). Release source is
