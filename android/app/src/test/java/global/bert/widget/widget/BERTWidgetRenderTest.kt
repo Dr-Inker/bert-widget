@@ -82,6 +82,13 @@ class BERTWidgetRenderTest {
         return Rendered(host, texts)
     }
 
+    /** Top-left of [view] inside [root]. The host is never attached to a window, so getLocationInWindow reports 0,0. */
+    private fun offsetIn(view: View, root: View): Pair<Int, Int> {
+        var x = 0; var y = 0; var v: View? = view
+        while (v != null && v !== root) { x += v.left - v.scrollX; y += v.top - v.scrollY; v = v.parent as? View }
+        return x to y
+    }
+
     /** True when any ancestor's bounds cut off part of this view (Glance containers clip silently). */
     private fun clippedByAncestor(view: View): Boolean {
         var x = view.left; var y = view.top; var right = view.right; var bottom = view.bottom
@@ -97,14 +104,18 @@ class BERTWidgetRenderTest {
 
     /** Every visible text fits: one line, not ellipsized, fully inside the widget bounds. */
     private fun problems(r: Rendered, multiline: Set<String> = emptySet()): List<String> {
-        val loc = IntArray(2); val rootLoc = IntArray(2); r.root.getLocationInWindow(rootLoc)
         return r.texts.mapNotNull { tv ->
-            tv.getLocationInWindow(loc)
-            val left = loc[0] - rootLoc[0]; val top = loc[1] - rootLoc[1]
+            val (left, top) = offsetIn(tv, r.root)
             val layout = tv.layout
             val lines = layout?.lineCount ?: 0
             val ellipsized = layout != null && (0 until lines).any { layout.getEllipsisCount(it) > 0 }
-            val widest = layout?.let { l -> (0 until lines).maxOfOrNull { l.getLineWidth(it) } } ?: 0f
+            // getLineWidth counts a wrapped line's trailing space, which is never drawn: measure the visible glyphs.
+            // An ellipsized line draws only up to its ellipsis start, then the ellipsis.
+            fun shown(l: android.text.Layout, i: Int): String = l.getLineStart(i).let { start ->
+                if (l.getEllipsisCount(i) > 0) tv.text.substring(start, start + l.getEllipsisStart(i)).trimEnd() + "…"
+                else tv.text.substring(start, l.getLineEnd(i)).trimEnd()
+            }
+            val widest = layout?.let { l -> (0 until lines).maxOfOrNull { tv.paint.measureText(shown(l, it)) } } ?: 0f
             val clippedH = widest > tv.width - tv.totalPaddingLeft - tv.totalPaddingRight + 1
             // Lines laid out beyond the view's own height are cut mid-glyph without any ellipsis.
             val overflowsBox = layout != null && layout.height > tv.height - tv.totalPaddingTop - tv.totalPaddingBottom + 1
@@ -114,6 +125,29 @@ class BERTWidgetRenderTest {
                 "clipped".takeIf { clippedH }, "taller than its box".takeIf { overflowsBox }, "outside widget".takeIf { outside })
             if (issue.isEmpty()) null else "'${tv.text}': ${issue.joinToString()}"
         }
+    }
+
+    /** Largest vertical stretch with no laid-out text, as a share of the widget height: a big void reads as broken. */
+    private fun emptiestBand(r: Rendered): Float {
+        val spans = r.texts.map { tv ->
+            val top = offsetIn(tv, r.root).second + tv.totalPaddingTop
+            top to top + minOf(tv.layout?.height ?: 0, tv.height - tv.totalPaddingTop - tv.totalPaddingBottom)
+        }.sortedBy { it.first }
+        var edge = 0; var widest = 0
+        for ((top, bottom) in spans) { widest = maxOf(widest, top - edge); edge = maxOf(edge, bottom) }
+        widest = maxOf(widest, r.root.height - edge)
+        return widest.toFloat() / r.root.height
+    }
+
+    /** Share of the widget covered by Bert's own picture (the gradient overlay is not "Bert"). */
+    private fun bertArtShare(r: Rendered): Float {
+        var largest = 0
+        fun walk(v: View) {
+            if (v is android.widget.ImageView && v.visibility == View.VISIBLE && v.contentDescription == "Bert") largest = maxOf(largest, v.width * v.height)
+            if (v is ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+        }
+        walk(r.root)
+        return largest.toFloat() / (r.root.width * r.root.height)
     }
 
     @Test fun compactWidgetFitsFromMinimumToLarge() {
@@ -157,10 +191,44 @@ class BERTWidgetRenderTest {
             .put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + (60L * 24 + 7) * 3_600_000).toString())
                 .put("status", "live").put("pool", 250).put("top", org.json.JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
         context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()
-        val report = listOf(120 to 110, 180 to 180, 250 to 110, 320 to 150, 360 to 200).associate { (w, h) ->
+        val report = BERT_SIZES.associate { (w, h) ->
             "bert ${w}x$h" to problems(render(BERTDailyWidget(), w, h, "bert-${w}x$h"), multiline = setOf(dispatch))
         }
         println("WIDGET REPORT bert: $report")
         assertTrue(report.toString(), report.values.all { it.isEmpty() })
+    }
+
+    /** Owner on the S25 at 4x2: "looks empty and weird". Bert fills the widget at every size, long post or short. */
+    @Test fun bertWidgetIsFilledAndShowsBertAtEverySize() {
+        val now = System.currentTimeMillis()
+        val posts = mapOf(
+            "short" to "the blanket settled heavier on its own. like the season finally taught it how to hold still.",
+            "long" to "woofmornin. the ladybug holds the screen door like the wind can wait its turn, and the mayor is in no hurry either. " +
+                "somewhere a kettle is thinking about it. the pack has opinions about breakfast and none of them are quiet.",
+        )
+        val report = posts.flatMap { (kind, post) ->
+            listOf(true, false).flatMap { tournament ->
+                val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", "giddy").put("latest_post", post)
+                if (tournament) status.put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + 30 * 3_600_000L).toString())
+                    .put("status", "live").put("pool", 250).put("top", org.json.JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
+                context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()
+                BERT_SIZES.map { (w, h) ->
+                    val tag = "$kind${if (tournament) "-event" else ""}-${w}x$h"
+                    val r = render(BERTDailyWidget(), w, h, "bert-fill-$tag")
+                    val band = emptiestBand(r); val art = bertArtShare(r)
+                    val issues = problems(r, multiline = setOf(post)) +
+                        listOfNotNull("empty band ${(band * 100).toInt()}%".takeIf { band > 0.25f },
+                            "Bert art only ${(art * 100).toInt()}%".takeIf { w >= 200 && art < 0.18f })
+                    tag to issues
+                }
+            }
+        }.toMap()
+        println("WIDGET REPORT bert fill: $report")
+        assertTrue(report.filterValues { it.isNotEmpty() }.toString(), report.values.all { it.isEmpty() })
+    }
+
+    private companion object {
+        /** Minimum 2x1 up to a large 4x2; 380x190 is roughly the S25's 4x2 cell. */
+        val BERT_SIZES = listOf(120 to 110, 180 to 180, 250 to 110, 300 to 130, 320 to 150, 360 to 200, 380 to 190, 400 to 220)
     }
 }
