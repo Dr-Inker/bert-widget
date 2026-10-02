@@ -11,10 +11,15 @@ except retiring the price server.
 1. Play Console upload from `C:\Users\Sjpch\BERT-Play\` on the drinkerlabs PC (`bert-0.8.1.aab`, `mapping-0.8.1.txt`,
    graphics, `LISTING.md`; 0.8.0 moved to `superseded-0.8.0\`). Offer to walk through it.
 2. A contact email for the Play listing (not chosen yet; do not use the owner's personal address without asking).
-3. Decide whether berthalla.io/app keeps serving APKs or points to Play once Play re-signs the app (Play and
-   sideloaded installs cannot update each other).
+3. ~~APK vs Play~~ **Decided (owner, 2 October):** berthalla.io/app keeps serving the signed APK until the app is
+   through Play testing and fully approved, then points at the Play Store link instead.
 
 **For me to do:**
+- **When the owner says Play approved:** switch every download link on berthalla.io/app (six `a[download]` plus the nav
+  and dock) to the Play listing URL; keep the last APK reachable for existing installs; add a short note that
+  sideloaded installs must uninstall the APK and install from Play to get updates (Play re-signs the app, so the two
+  cannot update each other; that wipes on-device holdings and saved cards). Update `check-page.cjs` to expect the Play
+  link, `release.json` and the `/app/` FAQ.
 - ~15 October 2026: count `/widget/api/quote` + `/widget/api/history` requests with vs without `?via=fallback` in
   `/var/log/nginx/access.log`; propose retiring `bert-widget.service` if untagged (pre-0.7) traffic has faded.
 - After Play review: fix anything Play flags; keep `docs/play/LISTING.md` in step.
