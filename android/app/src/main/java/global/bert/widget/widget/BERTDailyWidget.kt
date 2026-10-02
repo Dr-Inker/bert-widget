@@ -126,6 +126,7 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
                     val forms = listOfNotNull(
                         leader?.let { "${event.name.uppercase().take(22)} · $left · ${it.name.uppercase().take(14)} ${it.score}" },
                         "${event.name.uppercase().take(18)} · $left",
+                        "FLAPPY · $left", // a bare countdown does not say what is ending
                         left,
                     )
                     // Bold caps at 9sp run about 0.64em a glyph; take the longest form the column holds.
