@@ -14,6 +14,12 @@ except retiring the price server.
 3. ~~APK vs Play~~ **Decided (owner, 2 October):** berthalla.io/app keeps serving the signed APK until the app is
    through Play testing and fully approved, then points at the Play Store link instead.
 
+**Play upload in progress (owner, 2 October):** app name `BERT: Bert's World`, package `global.bert.widget`, release
+name `0.8.1`, en-GB release notes drafted in chat (first release, five feature bullets); 85 "localisations" are AndroidX
+translations, not countries; Nigeria wanted (Closed testing → Manage track → Countries / regions). Expect the 12-tester /
+14-day closed test for a new personal account. Offered, not done: a home-screen widget Play screenshot; trimming locales
+to English (`androidResources.localeFilters`) in a later release.
+
 **For me to do:**
 - **When the owner says Play approved:** switch every download link on berthalla.io/app (six `a[download]` plus the nav
   and dock) to the Play listing URL; keep the last APK reachable for existing installs; add a short note that
