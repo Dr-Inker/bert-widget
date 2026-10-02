@@ -259,3 +259,10 @@ Use content hashes in updated JavaScript/CSS query parameters. The initial reuse
 - Service and nginx: one `Cache-Control` per API response, errors `no-store`. Evidence:
   [release 0.8.0](docs/evidence/2026-10-01/release-0.8.0/README.md). Rollback: `/opt/bert-widget-qa/release-0.8.0/previous`.
 
+## v0.8.1 Android release record — 2026-10-02
+
+- Bert widget redesign (full-height photo / 2×2 banner, update fills the widget, orange pill); fuller price and market
+  widgets. App source `ef28193`; website `ce6e639`.
+- APK code 20, 5,252,940 bytes, SHA-256 `137b49e270117a1fdb2867685463b0c2ee58ce1ef013b01694594c3fc94df905`. Play bundle
+  `bert-0.8.1.aab` SHA-256 `98e6c593…e503` with `mapping-0.8.1.txt`. No server change. Evidence:
+  [release 0.8.1](docs/evidence/2026-10-02/release-0.8.1/README.md). Rollback: `/opt/bert-widget-qa/release-0.8.1/previous`.

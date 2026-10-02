@@ -1,9 +1,9 @@
 # Google Play listing — BERT
 
-Everything to paste into the Play Console. Graphics are in this folder. Upload artifact: the v0.8.0 app bundle
-(`/opt/bert-widget-qa/release-0.8.0/staged/bert-0.8.0.aab`, also copied to the drinkerlabs PC at
+Everything to paste into the Play Console. Graphics are in this folder. Upload artifact: the v0.8.1 app bundle
+(`/opt/bert-widget-qa/release-0.8.1/staged/bert-0.8.1.aab`, also copied to the drinkerlabs PC at
 `C:\\Users\\Sjpch\\BERT-Play\\`), signed with the existing release key, which Play App Signing uses as the upload key.
-Upload `mapping-0.8.0.txt` alongside it so crash reports are readable.
+Upload `mapping-0.8.1.txt` alongside it so crash reports are readable.
 
 ## Store listing
 
@@ -19,7 +19,7 @@ Upload `mapping-0.8.0.txt` alongside it so crash reports are readable.
 >
 > **Create** — make caption cards with Bert in five artworks, as a note or a poster, square or story-sized. Save them on your phone and share them anywhere.
 >
-> **Widgets** — Bert himself (mood, update, tournament countdown), or the BERT price at a glance with a 24-hour chart. Every widget shows when its data is from, even offline.
+> **Widgets** — Bert himself (his photo, mood, latest update and tournament countdown, filling any size), or the BERT price at a glance with a 24-hour chart. Every widget shows when its data is from, even offline.
 >
 > **Tools** — the BERT market price and 24-hour chart, an optional private holdings record, and opt-in alerts for tournaments, Bert's updates and price levels.
 >

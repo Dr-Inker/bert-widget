@@ -1,28 +1,26 @@
 # Next session — BERT app
 
-## START HERE (memo left 1 October 2026, end of session)
+## START HERE (memo left 2 October 2026, end of session)
 
-**State:** v0.8.0 (code 19) is live at https://berthalla.io/app/ and on the owner's S25. GitHub `main` = this release.
-All improvements from the October 1 critique are shipped except retiring the price server. The owner plans to upload
-to Google Play next.
+**State:** v0.8.1 (code 20) is live at https://berthalla.io/app/ and on the owner's S25 (in-place upgrade from 0.8.0).
+GitHub `main` = this release. The Bert widget redesign shipped (owner's "looks empty and weird" fixed and checked on the
+S25 at 4×2 and 2×2), and the price and market widgets no longer leave empty bands. Nothing from the critiques is open
+except retiring the price server.
 
 **Waiting on the owner:**
-1. Play Console upload from `C:\Users\Sjpch\BERT-Play\` on the drinkerlabs PC (`bert-0.8.0.aab`, `mapping-0.8.0.txt`,
-   graphics, `LISTING.md`). Offer to walk through it.
+1. Play Console upload from `C:\Users\Sjpch\BERT-Play\` on the drinkerlabs PC (`bert-0.8.1.aab`, `mapping-0.8.1.txt`,
+   graphics, `LISTING.md`; 0.8.0 moved to `superseded-0.8.0\`). Offer to walk through it.
 2. A contact email for the Play listing (not chosen yet; do not use the owner's personal address without asking).
 3. Decide whether berthalla.io/app keeps serving APKs or points to Play once Play re-signs the app (Play and
    sideloaded installs cannot update each other).
 
 **For me to do:**
-- **First: redesign the Bert widget** (owner, on the S25 at a large 4×2 size: "looks empty and weird"). Text is a fixed
-  14sp, so big widgets show two small lines and a void; no Bert art beyond a 30dp avatar; mood pill uses the purple theme
-  accent. Plan: full-height Bert portrait on the left (reuse caption-card art), dispatch that scales with the space
-  (≈14–20sp) and is vertically centred, orange mood pill, tidy tournament footer, subtle gradient. Add a render-test check
-  that fails when a large share of the widget is empty, render 120×110 → 400×220, then device-check on the S25.
 - ~15 October 2026: count `/widget/api/quote` + `/widget/api/history` requests with vs without `?via=fallback` in
   `/var/log/nginx/access.log`; propose retiring `bert-widget.service` if untagged (pre-0.7) traffic has faded.
 - After Play review: fix anything Play flags; keep `docs/play/LISTING.md` in step.
 - iOS fractional-date fix is uncompiled; needs Xcode.
+- The BERT Preview on the S25 is now signed with this host's `~/.android/debug.keystore`; the earlier preview's signer
+  was unknown, so it was reinstalled (its test data is gone).
 
 **Working setup:**
 - Repo `/opt/bert-widget` is the production checkout (the quote/history service runs from it). Develop in the
@@ -33,8 +31,13 @@ to Google Play next.
   `android/app/src/main/assets/games/lost-trail/`.
 - Device: S25 via `ssh pc` + `C:\Users\Sjpch\platform-tools\adb.exe -s R5CY13S5TRD`. The owner often watches this
   session on that phone: ask them to unlock/put it down, guard taps to BERT's package, restore any settings changed.
-- Release recipe: see the v0.8.0 evidence README and `DEPLOYMENT.md` (version bump → gate → signed APK + AAB →
+- Release recipe: see the v0.8.1 evidence README (scripts alongside it) and `DEPLOYMENT.md` (version bump → gate → signed APK + AAB →
   verify + check-apk → stamp site → device upgrade → publish → public checks → records → push).
+
+## v0.8.1 published — October 2: the Bert widget redesign
+
+Full record: [release 0.8.1](evidence/2026-10-02/release-0.8.1/README.md). Render tests now fail on empty bands in any
+widget, on a too-small Bert picture, at font scale 1.3 and on theme contrast.
 
 ## v0.8.0 published — October 1; Google Play next
 

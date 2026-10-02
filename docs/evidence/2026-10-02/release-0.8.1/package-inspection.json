@@ -1,0 +1,15 @@
+{
+  "apkSha256": "137b49e270117a1fdb2867685463b0c2ee58ce1ef013b01694594c3fc94df905",
+  "game": {
+    "sourceRepository": "bert-platformer",
+    "sourceSha": "35c37dbf7dcd2d8ed802fcf24874fd4c68d9b52b",
+    "sha256": "ecaa65d36117d5adf1deac170563a1c5b35e92fbb2a60aa1653b80c4fc209eee",
+    "bytes": 568586,
+    "buildCommand": "node tools/build-expedition.mjs",
+    "art": "Owner-approved Bert, 22 completed PixelLab jobs (incl. title key art) and the title Bert pixelated from the canonical reference; see platformer manifest",
+    "thumbnail": "Title key art (platformer jobs/title-landscape) with the title Bert, 2x nearest-neighbour, platformer source 35c37dbf7dcd2d8ed802fcf24874fd4c68d9b52b"
+  },
+  "isolatedActivity": true,
+  "productionEndpointsOnly": true
+}
+0.8.1 widget art present
