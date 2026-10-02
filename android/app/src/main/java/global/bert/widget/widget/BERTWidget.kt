@@ -82,8 +82,8 @@ open class BERTWidget : GlanceAppWidget() {
                         .clickable(actionStartActivity<MainActivity>()),
                 ) {
                     // Sizes below are pinned by BERTWidgetRenderTest, which renders every text at launcher sizes.
-                    if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 200.dp, narrow = size.width < 290.dp)
-                    else CompactWidgetContent(quote, sparkline, narrow = size.width < 150.dp, short = size.height < 165.dp)
+                    if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 200.dp, roomy = size.height >= 165.dp, narrow = size.width < 290.dp)
+                    else CompactWidgetContent(quote, sparkline, narrow = size.width < 150.dp, short = size.height < 140.dp)
                 }
             }
         }
@@ -146,7 +146,7 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
 }
 
 @Composable
-private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: Boolean, narrow: Boolean) {
+private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: Boolean, roomy: Boolean, narrow: Boolean) {
     val palette = LocalWidgetPalette.current
     Row(modifier = GlanceModifier.fillMaxSize().padding(vertical = if (spacious) 12.dp else 6.dp, horizontal = 8.dp)) {
         Spacer(GlanceModifier.width(3.dp).fillMaxHeight().background(ColorProvider(palette.accent)))
@@ -185,10 +185,17 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
                 MarketFooter(quote)
             } else {
                 Spacer(GlanceModifier.defaultWeight())
+                // Between the slim and spacious layouts, boxed metrics and the source line fill what would be a gap.
                 Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight())
-                    WidgetMetric("24H VOLUME", quote.volume24hUsd, GlanceModifier.defaultWeight())
-                    WidgetMetric("LIQUIDITY", quote.liquidityUsd, GlanceModifier.defaultWeight())
+                    WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight(), panel = roomy)
+                    if (roomy) Spacer(GlanceModifier.width(6.dp))
+                    WidgetMetric("24H VOLUME", quote.volume24hUsd, GlanceModifier.defaultWeight(), panel = roomy)
+                    if (roomy) Spacer(GlanceModifier.width(6.dp))
+                    WidgetMetric("LIQUIDITY", quote.liquidityUsd, GlanceModifier.defaultWeight(), panel = roomy)
+                }
+                if (roomy) {
+                    Spacer(GlanceModifier.height(6.dp))
+                    MarketFooter(quote)
                 }
             }
         }

@@ -127,17 +127,30 @@ class BERTWidgetRenderTest {
         }
     }
 
-    /** Largest vertical stretch with no laid-out text, as a share of the widget height: a big void reads as broken. */
+    /**
+     * Largest vertical stretch with no laid-out text, as a share of the widget height: a big void reads as broken.
+     * A described picture across most of the width (Bert's banner, the price chart) counts as content; the side
+     * portrait and the undescribed glow do not, so wide Bert widgets are judged on their text column.
+     */
     private fun emptiestBand(r: Rendered): Float {
-        val spans = r.texts.map { tv ->
+        val banners = mutableListOf<Pair<Int, Int>>()
+        fun walk(v: View) {
+            if (v is android.widget.ImageView && v.visibility == View.VISIBLE && v.contentDescription != null && v.width > r.root.width * 0.6f)
+                offsetIn(v, r.root).second.let { banners += it to it + v.height }
+            if (v is ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+        }
+        walk(r.root)
+        val spans = (banners + r.texts.map { tv ->
             val top = offsetIn(tv, r.root).second + tv.totalPaddingTop
             top to top + minOf(tv.layout?.height ?: 0, tv.height - tv.totalPaddingTop - tv.totalPaddingBottom)
-        }.sortedBy { it.first }
+        }).sortedBy { it.first }
         var edge = 0; var widest = 0
         for ((top, bottom) in spans) { widest = maxOf(widest, top - edge); edge = maxOf(edge, bottom) }
         widest = maxOf(widest, r.root.height - edge)
         return widest.toFloat() / r.root.height
     }
+
+    private fun voids(r: Rendered) = emptiestBand(r).let { band -> listOfNotNull("empty band ${(band * 100).toInt()}%".takeIf { band > 0.25f }) }
 
     /** Share of the widget covered by Bert's own picture (the gradient overlay is not "Bert"). */
     private fun bertArtShare(r: Rendered): Float {
@@ -151,16 +164,16 @@ class BERTWidgetRenderTest {
     }
 
     @Test fun compactWidgetFitsFromMinimumToLarge() {
-        val report = listOf(120 to 120, 150 to 150, 180 to 180).associate { (w, h) ->
-            "compact ${w}x$h" to problems(render(BERTWidget(), w, h, "compact-${w}x$h"))
+        val report = listOf(120 to 120, 150 to 150, 160 to 140, 180 to 180).associate { (w, h) ->
+            "compact ${w}x$h" to render(BERTWidget(), w, h, "compact-${w}x$h").let { problems(it) + voids(it) }
         }
         println("WIDGET REPORT compact: $report")
         assertTrue(report.toString(), report.values.all { it.isEmpty() })
     }
 
     @Test fun marketWidgetFitsFromMinimumToSpacious() {
-        val report = listOf(240 to 120, 280 to 120, 320 to 150, 360 to 200).associate { (w, h) ->
-            "market ${w}x$h" to problems(render(BERTMarketWidget(), w, h, "market-${w}x$h"))
+        val report = listOf(240 to 120, 280 to 120, 320 to 150, 340 to 180, 360 to 200).associate { (w, h) ->
+            "market ${w}x$h" to render(BERTMarketWidget(), w, h, "market-${w}x$h").let { problems(it) + voids(it) }
         }
         println("WIDGET REPORT market: $report")
         assertTrue(report.toString(), report.values.all { it.isEmpty() })
@@ -200,35 +213,69 @@ class BERTWidgetRenderTest {
 
     /** Owner on the S25 at 4x2: "looks empty and weird". Bert fills the widget at every size, long post or short. */
     @Test fun bertWidgetIsFilledAndShowsBertAtEverySize() {
-        val now = System.currentTimeMillis()
-        val posts = mapOf(
-            "short" to "the blanket settled heavier on its own. like the season finally taught it how to hold still.",
-            "long" to "woofmornin. the ladybug holds the screen door like the wind can wait its turn, and the mayor is in no hurry either. " +
-                "somewhere a kettle is thinking about it. the pack has opinions about breakfast and none of them are quiet.",
-        )
-        val report = posts.flatMap { (kind, post) ->
-            listOf(true, false).flatMap { tournament ->
-                val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", "giddy").put("latest_post", post)
-                if (tournament) status.put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + 30 * 3_600_000L).toString())
-                    .put("status", "live").put("pool", 250).put("top", org.json.JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
-                context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()
-                BERT_SIZES.map { (w, h) ->
-                    val tag = "$kind${if (tournament) "-event" else ""}-${w}x$h"
-                    val r = render(BERTDailyWidget(), w, h, "bert-fill-$tag")
-                    val band = emptiestBand(r); val art = bertArtShare(r)
-                    val issues = problems(r, multiline = setOf(post)) +
-                        listOfNotNull("empty band ${(band * 100).toInt()}%".takeIf { band > 0.25f },
-                            "Bert art only ${(art * 100).toInt()}%".takeIf { w >= 200 && art < 0.18f })
-                    tag to issues
-                }
-            }
-        }.toMap()
+        val report = bertFillReport("fill")
         println("WIDGET REPORT bert fill: $report")
         assertTrue(report.filterValues { it.isNotEmpty() }.toString(), report.values.all { it.isEmpty() })
     }
 
+    /** Android's largest default text step: the fit estimate must still keep whole lines inside the widget. */
+    @Test fun bertWidgetFitsWithLargeText() {
+        RuntimeEnvironment.setFontScale(1.3f)
+        try {
+            val report = bertFillReport("font130")
+            println("WIDGET REPORT bert font 1.3: $report")
+            assertTrue(report.filterValues { it.isNotEmpty() }.toString(), report.values.all { it.isEmpty() })
+        } finally { RuntimeEnvironment.setFontScale(1f) }
+    }
+
+    /** Every theme pack keeps the widget's words legible (WCAG AA, 4.5:1) on its own background and panel. */
+    @Test fun bertWidgetColoursAreLegibleInEveryTheme() {
+        fun lum(argb: Long) = listOf(16, 8, 0).map { ((argb shr it) and 0xFF) / 255.0 }
+            .map { if (it <= 0.03928) it / 12.92 else Math.pow((it + 0.055) / 1.055, 2.4) }.let { (r, g, b) -> 0.2126 * r + 0.7152 * g + 0.0722 * b }
+        fun ratio(a: Long, b: Long) = (maxOf(lum(a), lum(b)) + 0.05) / (minOf(lum(a), lum(b)) + 0.05)
+        val failures = global.bert.widget.theme.BERTThemePack.entries.flatMap { t ->
+            listOf("text/background" to ratio(t.textArgb, t.backgroundArgb), "muted/background" to ratio(t.mutedArgb, t.backgroundArgb),
+                "gold/panel" to ratio(0xFFFFC857, t.panelArgb), "mood pill" to ratio(0xFF1F0E02, 0xFFFF9433))
+                .filter { it.second < 4.5 }.map { "${t.id} ${it.first} ${"%.2f".format(it.second)}" }
+        }
+        assertTrue(failures.toString(), failures.isEmpty())
+        global.bert.widget.theme.BERTThemePack.entries.forEach { t ->
+            global.bert.widget.theme.BERTThemeStore(context).save(t)
+            seedActivity(LONG_POST, tournament = true)
+            val issues = problems(render(BERTDailyWidget(), 360, 200, "bert-theme-${t.id}"), multiline = setOf(LONG_POST))
+            assertTrue("${t.id}: $issues", issues.isEmpty())
+        }
+    }
+
+    private fun seedActivity(post: String, tournament: Boolean) {
+        val now = System.currentTimeMillis()
+        val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", "giddy").put("latest_post", post)
+        if (tournament) status.put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + 30 * 3_600_000L).toString())
+            .put("status", "live").put("pool", 250).put("top", org.json.JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
+        context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()
+    }
+
+    /** Fit, emptiness and Bert's art at every size for a short and a long post, with and without the tournament. */
+    private fun bertFillReport(prefix: String): Map<String, List<String>> =
+        mapOf("short" to SHORT_POST, "long" to LONG_POST).flatMap { (kind, post) ->
+            listOf(true, false).flatMap { tournament ->
+                seedActivity(post, tournament)
+                BERT_SIZES.map { (w, h) ->
+                    val tag = "$kind${if (tournament) "-event" else ""}-${w}x$h"
+                    val r = render(BERTDailyWidget(), w, h, "bert-$prefix-$tag")
+                    val art = bertArtShare(r)
+                    tag to problems(r, multiline = setOf(post)) +
+                        voids(r) + listOfNotNull(
+                            "Bert art only ${(art * 100).toInt()}%".takeIf { (w >= 200 || h >= 150) && art < 0.18f })
+                }
+            }
+        }.toMap()
+
     private companion object {
-        /** Minimum 2x1 up to a large 4x2; 380x190 is roughly the S25's 4x2 cell. */
-        val BERT_SIZES = listOf(120 to 110, 180 to 180, 250 to 110, 300 to 130, 320 to 150, 360 to 200, 380 to 190, 400 to 220)
+        /** Minimum 2x1 up to a large 4x2; 380x190 is roughly the S25's 4x2 cell, 180x190 its 2x2. */
+        const val SHORT_POST = "the blanket settled heavier on its own. like the season finally taught it how to hold still."
+        const val LONG_POST = "woofmornin. the ladybug holds the screen door like the wind can wait its turn, and the mayor is in no hurry either. " +
+            "somewhere a kettle is thinking about it. the pack has opinions about breakfast and none of them are quiet."
+        val BERT_SIZES = listOf(120 to 110, 180 to 180, 180 to 190, 150 to 150, 250 to 110, 300 to 130, 320 to 150, 360 to 200, 380 to 190, 400 to 220)
     }
 }

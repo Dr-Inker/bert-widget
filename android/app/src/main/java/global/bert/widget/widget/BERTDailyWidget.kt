@@ -69,8 +69,11 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
     val w = size.width.value; val h = size.height.value
     val fontScale = LocalContext.current.resources.configuration.fontScale
     val pad = if (h < 130f) 8f else 12f
-    // From a 2x2-ish width up, Bert gets a full-height portrait; below that he is a round avatar in the header.
+    // From a 2x2-ish width up, Bert gets a full-height portrait; a tall narrow widget gets a banner of his face across
+    // the top; only the smallest sizes fall back to a round avatar in the header.
     val wide = w >= 200f
+    val banner = !wide && h >= 150f
+    val bannerH = if (banner) minOf((h - pad * 2) * 0.38f, (w - pad * 2) / 2f) else 0f
     val portraitW = if (wide) minOf((h - pad * 2) * 0.78f, w * 0.34f) else 0f
     val portraitH = if (wide) minOf(h - pad * 2, portraitW / 0.6f) else 0f
     val gap = if (wide) 12f else 0f
@@ -81,7 +84,7 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
     val event = activity?.event
     val delayed = activity?.isStaleAt(now) ?: true
     val showTournament = event != null && event.phaseAt(now, delayed) == EventPhase.OPEN
-    val headerH = maxOf(if (wide) 0f else avatar, (if (wide) 15f else 13f) * 1.34f * fontScale)
+    val headerH = if (banner) bannerH + 2f else maxOf(if (wide) 0f else avatar, (if (wide) 15f else 13f) * 1.34f * fontScale)
     val footerH = if (showTournament) 9f * 1.34f * fontScale + 8f + 6f else 0f
     val dispatch = activity?.dispatch
     val body = dispatch ?: "Bert's next update will appear here."
@@ -96,20 +99,19 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
                 Spacer(GlanceModifier.width(gap.dp))
             }
             Column(GlanceModifier.defaultWeight().fillMaxHeight()) {
-                Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                if (banner) Box(GlanceModifier.fillMaxWidth().height(bannerH.dp), contentAlignment = Alignment.TopEnd) {
+                    Image(ImageProvider(R.drawable.bert_widget_banner), "Bert", GlanceModifier.fillMaxSize().cornerRadius(12.dp), contentScale = ContentScale.Crop)
+                    activity?.mood?.let { MoodPill(it.uppercase().take(9), GlanceModifier.padding(6.dp)) }
+                } else Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (!wide) {
                         Image(ImageProvider(R.drawable.bert_token), "Bert", GlanceModifier.size(avatar.dp).cornerRadius((avatar / 2).dp), contentScale = ContentScale.Crop)
                         if (showName) Spacer(GlanceModifier.width(8.dp))
                     }
                     if (showName) Text("BERT", style = TextStyle(color = ColorProvider(text), fontSize = if (wide) 15.sp else 13.sp, fontWeight = FontWeight.Bold))
                     Spacer(GlanceModifier.defaultWeight())
-                    activity?.mood?.let { mood ->
-                        Text(mood.uppercase().take(if (wide) 12 else 9), maxLines = 1,
-                            style = TextStyle(color = ColorProvider(OnOrange), fontSize = 9.sp, fontWeight = FontWeight.Bold),
-                            modifier = GlanceModifier.background(ColorProvider(Orange)).cornerRadius(9.dp).padding(horizontal = 7.dp, vertical = 2.dp))
-                    }
+                    activity?.mood?.let { MoodPill(it.uppercase().take(if (wide) 12 else 9)) }
                 }
-                Spacer(GlanceModifier.height(4.dp))
+                Spacer(GlanceModifier.height(if (banner) 6.dp else 4.dp))
                 // Glance cannot measure, so fitDispatch picks whole lines at the largest size that holds the post.
                 Box(GlanceModifier.defaultWeight().fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
                     Text(body, maxLines = lines, modifier = GlanceModifier.fillMaxWidth(),
@@ -134,6 +136,14 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun MoodPill(mood: String, outer: GlanceModifier = GlanceModifier) {
+    Box(outer) {
+        Text(mood, maxLines = 1, style = TextStyle(color = ColorProvider(OnOrange), fontSize = 9.sp, fontWeight = FontWeight.Bold),
+            modifier = GlanceModifier.background(ColorProvider(Orange)).cornerRadius(9.dp).padding(horizontal = 7.dp, vertical = 2.dp))
     }
 }
 
