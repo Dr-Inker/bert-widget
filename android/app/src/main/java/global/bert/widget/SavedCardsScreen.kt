@@ -14,6 +14,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -31,6 +33,7 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
     val context = LocalContext.current
     val library = remember { CaptionLibrary(context.applicationContext) }
     val scope = rememberCoroutineScope()
+    val haptics = LocalHapticFeedback.current
     var revision by remember { mutableIntStateOf(0) }
     var selectedId by rememberSaveable { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -73,6 +76,7 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
                 scope.launch {
                     try {
                         val intent = withContext(Dispatchers.IO) { captionShareIntent(context.applicationContext, ready) }
+                        haptics.performHapticFeedback(HapticFeedbackType.Confirm)
                         context.startActivity(intent)
                     } catch (cancelled: CancellationException) { throw cancelled }
                     catch (_: Exception) { error = "The card couldn’t be shared. Try again." }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Static launcher shortcuts. Each opens MainActivity with a BERTEntry (LostTrailActivity is not exported).
+     targetPackage must be a literal: the launcher parses this file with the system's resources, not the app's.
+     The preview build (".preview" suffix) overrides this file in src/preview/res/xml/. -->
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="continue_lost_trail"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_game"
+        android:shortcutShortLabel="@string/shortcut_game_short"
+        android:shortcutLongLabel="@string/shortcut_game_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="global.bert.widget.preview"
+            android:targetClass="global.bert.widget.MainActivity">
+            <extra android:name="global.bert.widget.ENTRY" android:value="GAME" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="bert_price"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_price"
+        android:shortcutShortLabel="@string/shortcut_price_short"
+        android:shortcutLongLabel="@string/shortcut_price_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="global.bert.widget.preview"
+            android:targetClass="global.bert.widget.MainActivity">
+            <extra android:name="global.bert.widget.ENTRY" android:value="MARKET" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="make_a_card"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_create"
+        android:shortcutShortLabel="@string/shortcut_create_short"
+        android:shortcutLongLabel="@string/shortcut_create_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="global.bert.widget.preview"
+            android:targetClass="global.bert.widget.MainActivity">
+            <extra android:name="global.bert.widget.ENTRY" android:value="CREATE" />
+        </intent>
+    </shortcut>
+</shortcuts>

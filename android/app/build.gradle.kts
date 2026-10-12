@@ -11,8 +11,9 @@ android {
         applicationId = "global.bert.widget"
         minSdk = 26
         targetSdk = 36
-        versionCode = 20
-        versionName = "0.8.1"
+        versionCode = 24
+        versionName = "0.9.2"
+        // res/xml/shortcuts.xml cannot see the variant's applicationId; the preview build adds a suffix (see below).
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
         buildConfigField("String", "BERT_HISTORY_URL", "\"https://berthalla.io/widget/api/history\"")
@@ -105,7 +106,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
     implementation("androidx.glance:glance-appwidget:1.1.1")
-    implementation("androidx.work:work-runtime:2.11.2")
+    implementation("androidx.work:work-runtime:2.12.0")
     testImplementation(composeBom)
     testImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")

@@ -12,11 +12,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.annotation.DrawableRes
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
@@ -176,30 +178,43 @@ private fun ThemePackCard(theme: BERTThemePack, selected: Boolean, onClick: () -
     }
 }
 
+/** What the picker offers for one widget: its own name, the preview image the launcher shows, and the receiver to pin. */
+internal class WidgetChoice(
+    val name: String, val detail: String, @DrawableRes val preview: Int, val receiver: Class<*>,
+)
+
+internal val WidgetChoices = listOf(
+    WidgetChoice("Bert’s day", "2×2 or 4×2 · Bert’s mood and Berthalla’s latest update.", R.drawable.widget_preview_bert, BERTDailyWidgetReceiver::class.java),
+    WidgetChoice("BERT price", "2×2 · The price and its 24-hour move.", R.drawable.widget_preview_compact, BERTWidgetReceiver::class.java),
+    WidgetChoice("BERT market desk", "4×2 · Price, your position, market cap, volume and liquidity.", R.drawable.widget_preview_market, BERTMarketWidgetReceiver::class.java),
+)
+
 @Composable
 internal fun WidgetSetup(context: Context) {
-    val stackActions = LocalDensity.current.fontScale > 1.3f
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(22.dp)) {
-        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
             SectionLabel("HOME-SCREEN WIDGETS")
             Text("Bert himself, the quick price view or the full market desk.", color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
-                maxItemsInEachRow = if (stackActions) 1 else 2, modifier = Modifier.fillMaxWidth()) {
-                WidgetButton("Compact", "2×2", Modifier.weight(1f)) { pinWidget(context, BERTWidgetReceiver::class.java) }
-                WidgetButton("Market", "4×2", Modifier.weight(1f)) { pinWidget(context, BERTMarketWidgetReceiver::class.java) }
-                WidgetButton("Bert", "4×2", Modifier.weight(1f)) { pinWidget(context, BERTDailyWidgetReceiver::class.java) }
-            }
-            Text("If your launcher does not support one-tap placement, long-press the home screen and choose Widgets → BERT.", color = Muted, fontSize = 11.sp, lineHeight = 16.sp)
+            WidgetChoices.forEach { choice -> WidgetChoiceCard(choice) { pinWidget(context, choice.receiver) } }
+            Text("If your launcher does not support one-tap placement, long-press the home screen and choose Widgets → BERT.", color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
         }
     }
 }
 
+/** The picture is the widget itself (rendered by the same code the launcher runs), shown above its Add button. */
 @Composable
-private fun WidgetButton(name: String, size: String, modifier: Modifier, onClick: () -> Unit) {
-    OutlinedButton(onClick = onClick, modifier = modifier, border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(name, color = Cream, fontWeight = FontWeight.Bold)
-            Text(size, color = Muted, fontSize = 12.sp)
+private fun WidgetChoiceCard(choice: WidgetChoice, onAdd: () -> Unit) {
+    val painter = painterResource(choice.preview)
+    val ratio = painter.intrinsicSize.let { if (it.height > 0f) it.width / it.height else 2f }
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Image(
+            painter = painter, contentDescription = "Preview of the ${choice.name} widget", contentScale = ContentScale.Fit,
+            modifier = Modifier.fillMaxWidth(if (ratio < 1.3f) 0.5f else 1f).aspectRatio(ratio).clip(RoundedCornerShape(16.dp)),
+        )
+        Text(choice.name, color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
+        Text(choice.detail, color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
+        OutlinedButton(onClick = onAdd, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp), border = BorderStroke(1.dp, Color.White.copy(alpha = 0.2f))) {
+            Text("Add ${choice.name}", color = Cream, fontWeight = FontWeight.Bold)
         }
     }
 }

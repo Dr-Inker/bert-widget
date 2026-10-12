@@ -5,12 +5,14 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.Color
@@ -18,7 +20,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import global.bert.widget.data.*
@@ -55,16 +60,17 @@ internal fun MarketScreen(state: QuoteState, history: List<BERTPriceSample>, now
                     Text(formatPrice(quote.priceUsd), color = Cream, fontSize = 38.sp, fontWeight = FontWeight.ExtraBold)
                     Text("${formatPercent(quote.change24hPct)} · past 24h", color = movementColor(quote.change24hPct), fontSize = 17.sp, fontWeight = FontWeight.Bold)
                     QuoteFreshness(state, now)
-                    if (state.updateDelayed) Text("Couldn't refresh. Showing the last saved quote.", color = Amber, fontSize = 13.sp)
+                    if (state.updateDelayed) Text("Couldn’t refresh. Showing the last saved quote.", color = Amber, fontSize = 13.sp)
                 }
             }
+            if (quote.hasActivity) ActivityCard(quote)
             PriceHistoryPanel(history, now)
             // Stacked rows keep labels and figures readable on narrow screens and at large font sizes.
             Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     MarketMetric("Market cap", quote.marketCapUsd)
-                    MarketMetric("24h volume", quote.volume24hUsd)
-                    MarketMetric("Liquidity", quote.liquidityUsd)
+                    MarketMetric("Main pool 24h volume", quote.volume24hUsd)
+                    MarketMetric("Main pool liquidity", quote.liquidityUsd)
                 }
             }
             Button(onClick = refresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth()) {
@@ -88,6 +94,67 @@ internal fun MarketScreen(state: QuoteState, history: List<BERTPriceSample>, now
             }) { Text("Copy mint", color = Cream) }
             Text("Informational market data only.", color = Muted, fontSize = 12.sp)
         }
+    }
+}
+
+/** Facts about the main pool's recent trading; deliberately no verdicts, so no "bullish" or "pressure" wording. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ActivityCard(quote: BERTQuote) {
+    val changes = listOf("1H" to quote.change1hPct, "6H" to quote.change6hPct, "24H" to quote.change24hPct).filter { it.second != null }
+    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionLabel("ACTIVITY")
+            if (changes.isNotEmpty()) {
+                // Wraps whole chips onto a new line at large font sizes instead of breaking a figure.
+                FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    changes.forEach { (label, value) -> ChangeChip(label, value) }
+                }
+            }
+            val buys1h = quote.buys1h
+            val sells1h = quote.sells1h
+            if (buys1h != null && sells1h != null) {
+                Text(tradeCounts("Last hour:", buys1h, sells1h), color = Cream, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                if (buys1h + sells1h > 0) {
+                    val summary = "In the last hour, $buys1h buys and $sells1h sells."
+                    Row(Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)).semantics { contentDescription = summary }) {
+                        if (buys1h > 0) Box(Modifier.weight(buys1h.toFloat()).fillMaxHeight().background(Green))
+                        if (sells1h > 0) Box(Modifier.weight(sells1h.toFloat()).fillMaxHeight().background(Red))
+                    }
+                }
+            }
+            val buys24h = quote.buys24h
+            val sells24h = quote.sells24h
+            if (buys24h != null && sells24h != null) {
+                Text(tradeCounts("Past 24h:", buys24h, sells24h), color = Muted, fontSize = 13.sp)
+            }
+            Text("Transactions on the main pool, via DEX Screener", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+        }
+    }
+}
+
+private const val NBSP = "\u00A0"
+
+/** "64 buys" with a non-breaking space, so a count never parts from its noun. */
+private fun plural(count: Int, noun: String) = "${String.format(Locale.US, "%,d", count)}$NBSP$noun${if (count == 1) "" else "s"}"
+
+/**
+ * "Last hour: 64 buys · 25 sells". The separator is glued to the figure before it, so the only place the line can break
+ * is after the dot: a wrapped line ends with "·" and never starts with one, at any width or font scale.
+ */
+internal fun tradeCounts(label: String, buys: Int, sells: Int) = "$label ${plural(buys, "buy")}$NBSP· ${plural(sells, "sell")}"
+
+@Composable
+private fun ChangeChip(label: String, value: Double?) {
+    Surface(shape = RoundedCornerShape(12.dp), color = PanelStrong) {
+        // One Text (label + coloured figure) so it reads as a single item and never matches the range chips' "1H"/"24H".
+        Text(
+            buildAnnotatedString {
+                withStyle(SpanStyle(color = Muted, fontSize = 13.sp)) { append("$label ") }
+                withStyle(SpanStyle(color = movementColor(value), fontWeight = FontWeight.Bold)) { append(formatPercent(value)) }
+            },
+            Modifier.padding(horizontal = 12.dp, vertical = 8.dp), fontSize = 14.sp,
+        )
     }
 }
 

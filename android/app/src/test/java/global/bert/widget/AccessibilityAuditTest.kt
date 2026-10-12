@@ -69,7 +69,7 @@ class AccessibilityAuditTest {
             }
         }
         scrollThrough("Home")
-        for ((destination, tabs) in listOf("Explore" to listOf<String>(), "Create" to listOf("Art", "Saved", "Personalize"), "Tools" to listOf("Market", "Holdings", "Alerts"))) {
+        for ((destination, tabs) in listOf("Explore" to listOf<String>(), "Create" to listOf("Art", "Saved", "Personalise"), "Tools" to listOf("Market", "Holdings", "Alerts"))) {
             compose.onNodeWithText(destination, useUnmergedTree = true).performClick()
             if (tabs.isEmpty()) scrollThrough(destination)
             for (tab in tabs) {

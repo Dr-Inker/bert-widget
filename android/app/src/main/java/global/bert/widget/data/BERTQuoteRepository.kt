@@ -53,9 +53,15 @@ class BERTQuoteRepository(
         val price = quote.getDouble("priceUsd")
         require(price.isFinite() && price > 0) { "Invalid BERT price" }
 
+        // Counts are all-or-nothing per window, like the parser that wrote them.
+        fun count(key: String) = BERTQuote.validCount(quote.optionalDouble(key))
+        val b1 = count("buys1h"); val s1 = count("sells1h"); val b24 = count("buys24h"); val s24 = count("sells24h")
+        val (buys1h, sells1h) = if (b1 != null && s1 != null) b1 to s1 else null to null
+        val (buys24h, sells24h) = if (b24 != null && s24 != null) b24 to s24 else null to null
+
         return BERTQuote(
             priceUsd = price,
-            change24hPct = quote.optionalDouble("change24hPct"),
+            change24hPct = BERTQuote.validChange(quote.optionalDouble("change24hPct")),
             marketCapUsd = quote.optionalDouble("marketCapUsd"),
             volume24hUsd = quote.optionalDouble("volume24hUsd"),
             liquidityUsd = quote.optionalDouble("liquidityUsd"),
@@ -65,6 +71,9 @@ class BERTQuoteRepository(
             dex = source.getString("dex"),
             pairUrl = requireValidDexScreenerPairUrl(source.getString("pairUrl")),
             pairAddress = source.optString("pairAddress").takeIf { SOLANA_ADDRESS.matches(it) },
+            change1hPct = BERTQuote.validChange(quote.optionalDouble("change1hPct")),
+            change6hPct = BERTQuote.validChange(quote.optionalDouble("change6hPct")),
+            buys1h = buys1h, sells1h = sells1h, buys24h = buys24h, sells24h = sells24h,
         )
     }
 

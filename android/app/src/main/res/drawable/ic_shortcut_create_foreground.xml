@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The CREATE symbol of BERTIcon.kt: a card with a pencil. -->
+    <group android:scaleX="1.7" android:scaleY="1.7" android:translateX="33.6" android:translateY="33.6">
+        <path android:strokeColor="#FFFFF5DF" android:strokeWidth="1.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:pathData="M14,4L5,4L4,5L4,20L20,20L20,11"/>
+        <path android:strokeColor="#FFFF9433" android:strokeWidth="1.8" android:strokeLineCap="round" android:strokeLineJoin="round" android:fillColor="#33FF9433" android:pathData="M11,10L18,3L21,6L14,13L10,14Z"/>
+    </group>
+</vector>

@@ -13,6 +13,7 @@ import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import global.bert.widget.alerts.BERTNotifier
+import global.bert.widget.data.BERTActivity
 import global.bert.widget.data.BERTActivityRepository
 import global.bert.widget.data.BERTAlertRules
 import global.bert.widget.data.BERTAlertStore
@@ -23,50 +24,66 @@ import global.bert.widget.widget.BERTDailyWidgetReceiver
 import global.bert.widget.widget.BERTMarketWidgetReceiver
 import global.bert.widget.widget.BERTWidgetReceiver
 import global.bert.widget.widget.updateAllBERTWidgets
+import java.time.Instant
+import java.time.ZoneId
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.cancellation.CancellationException
 
-/** The Bert widget shows Bert's feed, so keep it current while one is placed. */
-internal suspend fun refreshActivityForDailyWidget(context: Context) {
-    val manager = AppWidgetManager.getInstance(context) ?: return
-    if (manager.getAppWidgetIds(ComponentName(context, BERTDailyWidgetReceiver::class.java)).isEmpty()) return
-    try { BERTActivityRepository(context).refresh() }
+/**
+ * Fetches Bert's feed once per run when the Bert widget or a feed-based alert needs it. A failed fetch
+ * falls back to the stored copy, so tournament and dispatch alerts still see the last valid feed.
+ */
+internal suspend fun refreshActivityIfNeeded(
+    context: Context,
+    fetch: suspend () -> BERTActivity = { BERTActivityRepository(context).refresh() },
+): BERTActivity? {
+    val alerts = BERTAlertStore(context).settings()
+    if (!hasPlacedDailyWidget(context) && !alerts.tournament && !alerts.dispatch) return null
+    return try { fetch() }
     catch (cancelled: CancellationException) { throw cancelled }
-    catch (_: Exception) { }
+    catch (_: Exception) { BERTActivityRepository(context).load() }
 }
 
-/** Evaluates switched-on alerts against the freshly stored quote and (when needed) Bert's activity feed. */
-internal suspend fun checkAlerts(context: Context, now: Long = System.currentTimeMillis()) {
+private fun hasPlacedDailyWidget(context: Context): Boolean {
+    val manager = AppWidgetManager.getInstance(context) ?: return false
+    return manager.getAppWidgetIds(ComponentName(context, BERTDailyWidgetReceiver::class.java)).isNotEmpty()
+}
+
+/** Evaluates switched-on alerts against the stored quote and the given (or stored) copy of Bert's feed. */
+internal fun checkAlerts(
+    context: Context,
+    activity: BERTActivity? = BERTActivityRepository(context).load(),
+    now: Long = System.currentTimeMillis(),
+) {
     val store = BERTAlertStore(context)
     val settings = store.settings()
     if (!settings.anyEnabled) return
-    val activity = if (settings.tournament || settings.dispatch) {
-        // Refreshed below for the Bert widget too; this read uses the stored copy when that already ran.
-        try { BERTActivityRepository(context).refresh() }
-        catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { BERTActivityRepository(context).load() }
-    } else null
-    val (notices, memory) = BERTAlertRules.evaluate(settings, store.memory(), BERTQuoteRepository(context).load(), activity, now)
+    val (notices, memory) = BERTAlertRules.evaluate(settings, store.memory(), BERTQuoteRepository(context).load(), activity, now,
+        use24Hour = android.text.format.DateFormat.is24HourFormat(context))
     // Memory only advances for notices that were actually shown (or need no showing), so a missing
     // permission does not silently consume an alert.
-    if (notices.isEmpty() || BERTNotifier.post(context, notices) > 0) store.saveMemory(memory)
+    if (notices.isEmpty() || BERTNotifier.post(context, notices) > 0) store.saveMemoryIfUnchanged(memory, settings)
 }
+
+/** Runs one refresh step; cancellation propagates, any other failure is reported as false. */
+private inline fun bestEffort(step: () -> Unit): Boolean =
+    try { step(); true }
+    catch (cancelled: CancellationException) { throw cancelled }
+    catch (_: Exception) { false }
 
 class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result = try {
-        BERTQuoteRepository(applicationContext).refresh()
-        refreshActivityForDailyWidget(applicationContext)
-        checkAlerts(applicationContext)
+    override suspend fun doWork(): Result {
+        // Each step stands alone: a failed quote must not suppress feed alerts, the Bert widget or a re-render.
+        val quoteRefreshed = bestEffort { BERTQuoteRepository(applicationContext).refresh() }
+        val activity = refreshActivityIfNeeded(applicationContext)
+        bestEffort { checkAlerts(applicationContext, activity) }
         // Best effort: the sparkline falls back to cached history plus device quotes.
-        try { BERTMarketHistoryRepository(applicationContext).refresh() }
-        catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { }
-        updateAllBERTWidgets(applicationContext)
-        Result.success()
-    } catch (_: Exception) {
-        updateAllBERTWidgets(applicationContext)
-        Result.retry()
+        bestEffort { BERTMarketHistoryRepository(applicationContext).refresh() }
+        val rendered = bestEffort { updateAllBERTWidgets(applicationContext) }
+        // Periodic-work retries back off up to 5 hours and replace the 15-minute cadence, so retry only briefly;
+        // after that the next period tries again on schedule.
+        return if ((quoteRefreshed && rendered) || runAttemptCount >= 2) Result.success() else Result.retry()
     }
 
     companion object {
@@ -102,13 +119,15 @@ class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
 }
 
 /**
- * Re-renders widgets when the displayed quote crosses the staleness threshold. The refresh worker
- * needs a network, so without this an offline phone would keep showing "UPDATED" over an old price.
+ * Re-renders widgets when the displayed quote or Bert's feed crosses its staleness threshold, and at local
+ * midnight for the Bert widget's time. The refresh worker needs a network, so without this an offline phone
+ * would keep showing "UPDATED" over old data, or yesterday's time without its date.
  */
 class BERTWidgetStaleRenderWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
     override suspend fun doWork(): Result {
-        updateAllBERTWidgets(applicationContext, scheduleStaleRender = false)
+        // Re-arms itself: every delay below is at least SLACK_MILLIS, and midnight comes once a day.
+        updateAllBERTWidgets(applicationContext)
         return Result.success()
     }
 
@@ -121,8 +140,26 @@ class BERTWidgetStaleRenderWorker(context: Context, parameters: WorkerParameters
             return quote.observedAtEpochMillis + BERTQuote.STALE_AFTER_MILLIS - nowEpochMillis + SLACK_MILLIS
         }
 
+        internal fun delayUntilFeedStaleMillis(activity: BERTActivity?, nowEpochMillis: Long): Long? {
+            if (activity == null || activity.isStaleAt(nowEpochMillis)) return null
+            return activity.updatedAtEpochMillis + 30 * 60_000L - nowEpochMillis + SLACK_MILLIS
+        }
+
+        internal fun delayUntilMidnightMillis(nowEpochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): Long {
+            val midnight = Instant.ofEpochMilli(nowEpochMillis).atZone(zone).toLocalDate().plusDays(1).atStartOfDay(zone)
+            return midnight.toInstant().toEpochMilli() - nowEpochMillis + SLACK_MILLIS
+        }
+
+        /** The soonest moment a placed widget's words go out of date: quote or feed turning stale, or a new day. */
+        internal fun nextRenderDelayMillis(quote: BERTQuote?, activity: BERTActivity?, nowEpochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): Long? =
+            listOfNotNull(
+                delayUntilStaleMillis(quote, nowEpochMillis),
+                delayUntilFeedStaleMillis(activity, nowEpochMillis),
+                activity?.let { delayUntilMidnightMillis(nowEpochMillis, zone) },
+            ).minOrNull()
+
         fun schedule(context: Context, quote: BERTQuote?, nowEpochMillis: Long = System.currentTimeMillis()) {
-            val delay = delayUntilStaleMillis(quote, nowEpochMillis) ?: return
+            val delay = nextRenderDelayMillis(quote, BERTActivityRepository(context).load(), nowEpochMillis) ?: return
             if (!BERTRefreshWorker.hasPlacedWidgets(context)) return
             // No network constraint: the point is to run while offline.
             val request = OneTimeWorkRequestBuilder<BERTWidgetStaleRenderWorker>()

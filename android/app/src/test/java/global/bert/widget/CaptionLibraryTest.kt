@@ -28,7 +28,7 @@ class CaptionLibraryTest {
         val card = reopened.open(saved.id)
         assertEquals(original.caption, card.caption)
         assertEquals(2, card.palette)
-        assertTrue("Persisted PNG must preserve the preview's pixels", original.bitmap.sameAs(card.bitmap))
+        assertTrue("Persisted PNG must preserve the preview’s pixels", original.bitmap.sameAs(card.bitmap))
         assertEquals(270, reopened.thumbnail(saved.id).width)
     }
 

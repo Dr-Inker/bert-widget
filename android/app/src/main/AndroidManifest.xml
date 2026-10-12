@@ -9,6 +9,12 @@
     <!-- WorkManager declares foreground-service support that BERT never uses (no expedited or long-running
          work); removing it keeps the Play foreground-service declaration out of scope. -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
+    <!-- Caption cards offer Telegram and X first in the share sheet; only these apps need to be visible for that. -->
+    <queries>
+        <package android:name="org.telegram.messenger" />
+        <package android:name="org.telegram.messenger.web" />
+        <package android:name="com.twitter.android" />
+    </queries>
 
     <application
         android:name=".BERTApplication"
@@ -31,13 +37,14 @@
         </provider>
         <service android:name="androidx.work.impl.foreground.SystemForegroundService" tools:node="remove" />
         <activity android:name=".LostTrailActivity" android:exported="false"
-            android:configChanges="orientation|screenSize|smallestScreenSize|keyboardHidden"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout|keyboardHidden"
             android:label="Super Bert World" />
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity android:name=".MainActivity" android:exported="true" android:launchMode="singleTop">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
         <receiver
             android:name=".widget.BERTWidgetReceiver"

@@ -1,14 +1,14 @@
 # Google Play listing — BERT
 
-Everything to paste into the Play Console. Graphics are in this folder. Upload artifact: the v0.8.1 app bundle
-(`/opt/bert-widget-qa/release-0.8.1/staged/bert-0.8.1.aab`, also copied to the drinkerlabs PC at
+Everything to paste into the Play Console. Graphics are in this folder. Upload artifact: the v0.9.2 app bundle
+(`/opt/bert-widget-qa/release-0.9.2/staged/bert-0.9.2.aab`, also copied to the drinkerlabs PC at
 `C:\\Users\\Sjpch\\BERT-Play\\`), signed with the existing release key, which Play App Signing uses as the upload key.
-Upload `mapping-0.8.1.txt` alongside it so crash reports are readable.
+Upload `mapping-0.9.2.txt` alongside it so crash reports are readable.
 
 ## Store listing
 
 - **App name (≤30):** `BERT: Bert's World`
-- **Short description (≤80):** `Bert's updates, a pixel adventure, caption cards, alerts and home-screen widgets.`
+- **Short description (≤80):** `Daily Bert updates, a pixel adventure, caption cards, alerts and home widgets.`
 - **Full description:**
 
 > Bertram the Pomeranian — Bert to his friends — now lives on your phone.
@@ -21,7 +21,7 @@ Upload `mapping-0.8.1.txt` alongside it so crash reports are readable.
 >
 > **Widgets** — Bert himself (his photo, mood, latest update and tournament countdown, filling any size), or the BERT price at a glance with a 24-hour chart. Every widget shows when its data is from, even offline.
 >
-> **Tools** — the BERT market price and 24-hour chart, an optional private holdings record, and opt-in alerts for tournaments, Bert's updates and price levels.
+> **Tools** — the BERT market price and 24-hour chart, an optional private holdings record, and opt-in alerts for tournaments, Berthalla's daily updates, price levels and big moves.
 >
 > **Themes** — three matching Home and Lock screen wallpaper packs.
 >
@@ -37,9 +37,12 @@ Upload `mapping-0.8.1.txt` alongside it so crash reports are readable.
 | --- | --- | --- |
 | App icon | `icon-512.png` | 512×512 PNG, full-bleed (Play applies the mask) |
 | Feature graphic | `feature-graphic-1024x500.png` | 1024×500 |
-| Phone screenshots | `screenshots/1-home.png` … `6-create.png` | 720×1280 (9:16); regenerate with `PlayStoreScreenshotsTest` |
+| Phone screenshots | `screenshots/1-today.png` … `5-alerts.png` | 1080×1920 (9:16), each with a caption band; regenerate with `PlayStoreScreenshotsTest` (output in `android/app/build/outputs/play/`) |
 
-Screenshots use review fixtures (no live quotes, no real holdings).
+Screenshots use review fixtures: no live quotes, no real holdings, fictional player names, and a Monday 09:10 clock.
+Upload order: gameplay and a home-screen widget first (both captured on a real device; not generated here), then
+Today, Create, Market, Explore and Alerts. Captions: "Bert’s day, every day", "Make it a card", "Know the market",
+"Play the Lost Trail", "Alerts that don’t nag".
 
 ## App content answers
 

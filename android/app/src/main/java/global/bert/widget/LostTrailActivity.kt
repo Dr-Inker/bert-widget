@@ -1,6 +1,7 @@
 package global.bert.widget
 
 import android.annotation.SuppressLint
+import global.bert.widget.data.LostTrailProgress
 import android.content.Context
 import android.content.res.Configuration
 import androidx.compose.runtime.LaunchedEffect
@@ -125,6 +126,10 @@ class LostTrailActivity : ComponentActivity() {
     internal fun pauseGame() { if (!rendererGone) gameView.evaluateJavascript("window.BertAppGame?.pause()", null) }
     override fun onPause() {
         backgrounded = true
+        // Home's "Continue" card reads the game's own save; copy it out while the page is alive, then pause.
+        if (!rendererGone) gameView.evaluateJavascript(
+            "JSON.stringify({p:localStorage.getItem('bert-lost-trail-v1'),r:localStorage.getItem('bert-lost-trail-run-v1')})",
+        ) { LostTrailProgress.store(applicationContext, it) }
         pauseGame()
         if (!rendererGone) gameView.onPause()
         super.onPause()
@@ -144,4 +149,7 @@ class LostTrailActivity : ComponentActivity() {
     }
 }
 
-internal fun openLostTrail(context: Context) { context.startActivity(Intent(context, LostTrailActivity::class.java)) }
+internal fun openLostTrail(context: Context) {
+    BERTOnboarding.markPlayedGame(context)
+    context.startActivity(Intent(context, LostTrailActivity::class.java))
+}

@@ -11,6 +11,7 @@ import android.os.Build
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
+import global.bert.widget.BERTEntry
 import global.bert.widget.MainActivity
 import global.bert.widget.R
 import global.bert.widget.data.AlertChannel
@@ -34,9 +35,6 @@ object BERTNotifier {
     fun post(context: Context, notices: List<AlertNotice>): Int {
         if (notices.isEmpty() || !canPost(context)) return 0
         ensureChannels(context)
-        val open = PendingIntent.getActivity(context, 0,
-            Intent(context, MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP),
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
         val manager = NotificationManagerCompat.from(context)
         for (notice in notices) {
             val notification = NotificationCompat.Builder(context, notice.channel.id)
@@ -44,11 +42,19 @@ object BERTNotifier {
                 .setContentTitle(notice.title)
                 .setContentText(notice.text)
                 .setStyle(NotificationCompat.BigTextStyle().bigText(notice.text))
-                .setContentIntent(open)
+                .setContentIntent(openIntent(context, notice.channel))
                 .setAutoCancel(true)
                 .build()
             try { manager.notify(notice.id, notification) } catch (_: SecurityException) { return 0 }
         }
         return notices.size
+    }
+
+    /** Price alerts open Market; Bert's updates and tournaments open Home. One request code per channel keeps the extras apart. */
+    private fun openIntent(context: Context, channel: AlertChannel): PendingIntent {
+        val entry = if (channel == AlertChannel.PRICE) BERTEntry.MARKET else BERTEntry.HOME
+        val intent = Intent(context, MainActivity::class.java).putExtra(BERTEntry.EXTRA, entry.name)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        return PendingIntent.getActivity(context, channel.ordinal, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)
     }
 }

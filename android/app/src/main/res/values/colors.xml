@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Matches Navy in BERTComponents.kt. -->
+    <color name="bert_navy">#071A2F</color>
+</resources>

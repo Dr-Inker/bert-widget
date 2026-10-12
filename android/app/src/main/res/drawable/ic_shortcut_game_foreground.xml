@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp" android:viewportWidth="108" android:viewportHeight="108">
+    <!-- The paw from ic_notification (24-unit art) scaled 1.7x and centred: it spans about 30 to 78 of the canvas. -->
+    <group android:scaleX="1.7" android:scaleY="1.7" android:translateX="33.6" android:translateY="31.4">
+        <path android:fillColor="#FFFF9433" android:pathData="M12,13.2c-2.7,0 -5.2,2.4 -5.2,4.6c0,1.5 1.2,2.4 2.6,2.4c1,0 1.7,-0.5 2.6,-0.5s1.6,0.5 2.6,0.5c1.4,0 2.6,-0.9 2.6,-2.4C17.2,15.6 14.7,13.2 12,13.2z"/>
+        <path android:fillColor="#FFFF9433" android:pathData="M7.2,8.8a1.9,2.4 0,1 0,3.8 0a1.9,2.4 0,1 0,-3.8 0z"/>
+        <path android:fillColor="#FFFF9433" android:pathData="M13,8.8a1.9,2.4 0,1 0,3.8 0a1.9,2.4 0,1 0,-3.8 0z"/>
+        <path android:fillColor="#FFFF9433" android:pathData="M3.6,12.6a1.7,2.1 0,1 0,3.4 0a1.7,2.1 0,1 0,-3.4 0z"/>
+        <path android:fillColor="#FFFF9433" android:pathData="M17,12.6a1.7,2.1 0,1 0,3.4 0a1.7,2.1 0,1 0,-3.4 0z"/>
+    </group>
+</vector>

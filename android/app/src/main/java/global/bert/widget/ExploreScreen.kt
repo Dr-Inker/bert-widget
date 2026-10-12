@@ -20,14 +20,15 @@ import androidx.compose.ui.unit.sp
 internal fun ExploreScreen() {
     Text("Follow your nose.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.ExtraBold)
     Text("A game, a soundtrack, a whole pack to meet.", color = Muted, fontSize = 15.sp, lineHeight = 22.sp)
+    OfficialBertCard()
     LostTrailCard()
     FeaturedExperience("Flappy Bert", "One more flap?", "Arcade runs and community tournaments.", BERTSymbol.PLAY, Green, BERTLink.FLAPPY)
     FeaturedExperience("Bert Music", "Soundtrack your day.", "Music from the BERT community.", BERTSymbol.MUSIC, Color(0xFFD2B5FF), BERTLink.MUSIC)
     SectionLabel("AROUND THE PACK")
-    ExperienceLink("Bert’s dispatches", "Town updates and municipal opinions.", BERTSymbol.STORY, BERTLink.DISPATCHES)
+    ExperienceLink("Berthalla on X", "Daily posts in Bert’s voice from Berthalla, a fan project.", BERTSymbol.STORY, BERTLink.DISPATCHES)
+    ExperienceLink("Berthalla", "Games, music and the Bert Studio on berthalla.io.", BERTSymbol.PLAY, BERTLink.BERTHALLA)
     ExperienceLink("Meet the community", "Catch up with the pack.", BERTSymbol.PACK, BERTLink.COMMUNITY)
     ExperienceLink("Woofhub", "Dog adoption, care and profiles.", BERTSymbol.HEART, BERTLink.WOOFHUB)
-    ExperienceLink("Meet Bertram", "The dog behind the hat.", BERTSymbol.HOME, BERTLink.STORY)
 }
 
 @Composable

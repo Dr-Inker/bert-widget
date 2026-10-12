@@ -2,10 +2,16 @@
 <resources>
     <string name="app_name">BERT</string>
     <string name="widget_description">Track Bertram The Pomeranian price and market data.</string>
-    <string name="widget_compact_name">BERT · Compact</string>
+    <string name="widget_compact_name">BERT price</string>
     <string name="widget_compact_description">BERT price and 24-hour change in a compact 2×2 widget.</string>
-    <string name="widget_market_name">BERT · Market</string>
-    <string name="widget_daily_name">BERT · Bert</string>
-    <string name="widget_daily_description">Bert\'s mood, his latest update and the tournament countdown. No market data.</string>
+    <string name="widget_market_name">BERT market desk</string>
+    <string name="widget_daily_name">Bert’s day</string>
+    <string name="widget_daily_description">Bert’s mood, Berthalla’s latest update and the tournament countdown. No market data.</string>
     <string name="widget_market_description">BERT price, market cap, volume and liquidity in a wide 4×2 widget.</string>
+    <string name="shortcut_game_short">Lost Trail</string>
+    <string name="shortcut_game_long">Continue the Lost Trail</string>
+    <string name="shortcut_price_short">BERT price</string>
+    <string name="shortcut_price_long">BERT price</string>
+    <string name="shortcut_create_short">Make a card</string>
+    <string name="shortcut_create_long">Make a card</string>
 </resources>

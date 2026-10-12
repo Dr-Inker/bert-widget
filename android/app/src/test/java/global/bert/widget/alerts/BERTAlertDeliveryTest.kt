@@ -56,11 +56,49 @@ class BERTAlertDeliveryTest {
         assertEquals("fires once", 1, manager.allNotifications.size)
     }
 
+    @Test fun `a level saved during a check is not overwritten by that check's memory`() {
+        val store = BERTAlertStore(context)
+        val judged = AlertSettings(priceAbove = 0.016)
+        store.save(judged)
+        store.save(AlertSettings(priceAbove = 0.018)) // the person edits mid-check
+        assertFalse(store.saveMemoryIfUnchanged(store.memory().copy(aboveFired = true), judged))
+        assertFalse(store.memory().aboveFired)
+    }
+
     @Test fun `changing a price level re-arms it`() {
         val store = BERTAlertStore(context)
         store.save(AlertSettings(priceAbove = 0.016))
         store.saveMemory(store.memory().copy(aboveFired = true))
         store.save(AlertSettings(priceAbove = 0.018))
         assertFalse(store.memory().aboveFired)
+    }
+
+    @Test fun `big move settings and memory survive a restart and a new threshold re-arms`() {
+        val store = BERTAlertStore(context)
+        assertEquals(null, store.settings().bigMovePct)
+        store.save(AlertSettings(bigMovePct = 20))
+        assertTrue(store.settings().anyEnabled)
+        store.saveMemory(store.memory().copy(bigMoveSide = -1, bigMoveAtEpochMillis = 1_790_000_000_000L))
+        val reloaded = BERTAlertStore(context)
+        assertEquals(20, reloaded.settings().bigMovePct)
+        assertEquals(-1, reloaded.memory().bigMoveSide)
+        assertEquals(1_790_000_000_000L, reloaded.memory().bigMoveAtEpochMillis)
+        store.save(AlertSettings(bigMovePct = 30))
+        assertEquals("unannounced again, cooldown clock kept", 0 to 1_790_000_000_000L, store.memory().let { it.bigMoveSide to it.bigMoveAtEpochMillis })
+        store.save(AlertSettings())
+        assertEquals(null, store.settings().bigMovePct)
+        assertFalse(store.settings().anyEnabled)
+    }
+
+    @Test fun `a fired price alert re-arms by itself after the price retreats`() = runBlocking {
+        val store = BERTAlertStore(context)
+        store.save(AlertSettings(priceAbove = 0.016))
+        shadowOf(context as Application).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        seedQuote(0.0170); checkAlerts(context)
+        assertTrue(store.memory().aboveFired)
+        seedQuote(0.0150); checkAlerts(context)
+        assertFalse(store.memory().aboveFired)
+        seedQuote(0.0170); checkAlerts(context)
+        assertTrue("fired again for the new crossing", store.memory().aboveFired)
     }
 }

@@ -19,6 +19,20 @@ enum class BERTThemePack(
     val mutedArgb: Long,
     val accentArgb: Long,
 ) {
+    /** The app's own navy and orange (Navy / Panel / Cream / Muted / Orange in BERTComponents.kt): the default for new installs. */
+    BERT_NAVY(
+        id = "bert-navy",
+        displayName = "BERT Navy",
+        subtitle = "THE APP\u2019S OWN COLOURS",
+        homeWallpaperRes = R.raw.wallpaper_bert_navy_home,
+        lockWallpaperRes = R.raw.wallpaper_bert_navy_lock,
+        previewRes = R.drawable.preview_bert_navy,
+        backgroundArgb = 0xFF071A2F,
+        panelArgb = 0xFF0D2942,
+        textArgb = 0xFFFFF5DF,
+        mutedArgb = 0xFF9CB0C5,
+        accentArgb = 0xFFFF9433,
+    ),
     MAYOR_PURPLE(
         id = "mayor-purple",
         displayName = "Mayor Purple",
@@ -60,14 +74,24 @@ enum class BERTThemePack(
     );
 
     companion object {
-        fun fromId(id: String?): BERTThemePack = entries.firstOrNull { it.id == id } ?: WOOFHUB_NIGHT
+        /** Nobody has chosen yet (or a saved id is from a newer build): the app's own navy and orange. */
+        val DEFAULT = BERT_NAVY
+
+        fun fromId(id: String?): BERTThemePack = entries.firstOrNull { it.id == id } ?: DEFAULT
     }
 }
 
-class BERTThemeStore(context: Context) {
+class BERTThemeStore(private val context: Context) {
     private val preferences = context.getSharedPreferences("bert_theme", Context.MODE_PRIVATE)
 
-    fun load(): BERTThemePack = BERTThemePack.fromId(preferences.getString(KEY_THEME, null))
+    fun load(): BERTThemePack {
+        preferences.getString(KEY_THEME, null)?.let { return BERTThemePack.fromId(it) }
+        // Never chosen: fresh installs get the app's navy; upgraders keep Woofhub Night, the default they already had
+        // (and the one matching any wallpaper they applied without choosing). Saved, so later updates can't flip it.
+        val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
+        val upgraded = info != null && info.lastUpdateTime > info.firstInstallTime
+        return (if (upgraded) BERTThemePack.WOOFHUB_NIGHT else BERTThemePack.DEFAULT).also(::save)
+    }
 
     fun save(theme: BERTThemePack) {
         preferences.edit().putString(KEY_THEME, theme.id).apply()

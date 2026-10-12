@@ -15,6 +15,9 @@ internal class CaptionCollectionFullException : IllegalStateException("Your coll
 internal class CaptionLibrary(context: Context) {
     private val root = File(context.filesDir, "caption-library")
 
+    /** Cheap presence check: whether any card directory exists, without reading or validating cards. */
+    fun hasAny(): Boolean = synchronized(lock) { root.listFiles()?.any { it.isDirectory } == true }
+
     fun list(): List<SavedCaption> = synchronized(lock) {
         root.listFiles().orEmpty().mapNotNull(::readEntry).sortedByDescending { it.savedAt }
     }

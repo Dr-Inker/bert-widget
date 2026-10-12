@@ -1,6 +1,8 @@
 package global.bert.widget.work
 
+import global.bert.widget.data.BERTActivity
 import global.bert.widget.data.BERTQuote
+import java.time.ZoneOffset
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -24,5 +26,18 @@ class BERTWidgetStaleRenderWorkerTest {
         assertNull(BERTWidgetStaleRenderWorker.delayUntilStaleMillis(null, 0))
         assertNull(BERTWidgetStaleRenderWorker.delayUntilStaleMillis(quote(0, "stale"), 1))
         assertNull(BERTWidgetStaleRenderWorker.delayUntilStaleMillis(quote(0), BERTQuote.STALE_AFTER_MILLIS))
+    }
+
+    @Test fun `the Bert widget re-renders when its feed turns stale, and at midnight for its time`() {
+        val zone = ZoneOffset.UTC
+        val now = 1_760_000_000_000L // 09:33:20 UTC
+        val feed = BERTActivity(now - 10 * 60_000L, "post", "content", null)
+        assertEquals(20 * 60_000L + 5_000L, BERTWidgetStaleRenderWorker.nextRenderDelayMillis(null, feed, now, zone))
+        // Feed already stale: only the next local midnight remains.
+        val old = BERTActivity(now - 3_600_000L, "post", "content", null)
+        val midnight = BERTWidgetStaleRenderWorker.nextRenderDelayMillis(null, old, now, zone)!!
+        assertEquals(0L, (now + midnight - 5_000L) % 86_400_000L)
+        // No feed and a stale quote: nothing to schedule, so the worker cannot loop.
+        assertNull(BERTWidgetStaleRenderWorker.nextRenderDelayMillis(quote(0, "stale"), null, now, zone))
     }
 }

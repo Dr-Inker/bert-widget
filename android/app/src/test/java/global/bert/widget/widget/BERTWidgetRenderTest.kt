@@ -65,16 +65,7 @@ class BERTWidgetRenderTest {
     private data class Rendered(val root: View, val texts: List<TextView>)
 
     private fun render(widget: GlanceAppWidget, widthDp: Int, heightDp: Int, name: String): Rendered {
-        val views = runBlocking { widget.compose(context, size = DpSize(widthDp.dp, heightDp.dp)) }
-        val density = context.resources.displayMetrics.density
-        val host = FrameLayout(context)
-        val root = views.apply(context, host)
-        host.addView(root)
-        val w = (widthDp * density).toInt(); val h = (heightDp * density).toInt()
-        host.measure(View.MeasureSpec.makeMeasureSpec(w, View.MeasureSpec.EXACTLY), View.MeasureSpec.makeMeasureSpec(h, View.MeasureSpec.EXACTLY))
-        host.layout(0, 0, w, h)
-        val bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888)
-        host.draw(Canvas(bitmap))
+        val (host, bitmap) = renderWidgetOnHost(context, widget, widthDp, heightDp).let { it.host to it.bitmap }
         File("build/outputs/host-ui/widget-$name.png").apply { parentFile?.mkdirs() }.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         val texts = mutableListOf<TextView>()
         fun walk(v: View) { if (v is TextView && v.visibility == View.VISIBLE && v.text.isNotEmpty()) texts += v; if (v is ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i)) }
@@ -228,6 +219,89 @@ class BERTWidgetRenderTest {
         } finally { RuntimeEnvironment.setFontScale(1f) }
     }
 
+    /** The listing promises every widget says when its data is from: the S25's 2x2 and 4x2 show the feed's time. */
+    @Test fun bertWidgetShowsWhenItsUpdateIsFrom() {
+        seedActivity(LONG_POST, tournament = true)
+        val missing = listOf(180 to 190, 380 to 190).filter { (w, h) ->
+            render(BERTDailyWidget(), w, h, "bert-stamp-${w}x$h").texts.none { it.text.startsWith("UPDATED ") }
+        }
+        assertTrue("no UPDATED time at $missing", missing.isEmpty())
+    }
+
+    /**
+     * Bug from the 0.9.0 critique: narrow Bert widgets cut the mood to 9 letters ("MELANCHOLY" showed as "MELANCHOL").
+     * Every current mood, at every size and at large text, is drawn whole or not at all, and the longest one is
+     * drawn at every size where the widget has room for a header (everything from the 2x2 banner up).
+     */
+    @Test fun moodIsNeverCutAtAnySizeOrTextScale() {
+        val moods = listOf("giddy", "smug", "content", "anxious", "melancholy")
+        val sizes = BERT_SIZES + listOf(130 to 200, 120 to 160, 140 to 110, 200 to 110, 210 to 120)
+        val failures = mutableListOf<String>(); val dropped = sortedSetOf<String>()
+        for (scale in listOf(1f, 1.3f)) {
+            RuntimeEnvironment.setFontScale(scale)
+            try {
+                for (mood in moods) for (tournament in listOf(false, true)) {
+                    seedActivity(LONG_POST, tournament, mood)
+                    for ((w, h) in sizes) {
+                        val r = render(BERTDailyWidget(), w, h, "bert-mood-$mood-s${(scale * 10).toInt()}-${w}x$h")
+                        val label = mood.uppercase()
+                        val pills = r.texts.map { it.text.toString() }.filter { it.length >= 3 && label.startsWith(it.removeSuffix("…")) }
+                        if (pills.any { it != label }) failures += "$mood ${w}x$h at x$scale: cut to $pills"
+                        if (pills.isEmpty()) dropped += "$mood ${w}x$h x$scale"
+                        problems(r, multiline = setOf(LONG_POST)).forEach { failures += "$mood ${w}x$h at x$scale: $it" }
+                    }
+                }
+                // The longest word keeps its pill at the 2x2 and 4x2 sizes a phone actually offers, even at large text.
+                seedActivity(LONG_POST, tournament = true, mood = "melancholy")
+                for ((w, h) in listOf(180 to 190, 180 to 180, 150 to 150, 380 to 190, 400 to 220, 320 to 150))
+                    if (render(BERTDailyWidget(), w, h, "bert-mood-keep-${w}x$h").texts.none { it.text.toString() == "MELANCHOLY" }) failures += "melancholy missing at ${w}x$h x$scale"
+            } finally { RuntimeEnvironment.setFontScale(1f) }
+        }
+        println("WIDGET REPORT mood pill dropped (never cut): $dropped")
+        assertTrue(failures.toString(), failures.isEmpty())
+    }
+
+    /** Freshness, status, mood and event text is never smaller than 10sp, in any widget, at any size, at default and large text. */
+    @Test fun noWidgetTextIsBelowTenSp() {
+        seedActivity(LONG_POST, tournament = true, mood = "melancholy")
+        val small = mutableListOf<String>()
+        for (scale in listOf(1f, 1.3f)) {
+            RuntimeEnvironment.setFontScale(scale)
+            try {
+                val density = context.resources.displayMetrics.density
+                val cases = BERT_SIZES.map { (w, h) -> Triple(BERTDailyWidget(), w, h) } + listOf(120 to 120, 150 to 150, 160 to 140, 180 to 180).map { (w, h) -> Triple(BERTWidget(), w, h) } +
+                    listOf(240 to 120, 280 to 120, 320 to 150, 340 to 180, 360 to 200).map { (w, h) -> Triple(BERTMarketWidget(), w, h) }
+                for ((widget, w, h) in cases) render(widget, w, h, "min-sp-${widget::class.simpleName}-$w-x${(scale * 10).toInt()}x$h").texts.forEach { tv ->
+                    // Android scales sp by the font scale; allow half a pixel of rounding.
+                    if (tv.textSize < 10f * density * scale - 0.5f) small += "${widget::class.simpleName} ${w}x$h x$scale '${tv.text}' ${tv.textSize / density / scale}sp"
+                }
+            } finally { RuntimeEnvironment.setFontScale(1f) }
+        }
+        assertTrue(small.toString(), small.isEmpty())
+    }
+
+    /** The unconfirmed-feed and no-quote states use the same status text: still 10sp or more. */
+    @Test fun noQuoteAndDelayedStatesAreAlsoTenSpOrMore() {
+        seed(observedAgoMillis = 26 * 3_600_000L, holdings = null, history = false)
+        val density = context.resources.displayMetrics.density
+        val small = listOf(Triple(BERTWidget(), 120, 120), Triple(BERTWidget(), 180, 180), Triple(BERTMarketWidget(), 240, 120), Triple(BERTMarketWidget(), 360, 200)).flatMap { (widget, w, h) ->
+            render(widget, w, h, "min-sp-delayed-${widget::class.simpleName}-${w}x$h").texts.filter { it.textSize < 10f * density - 0.5f }.map { "${widget::class.simpleName} ${w}x$h '${it.text}'" }
+        }
+        assertTrue(small.toString(), small.isEmpty())
+    }
+
+    /** The 2x2 sizes (S25 is 180x190) say when Bert's feed is from, with a short or long post and with or without the tournament. */
+    @Test fun twoByTwoBertWidgetsShowTheAsOfTime() {
+        val clock = Regex("\\d{1,2}:\\d{2}")
+        val missing = mutableListOf<String>()
+        for (post in listOf(SHORT_POST, LONG_POST)) for (tournament in listOf(false, true)) {
+            seedActivity(post, tournament)
+            for ((w, h) in listOf(150 to 150, 180 to 180, 180 to 190))
+                if (render(BERTDailyWidget(), w, h, "bert-2x2-stamp-${w}x$h").texts.none { clock.containsMatchIn(it.text) }) missing += "${w}x$h tournament=$tournament len=${post.length}"
+        }
+        assertTrue("no as-of time at $missing", missing.isEmpty())
+    }
+
     /** Every theme pack keeps the widget's words legible (WCAG AA, 4.5:1) on its own background and panel. */
     @Test fun bertWidgetColoursAreLegibleInEveryTheme() {
         fun lum(argb: Long) = listOf(16, 8, 0).map { ((argb shr it) and 0xFF) / 255.0 }
@@ -247,9 +321,9 @@ class BERTWidgetRenderTest {
         }
     }
 
-    private fun seedActivity(post: String, tournament: Boolean) {
+    private fun seedActivity(post: String, tournament: Boolean, mood: String = "giddy") {
         val now = System.currentTimeMillis()
-        val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", "giddy").put("latest_post", post)
+        val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", mood).put("latest_post", post)
         if (tournament) status.put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + 30 * 3_600_000L).toString())
             .put("status", "live").put("pool", 250).put("top", org.json.JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
         context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()

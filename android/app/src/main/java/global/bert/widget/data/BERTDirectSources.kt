@@ -48,15 +48,21 @@ object BERTDirectSources {
         val dex = pair.getString("dexId")
         require(dex.isNotEmpty() && dex.length <= 64) { "Invalid DEX id" }
 
+        val change = pair.optJSONObject("priceChange")
+        val txns = pair.optJSONObject("txns")
         return JSONObject()
             .put("asset", JSONObject().put("chain", "solana").put("mint", BERTQuoteRepository.BERT_MINT)
                 .put("name", "Bertram The Pomeranian").put("symbol", "Bert"))
             .put("quote", JSONObject()
                 .put("priceUsd", price)
-                .putOpt("change24hPct", number(pair.optJSONObject("priceChange"), "h24"))
+                .putOpt("change24hPct", BERTQuote.validChange(number(change, "h24")))
                 .putOpt("marketCapUsd", number(pair, "marketCap"))
                 .putOpt("volume24hUsd", number(pair.optJSONObject("volume"), "h24"))
-                .putOpt("liquidityUsd", number(pair.optJSONObject("liquidity"), "usd")))
+                .putOpt("liquidityUsd", number(pair.optJSONObject("liquidity"), "usd"))
+                .putOpt("change1hPct", BERTQuote.validChange(number(change, "h1")))
+                .putOpt("change6hPct", BERTQuote.validChange(number(change, "h6")))
+                .putTxns("1h", txns?.optJSONObject("h1"))
+                .putTxns("24h", txns?.optJSONObject("h24")))
             .put("source", JSONObject()
                 .put("name", "dexscreener")
                 .put("pairAddress", pairAddress)
@@ -95,6 +101,14 @@ object BERTDirectSources {
             .put("points", points)
             .put("meta", JSONObject().put("freshness", "fresh"))
             .toString()
+    }
+
+    /** Buys and sells travel together: a window with only one valid count would misstate the split. */
+    private fun JSONObject.putTxns(window: String, txns: JSONObject?): JSONObject {
+        val buys = BERTQuote.validCount(number(txns, "buys"))
+        val sells = BERTQuote.validCount(number(txns, "sells"))
+        if (buys != null && sells != null) put("buys$window", buys).put("sells$window", sells)
+        return this
     }
 
     private fun number(json: JSONObject?, key: String): Double? {

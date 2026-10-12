@@ -14,7 +14,14 @@ internal enum class BERTLink(val url: String, val launchLabel: String) {
     WOOFHUB("https://woofhub.com/", "Open in browser"),
     COMMUNITY("https://t.me/BERTCOINCTO", "Open in Telegram"),
     DISPATCHES("https://x.com/Berthalla_bot", "Open on X"),
+    // Official BERT: the main X account and website. Berthalla (berthalla.io, its X bot) is a separate, owner-run project.
+    OFFICIAL_X("https://x.com/bertcoincto", "Open on X"),
     STORY("https://www.bert.global/", "Open in browser"),
+    BERTHALLA("https://berthalla.io/", "Open in browser"),
+    PRIVACY("https://berthalla.io/app/privacy/", "Open in browser"),
+    FEEDBACK("https://github.com/Dr-Inker/bert-widget/issues", "Open in browser"),
+    SOURCE("https://github.com/Dr-Inker/bert-widget", "Open in browser"),
+    APACHE_LICENSE("https://www.apache.org/licenses/LICENSE-2.0", "Open in browser"),
 }
 
 internal fun openBERTLink(context: Context, link: BERTLink) {

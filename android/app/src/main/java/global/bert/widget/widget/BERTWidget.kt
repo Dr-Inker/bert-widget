@@ -10,11 +10,15 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.glance.GlanceId
 import androidx.glance.GlanceModifier
+import androidx.glance.ColorFilter
 import androidx.glance.Image
 import androidx.glance.ImageProvider
 import androidx.glance.LocalContext
 import androidx.glance.LocalSize
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
 import androidx.glance.action.actionStartActivity
+import global.bert.widget.BERTEntry
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.GlanceAppWidgetReceiver
@@ -79,7 +83,7 @@ open class BERTWidget : GlanceAppWidget() {
                 Box(
                     modifier = GlanceModifier.fillMaxSize()
                         .background(ColorProvider(palette.background))
-                        .clickable(actionStartActivity<MainActivity>()),
+                        .clickable(actionStartActivity<MainActivity>(entryParameters(BERTEntry.MARKET))),
                 ) {
                     // Sizes below are pinned by BERTWidgetRenderTest, which renders every text at launcher sizes.
                     if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 200.dp, roomy = size.height >= 165.dp, narrow = size.width < 290.dp)
@@ -113,7 +117,7 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
             Text(
                 "24H",
                 modifier = GlanceModifier.background(ColorProvider(palette.panel)).padding(horizontal = 8.dp, vertical = 3.dp),
-                style = TextStyle(color = ColorProvider(palette.muted), fontSize = 8.sp, fontWeight = FontWeight.Bold),
+                style = TextStyle(color = ColorProvider(palette.muted), fontSize = FRESHNESS_SP.sp, fontWeight = FontWeight.Bold),
             )
         }
         if (short) {
@@ -126,7 +130,7 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
                     modifier = GlanceModifier.fillMaxWidth().defaultWeight().background(ColorProvider(palette.panel)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text("NO HISTORY YET", style = eyebrowStyle(size = 8))
+                    Text("NO HISTORY YET", style = eyebrowStyle())
                 }
             } else {
                 Image(
@@ -140,7 +144,7 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
         }
         Text(
             freshnessLabel(quote, narrow),
-            style = TextStyle(color = ColorProvider(if (quote.isStale) Amber else palette.muted), fontSize = 8.sp, fontWeight = FontWeight.Medium),
+            style = TextStyle(color = ColorProvider(if (quote.isStale) Amber else palette.muted), fontSize = FRESHNESS_SP.sp, fontWeight = FontWeight.Medium),
         )
     }
 }
@@ -170,7 +174,7 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
                     )
                 }
                 Spacer(GlanceModifier.width(if (narrow) 8.dp else 12.dp))
-                HoldingsCapsule(quote, holdings, spacious, narrow)
+                HoldingsCapsule(quote, holdings, spacious, roomy, narrow)
             }
             if (spacious) {
                 Spacer(GlanceModifier.height(10.dp))
@@ -215,17 +219,18 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
         )
         if (showName) {
             Spacer(GlanceModifier.width(9.dp))
-            Text(
-                "BERT",
-                style = TextStyle(color = ColorProvider(palette.text), fontSize = if (compact) 13.sp else if (spacious) 17.sp else 15.sp, fontWeight = FontWeight.Bold),
-            )
+            // The official wordmark at the cap height the text name had (640x186 artwork).
+            val markHeight = if (compact) 12.dp else if (spacious) 16.dp else 14.dp
+            Image(ImageProvider(R.drawable.bert_wordmark), "BERT",
+                GlanceModifier.height(markHeight).width(markHeight * (640f / 186f)),
+                contentScale = ContentScale.Fit, colorFilter = ColorFilter.tint(ColorProvider(palette.text)))
         }
         Spacer(GlanceModifier.defaultWeight())
         Text(
             when { quote == null -> "● NO QUOTE"; quote.isStale -> "● DELAYED"; else -> "● UPDATED" },
             style = TextStyle(
                 color = ColorProvider(if (quote == null || quote.isStale) Amber else Green),
-                fontSize = if (compact) 8.sp else 9.sp,
+                fontSize = FRESHNESS_SP.sp,
                 fontWeight = FontWeight.Bold,
             ),
         )
@@ -233,14 +238,14 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
 }
 
 @Composable
-private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boolean, narrow: Boolean) {
+private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boolean, roomy: Boolean, narrow: Boolean) {
     val palette = LocalWidgetPalette.current
     Column(
         modifier = GlanceModifier.width(if (spacious) 154.dp else if (narrow) 108.dp else 142.dp)
             .background(ColorProvider(palette.panel))
-            .padding(horizontal = if (spacious) 14.dp else if (narrow) 8.dp else 11.dp, vertical = if (spacious) 10.dp else 6.dp),
+            .padding(horizontal = if (spacious) 14.dp else if (narrow) 8.dp else 11.dp, vertical = if (spacious) 10.dp else if (roomy) 6.dp else 3.dp),
     ) {
-        Text("YOUR POSITION", style = eyebrowStyle(color = palette.text, size = 8))
+        Text("YOUR POSITION", style = eyebrowStyle(color = palette.text))
         Text(
             if (holdings == null) "SET HOLDINGS" else formatHoldingsUsd(holdings * quote.priceUsd),
             style = TextStyle(color = ColorProvider(if (holdings == null) Amber else palette.text), fontSize = if (spacious) 15.sp else 12.sp, fontWeight = FontWeight.Bold),
@@ -266,7 +271,7 @@ private fun UnavailableWidgetContent(compact: Boolean) {
 private fun WidgetMetric(label: String, value: Double?, modifier: GlanceModifier = GlanceModifier, panel: Boolean = false) {
     val palette = LocalWidgetPalette.current
     Column(modifier = if (panel) modifier.background(ColorProvider(palette.panel)).padding(horizontal = 10.dp, vertical = 7.dp) else modifier) {
-        Text(label, style = eyebrowStyle(size = 8))
+        Text(label, style = eyebrowStyle())
         Text(formatCompactUsd(value), style = TextStyle(color = ColorProvider(palette.text), fontSize = if (panel) 14.sp else 12.sp, fontWeight = FontWeight.Bold))
     }
 }
@@ -277,12 +282,12 @@ private fun MarketFooter(quote: BERTQuote) {
     Row(modifier = GlanceModifier.fillMaxWidth()) {
         Text(
             "${quote.sourceName.uppercase()} · ${quote.dex.uppercase()}",
-            style = eyebrowStyle(size = 8),
+            style = eyebrowStyle(),
         )
         Spacer(GlanceModifier.defaultWeight())
         Text(
             freshnessLabel(quote),
-            style = eyebrowStyle(color = if (quote.isStale) Amber else palette.muted, size = 8),
+            style = eyebrowStyle(color = if (quote.isStale) Amber else palette.muted),
         )
     }
 }
@@ -310,8 +315,8 @@ private fun freshnessLabel(quote: BERTQuote, narrow: Boolean = false): String {
 }
 
 @Composable
-private fun eyebrowStyle(color: Color? = null, size: Int = 9) =
-    TextStyle(color = ColorProvider(color ?: LocalWidgetPalette.current.muted), fontSize = size.sp, fontWeight = FontWeight.Medium)
+private fun eyebrowStyle(color: Color? = null) =
+    TextStyle(color = ColorProvider(color ?: LocalWidgetPalette.current.muted), fontSize = FRESHNESS_SP.sp, fontWeight = FontWeight.Medium)
 
 private data class WidgetPalette(
     val background: Color,
@@ -332,7 +337,7 @@ private data class WidgetPalette(
 }
 
 private val LocalWidgetPalette = compositionLocalOf {
-    WidgetPalette.from(BERTThemePack.WOOFHUB_NIGHT)
+    WidgetPalette.from(BERTThemePack.DEFAULT)
 }
 
 private val Green = Color(0xFF45E09A)
@@ -392,3 +397,6 @@ suspend fun updateAllBERTWidgets(context: Context, scheduleStaleRender: Boolean 
         }
     }
 }
+
+/** Widget taps land on the matching screen; Glance passes action parameters to the activity as intent extras. */
+internal fun entryParameters(entry: BERTEntry) = actionParametersOf(ActionParameters.Key<String>(BERTEntry.EXTRA) to entry.name)

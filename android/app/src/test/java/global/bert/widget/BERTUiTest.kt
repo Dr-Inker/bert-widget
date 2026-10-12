@@ -48,6 +48,7 @@ class BERTUiTest {
               }
             }
         }
+        BERTHomeVisits(compose.activity).meetBertDismissed = true // first run is HomeScreenUiTest's; these show the everyday Home
         if (restoration == null) compose.setContent(content) else restoration.setContent(content)
     }
 
@@ -56,6 +57,7 @@ class BERTUiTest {
         0.0042, -12.5, 123_456_789.0, 2_345_678.0, 345_678.0, "fresh",
         1_789_000_000_000 - 42 * 60_000, "dexscreener", "raydium",
         "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+        change1hPct = 3.4, change6hPct = -8.25, buys1h = 64, sells1h = 25, buys24h = 1_204, sells24h = 987,
     ), updateDelayed = true)
 
     private fun marketHistoryFixture() = listOf(1_200L to 0.008, 300L to 0.003, 120L to 0.005, 50L to 0.004, 42L to 0.0042)
@@ -89,7 +91,7 @@ class BERTUiTest {
         }
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         waitForPreview()
-        recordSection("create", listOf("Art", "Saved", "Personalize"), hasContentDescription("Caption card preview:", substring = true))
+        recordSection("create", listOf("Art", "Saved", "Personalise"), hasContentDescription("Caption card preview:", substring = true))
         capture("pinned-create-large")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         val freshness = "Delayed · Updated 42m ago"
@@ -121,7 +123,7 @@ class BERTUiTest {
             compose.onNodeWithText(label).performScrollTo()
             measurements.put(measureLabel(label))
         }
-        compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertExists()
+        compose.onNodeWithText("Couldn’t refresh. Showing the last saved quote.").assertExists()
         compose.onNode(hasContentDescription("5 prices over", substring = true)).performScrollTo()
         capture("market-ranges$suffix")
         for (label in listOf("1H", "6H", "24H")) {
@@ -129,11 +131,14 @@ class BERTUiTest {
             val density = compose.activity.resources.displayMetrics.density
             measurements.put(measureLabel(label).put("touchHeightDp", target.height / density).put("touchWidthDp", target.width / density))
         }
+        compose.onNodeWithText("Last hour: 64\u00A0buys\u00A0· 25\u00A0sells").performScrollTo()
+        capture("market-activity$suffix")
+        for (label in listOf("1H +3.40%", "6H -8.25%", "24H -12.50%", "Last hour: 64\u00A0buys\u00A0· 25\u00A0sells", "Past 24h: 1,204\u00A0buys\u00A0· 987\u00A0sells", "Transactions on the main pool, via DEX Screener")) measurements.put(measureLabel(label))
         compose.onNodeWithText("Market cap").performScrollTo()
         capture("market-metrics-start$suffix")
-        compose.onNodeWithText("Liquidity").performScrollTo()
+        compose.onNodeWithText("Main pool liquidity").performScrollTo()
         capture("market-metrics$suffix")
-        for (label in listOf("Market cap", "$123.5M", "24h volume", "$2.3M", "Liquidity", "$345.7K")) measurements.put(measureLabel(label))
+        for (label in listOf("Market cap", "$123.5M", "Main pool 24h volume", "$2.3M", "Main pool liquidity", "$345.7K")) measurements.put(measureLabel(label))
         compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
         compose.onNodeWithText("$1,050.00").performScrollTo()
         capture("holdings-populated$suffix")
@@ -165,7 +170,8 @@ class BERTUiTest {
         for (index in 0 until measurements.length()) {
             val item = measurements.getJSONObject(index)
             if (item.has("touchHeightDp")) assertTrue("${item.getString("label")} needs a 48dp touch target", item.getDouble("touchHeightDp") >= 48 && item.getDouble("touchWidthDp") >= 48)
-            if (item.getString("label") !in listOf("Delayed · Updated 42m ago", extremeValue))
+            // Sentences may wrap at 2x text; the activity chips, figures and prices may not.
+            if (item.getString("label") !in listOf("Delayed · Updated 42m ago", extremeValue) && !item.getString("label").let { it.startsWith("Last hour") || it.startsWith("Past 24h") || it.startsWith("Transactions on") || it.startsWith("Main pool") })
                 assertEquals("${item.getString("label")} must remain an intact label or number", 1, item.getInt("lineCount"))
         }
     }
@@ -235,12 +241,30 @@ class BERTUiTest {
         compose.onNodeWithText("${'$'}250 prize pool · top 5 paid").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("Flappy Bert tournament · sponsored by DrInkerLABS").assertExists()
         compose.onNodeWithText("LamexCrypt").performScrollTo().assertIsDisplayed()
-        // The card sits above the evergreen feature links.
+        // Today, the price and the game come first; the tournament follows them.
         val card = compose.onNodeWithText("The Autumn Arc").getUnclippedBoundsInRoot()
-        val links = compose.onNodeWithText("A LITTLE BERT IN YOUR DAY").getUnclippedBoundsInRoot()
-        assertTrue(card.bottom < links.top)
+        val trail = compose.onNodeWithText("Play The Lost Trail").getUnclippedBoundsInRoot()
+        assertTrue(trail.bottom < card.top)
         compose.onNodeWithText("Hameed").performScrollTo()
         capture("home-tournament")
+    }
+
+    @Test fun homeShowsThePriceAndTurnsTheUpdateIntoACard() {
+        val now = 1_789_000_000_000
+        val long = "woofmornin. the ladybug holds the screen door like the wind can wait its turn, and the mayor is in no hurry either."
+        app(ActivityState.Available(BERTActivity(now - 60_000, long, "content", null)),
+            quote = QuoteState.Available(BERTQuote(0.0154, -7.92, null, null, null, "fresh", now - 30_000, "dexscreener", "raydium",
+                "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY")),
+            initialPosition = BERTPosition(1_000_000.0))
+        compose.onNodeWithText("$0.0154").assertIsDisplayed()
+        compose.onNodeWithText("-7.92% · 24h").assertIsDisplayed()
+        compose.onNodeWithText("YOUR BAG").assertIsDisplayed()
+        compose.onNodeWithText("Play The Lost Trail").performScrollTo().assertIsDisplayed()
+        capture("home-today")
+        compose.onNodeWithText("Make it a card").performScrollTo().performClick()
+        // A dispatch longer than a caption arrives as its first sentence, never as an over-limit error.
+        compose.onNodeWithText("woofmornin.", useUnmergedTree = true).assertExists()
+        compose.onAllNodesWithText("Shorten your caption", substring = true).assertCountEquals(0)
     }
 
     @Test fun alertsTabSavesSwitchesAndPriceLevels() {
@@ -258,6 +282,27 @@ class BERTUiTest {
         compose.onNodeWithText("Save price alerts").performScrollTo().performClick()
         assertEquals(0.02, store.settings().priceAbove!!, 0.0)
         capture("alerts")
+    }
+
+    @Test fun alertsWarnWhenALevelIsAlreadyCrossedAndOfferBigMoveChoices() {
+        runCatching { androidx.work.WorkManager.initialize(compose.activity.applicationContext, androidx.work.Configuration.Builder().build()) }
+        app(quote = QuoteState.Available(BERTQuote(0.0154, 1.6, null, null, null, "fresh", System.currentTimeMillis() - 30_000, "dexscreener", "raydium",
+            "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY")))
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Alerts", useUnmergedTree = true).performClick()
+        val store = BERTAlertStore(compose.activity)
+        compose.onNodeWithText("Alert above (USD)").performScrollTo().performTextInput("0.01")
+        compose.onNodeWithText("Alert below (USD)").performScrollTo().performTextInput("0.02")
+        compose.onNodeWithText("Save price alerts").performScrollTo().performClick()
+        compose.onNodeWithText("BERT is already above this — it will alert on the next check.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("BERT is already below this — it will alert on the next check.").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Alert above (USD)").performScrollTo().performTextInput("5")
+        compose.onNodeWithText("BERT is already above this — it will alert on the next check.").assertDoesNotExist()
+        assertEquals(null, store.settings().bigMovePct)
+        compose.onNode(hasContentDescription("Big move") and isToggleable()).performScrollTo().performClick()
+        assertEquals(10, store.settings().bigMovePct)
+        compose.onNodeWithText("20%").performScrollTo().performClick()
+        assertEquals(20, store.settings().bigMovePct)
     }
 
     @Test fun activityAndCaptionCreationRender() {
@@ -327,7 +372,7 @@ class BERTUiTest {
         capture("marketing-home")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("24h ago").assertExists()
-        compose.onNodeWithText("Couldn't refresh. Showing the last saved quote.").assertDoesNotExist()
+        compose.onNodeWithText("Couldn’t refresh. Showing the last saved quote.").assertDoesNotExist()
         capture("marketing-tools")
         compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
         compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
@@ -336,7 +381,7 @@ class BERTUiTest {
 
     @Test fun coldOfflineHomeKeepsAllDestinationsUsable() {
         app()
-        compose.onNodeWithText("Bert’s update couldn’t load.").assertIsDisplayed()
+        compose.onNodeWithText("Today’s update couldn’t load.").assertIsDisplayed()
         capture("home-offline")
         compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
         compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
@@ -613,7 +658,7 @@ class BERTUiTest {
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Share caption card").performScrollTo()
         compose.onNodeWithText("Saved", useUnmergedTree = true).assertIsDisplayed().performClick()
-        compose.onNodeWithText("Personalize", useUnmergedTree = true).assertIsDisplayed().performClick()
+        compose.onNodeWithText("Personalise", useUnmergedTree = true).assertIsDisplayed().performClick()
         compose.onNodeWithText("Lock screen only").performScrollTo()
         compose.onNodeWithText("Art", useUnmergedTree = true).assertIsDisplayed()
         capture("personalize-large-scrolled")
@@ -654,16 +699,16 @@ class BERTUiTest {
         }
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Share caption card").performScrollTo().assertIsDisplayed()
-        for (label in listOf("Art", "Saved", "Personalize")) {
+        for (label in listOf("Art", "Saved", "Personalise")) {
             compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp)
             measurements.put(measureLabel(label, singleLine = true))
         }
         capture("compact-create-large")
-        compose.onNodeWithText("Personalize", useUnmergedTree = true).performClick()
-        for (label in listOf("Apply both", "Home only", "Lock screen only", "Compact", "Market")) {
+        compose.onNodeWithText("Personalise", useUnmergedTree = true).performClick()
+        for (label in listOf("Apply both", "Home only", "Lock screen only", "Add Bert’s day", "Add BERT price", "Add BERT market desk")) {
             compose.onNodeWithText(label).performScrollTo().assertIsDisplayed()
             compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
-            measurements.put(measureLabel(label, singleLine = label != "Lock screen only"))
+            measurements.put(measureLabel(label, singleLine = label != "Lock screen only" && !label.startsWith("Add ")))
             if (label == "Lock screen only") capture("compact-wallpaper-large")
         }
         capture("compact-widgets-large")

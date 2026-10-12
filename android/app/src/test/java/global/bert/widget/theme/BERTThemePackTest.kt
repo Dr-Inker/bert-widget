@@ -12,8 +12,11 @@ class BERTThemePackTest {
     }
 
     @Test
-    fun unknownOrMissingThemeUsesWoofhubNight() {
-        assertEquals(BERTThemePack.WOOFHUB_NIGHT, BERTThemePack.fromId(null))
-        assertEquals(BERTThemePack.WOOFHUB_NIGHT, BERTThemePack.fromId("future-theme"))
+    fun unknownOrMissingThemeUsesTheAppsOwnNavyAndOrange() {
+        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.fromId(null))
+        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.fromId("future-theme"))
+        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.DEFAULT)
+        assertEquals(0xFF071A2FL, BERTThemePack.DEFAULT.backgroundArgb)
+        assertEquals(0xFFFF9433L, BERTThemePack.DEFAULT.accentArgb)
     }
 }

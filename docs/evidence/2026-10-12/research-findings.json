@@ -1,0 +1,1463 @@
+{
+ "reports": [
+  {
+   "lens": "product-ux-audit",
+   "verdict": "BERT v0.8.1 is careful, honest engineering that doesn't yet feel like a premium character app. Data freshness, privacy, large-text handling and widget sizing all hold up better than most fan apps. But a new user's first viewport is the same Bert photo twice, a greeting that never changes (\"Hey, pack.\"), a single cryptic sentence and two lines of plumbing (\"Source refreshed 1m ago\", \"Latest from Berthalla\"). Nothing in it says who Bert is or gives a reason to come back tomorrow. The best things the app owns are buried. The Lost Trail pixel game is the only part at a premium level, and it sits behind the second tab with no progress shown. The $BERT price, which the core audience checks first, is two taps deep, and widget and notification taps open a Home screen that has no price. Bert himself is one photo used in eight places, and his daily \"mood\" is only a text label. The shell is stock Material: system sans font, no motion and no haptics anywhere in the source. The Play kit is below Google's own bar for recommendations, and one listing screenshot shows the price cut off. The fixes are mostly small or medium: a real daily ritual on Home, a living Bert, a price strip plus taps that land in the right place, game progress on Home, and a polish pass. None of them needs accounts or new infrastructure.",
+   "strengths": [
+    "Honest data states throughout: separate loading, unavailable, stale and saved states for both the quote and Bert's activity. Ages are computed on the device clock, and widgets show the absolute time of their data (MarketScreen.kt:36-42, HomeScreen.kt:70-79, BERTWidget.kt:303-310). Keep this.",
+    "The privacy posture is a real selling point: no account, holdings only on the device, backup disabled, no tracking, and the notification permission is requested only when an alert is switched on (AlertsScreen.kt:50-54, LISTING.md data safety).",
+    "The Lost Trail title screen and the feature graphic are genuinely premium pixel art (docs/evidence/2026-10-01/release-0.7.0/device/s25-title.png, docs/play/feature-graphic-1024x500.png). Offline play, renderer-crash recovery and pause-on-background are handled with care (LostTrailActivity.kt:58-97).",
+    "Large-text adaptation goes well beyond the norm: two-row navigation, stacked market metrics and adaptive widget text fitting (MainActivity.kt:264-282, MarketScreen.kt:95-107, BERTDailyWidget.kt:155-162).",
+    "The caption card flow is complete and safe end to end: live preview, five art choices, note or poster layout, square or story size, a local saved collection, and FileProvider-scoped sharing (CreateScreen.kt:43-179, CaptionCard.kt:24-36).",
+    "The Bert widget redesign fits text to any launcher size and shows a tournament strip with the leader. Device evidence shows it reads well at 4x2 (BERTDailyWidget.kt:66-141; docs/evidence/2026-10-01/release-0.8.0/device/s25-bert-widget.png).",
+    "Curated outbound links: no URL from a remote payload is ever launched (BERTLinks.kt:9-18). This is the right trust stance for a memecoin audience."
+   ],
+   "findings": [
+    {
+     "title": "Home has no daily ritual: one sentence, a static greeting, nothing to do and no history",
+     "area": "home",
+     "current_state": "The Home hero is a fixed 'THE MAYOR IS IN / Hey, pack.' (HomeScreen.kt:44-45), one dispatch string (HomeScreen.kt:63), then 'Source refreshed Xm ago' and 'Latest from Berthalla' (HomeScreen.kt:78-79), Refresh and 'Bert on X' buttons (HomeScreen.kt:83-84), the tournament card, and three text-only FeatureLinks that just jump to other tabs (HomeScreen.kt:94-97). The live feed (https://berthalla.io/status.json, fetched 2026-10-12) carries only updated_at, mood, latest_post, price and flappy. There is no archive, no publication time and no image. Yesterday's post is gone forever, and there is nothing to do, collect or respond to. The screenshot docs/play/screenshots/1-home.png shows the first viewport is about 60% chrome and greeting.",
+     "best_in_class": "Nintendo Today! is built on a daily feed plus an animated character calendar that changes every day, and it carries that content into widgets and matching wallpapers (https://www.nintendo.com/us/mobile-apps/nintendo-today/). Duolingo's widget is designed to 'motivate action' rather than display information. Duolingo reports that half of learners with the widget installed have a streak of at least 6 months, and that widget users retain far better even after controlling for commitment (https://blog.duolingo.com/widget-feature).",
+     "recommendation": "Turn Home into 'Today with Bert'. (1) A dated dispatch card with a swipeable last-7-days strip, which needs the feed to add an id, published_at and a short history array. (2) A 'Bert of the day' real photo from a small owner-curated set, rotated by date and bundled or cached. (3) One tiny daily action, such as 'Remix today's dispatch into a card' (one tap into Create with the caption prefilled) or a daily Odd Bert Out puzzle once that content exists (the puzzle is listed in docs/RESEARCH-2026-09-08.md as a Berthalla activity). Replace the static greeting with a time-of-day line, and fold the two plumbing lines into a single 'Updated 9:12' line.",
+     "impact": "high",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/HomeScreen.kt:44-97",
+      "https://berthalla.io/status.json",
+      "docs/play/screenshots/1-home.png",
+      "https://www.nintendo.com/us/mobile-apps/nintendo-today/",
+      "https://blog.duolingo.com/widget-feature"
+     ]
+    },
+    {
+     "title": "Bert, the real dog, is a single reused photo, and his mood never changes what you see",
+     "area": "home",
+     "current_state": "The same red-hat photo appears as the header avatar (MainActivity.kt:254), the Home hero avatar (HomeScreen.kt:42, so it shows twice in the first viewport in 1-home.png), the widget header token (BERTWidget.kt:210), the Bert widget portrait (BERTDailyWidget.kt:97, res/drawable-nodpi/bert_widget_portrait.jpg), the widget banner, the caption 'Photo' art (CaptionCard.kt:25), the launcher icon and the notification chrome. Mood ('content', 'giddy', 'anxious' and so on) is only a text pill (HomeScreen.kt:59, BERTDailyWidget.kt:112). 'Meet Bertram, the dog behind the hat' is an external link at the bottom of Explore (ExploreScreen.kt:30). A newcomer from Play never learns natively that Bert is a real Pomeranian.",
+     "best_in_class": "Duolingo's widget changes Duo's illustration with state: he gets more desperate as midnight nears and relaxed once the lesson is done. User response was strong enough that Duolingo shipped about 25 more mood illustrations (https://blog.duolingo.com/widget-feature).",
+     "recommendation": "Commission or select 8-12 real Bert photos mapped to the mood vocabulary the feed already emits, with a neutral fallback. Use the matching photo in the Home hero and in the Bert widget portrait and banner, so the widget visibly changes every day. Remove the duplicate header avatar on Home. Add a native 'Meet Bert' card on first run and in Explore: three photos, two sentences that he is a real Pomeranian (Bertram) and the cartoon is based on him, and how the community started. Keep mood visibly separate from price.",
+     "impact": "high",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/MainActivity.kt:254",
+      "android/app/src/main/java/global/bert/widget/HomeScreen.kt:42-63",
+      "android/app/src/main/java/global/bert/widget/widget/BERTDailyWidget.kt:97-112",
+      "android/app/src/main/java/global/bert/widget/ExploreScreen.kt:30",
+      "android/app/src/main/java/global/bert/widget/CaptionCard.kt:25",
+      "docs/play/screenshots/1-home.png",
+      "https://blog.duolingo.com/widget-feature"
+     ]
+    },
+    {
+     "title": "The price is invisible on Home, and every widget or notification tap lands there",
+     "area": "home",
+     "current_state": "Home has no price, change or holdings figure at all (HomeScreen.kt:30-98). The price lives at Tools > Market (MainActivity.kt:188-192). All three widgets launch MainActivity with no destination (BERTWidget.kt:82, BERTDailyWidget.kt:93). Every alert, including 'BERT is above $X', opens the same Home screen (BERTNotifier.kt:37-39). A holder who taps the Market widget, or a price alert, lands on a screen with no price. Holdings shows unrealized gain against cost but not today's change in the bag's value (HoldingsScreen.kt:28-41). The Sept research itself proposed an optional small market card on Home; it never shipped (docs/RESEARCH-2026-09-08.md, Recommended structure table).",
+     "best_in_class": "Android's widget quality guide expects a widget to update after related in-app actions and to use the system launch transition into the app (WT-3.2, WS-5). Users expect the widget they tapped to open its own context (https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide).",
+     "recommendation": "Add a one-line market strip under the Home hero showing price, 24h change, and 'your bag' value with today's dollar change if holdings are set. Tapping it opens Tools > Market. Pass an intent extra from each widget and notification: price and market widgets plus price alerts go to Market, the Bert widget and dispatch alerts go to Home, and tournament alerts go to the tournament card. Read the extra in MainActivity to pick the destination. Small work with a large payoff for the core audience.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/HomeScreen.kt:30-98",
+      "android/app/src/main/java/global/bert/widget/widget/BERTWidget.kt:82",
+      "android/app/src/main/java/global/bert/widget/widget/BERTDailyWidget.kt:93",
+      "android/app/src/main/java/global/bert/widget/alerts/BERTNotifier.kt:37-39",
+      "android/app/src/main/java/global/bert/widget/HoldingsScreen.kt:28-41",
+      "docs/RESEARCH-2026-09-08.md",
+      "https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide"
+     ]
+    },
+    {
+     "title": "The store sells the pixel game, but the app hides it with no 'continue' hook",
+     "area": "first-run",
+     "current_state": "The feature graphic leads with the Lost Trail art and 'PLAY \u00b7 CREATE \u00b7 WIDGETS' (docs/play/feature-graphic-1024x500.png). In the app, the game is a card on the second tab (ExploreScreen.kt:23), and Home mentions it only as the text link 'Find your next adventure' (HomeScreen.kt:95). The app knows nothing about the player's progress: the WebView has no JavaScript bridge, and saves live in the game's own storage (LostTrailActivity.kt:58-77, 81). So there is no 'World 3 \u00b7 7/18 keepsakes \u00b7 continue' prompt, which is the cheapest return hook the app owns.",
+     "best_in_class": "Google Play asks for the first screenshots and assets to show the actual core experience. A listing that promises a game should open on one (https://support.google.com/googleplay/android-developer/answer/9866151).",
+     "recommendation": "Put a Lost Trail hero card on Home, under Today, using the existing 16:9 art. Once the player has started, show their progress: read the save summary with evaluateJavascript on exit, or expose a read-only window.BertAppGame.progress(), then cache it natively. Copy: 'Continue the Lost Trail \u00b7 Mossy Hollow \u00b7 7 of 18 keepsakes'. First-time copy: 'Play now \u00b7 works offline'. Optionally add a 'Continue' app shortcut.",
+     "impact": "high",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "docs/play/feature-graphic-1024x500.png",
+      "android/app/src/main/java/global/bert/widget/ExploreScreen.kt:23",
+      "android/app/src/main/java/global/bert/widget/HomeScreen.kt:95",
+      "android/app/src/main/java/global/bert/widget/LostTrailActivity.kt:58-81",
+      "docs/evidence/2026-10-01/release-0.7.0/device/s25-title.png",
+      "https://support.google.com/googleplay/android-developer/answer/9866151"
+     ]
+    },
+    {
+     "title": "Play screenshots are below Google's 1080px bar, one is clipped, and none show the game or a widget",
+     "area": "play-store",
+     "current_state": "All six screenshots are 720\u00d71280 (docs/play/LISTING.md, Graphics table). 4-market.png catches the Market hero mid-scroll, so the price figure is cut off under the pinned tabs. Two of six are Home (dispatch and tournament). None shows Lost Trail gameplay or a widget on a real home screen, although those are the app's two most differentiated features. There are no captions.",
+     "best_in_class": "Google Play says apps should provide 'at least four screenshots at 1080px minimum resolution' (9:16 at 1080\u00d71920 or more), and that meeting this is required to be eligible for recommendation formats that use screenshots. It also says to put the strongest UI in the first three, keep taglines under 20% of the image, and add alt text (https://support.google.com/googleplay/android-developer/answer/9866151).",
+     "recommendation": "Re-render PlayStoreScreenshotsTest at 1080\u00d71920. Proposed order: (1) Lost Trail gameplay, (2) the Bert widget plus the compact price widget on a themed home screen, (3) Home with the dispatch, (4) a caption card, (5) Market scrolled to the top, (6) the tournament. Add one short caption per image ('Bert's world, offline', 'Bert on your home screen'), plus alt text. Do this before the closed test turns into a production listing.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "docs/play/LISTING.md",
+      "docs/play/screenshots/4-market.png",
+      "docs/play/screenshots/1-home.png",
+      "https://support.google.com/googleplay/android-developer/answer/9866151"
+     ]
+    },
+    {
+     "title": "Widget picker previews are placeholders, so two price widgets look identical and show no price",
+     "area": "widgets",
+     "current_state": "The Compact and Market widgets both use previewLayout=@layout/bert_widget_loading (res/xml/bert_widget_info.xml, res/xml/bert_market_widget_info.xml). That layout is a token image, '$BERT' and 'LIVE TOKEN PRICE', with no price, chart, metrics or holdings capsule (res/layout/bert_widget_loading.xml). The Bert widget's label is 'BERT \u00b7 Bert' (res/values/strings.xml). At small sizes the Bert widget's tournament strip falls back to a bare '59d 15h LEFT' with no subject; the code comment admits 'a bare countdown does not say what is ending' (BERTDailyWidget.kt:126-133; docs/evidence/2026-10-02/release-0.8.1/device/bert-2x2-font130-s25.png). There is no manual refresh action on any widget, and the app uses Glance 1.1.1.",
+     "best_in_class": "Widget quality guide: the Standard tier requires 'accurate previews in the widget picker' (WD-4) and a manual refresh when users expect fresher data (WT-2). The Differentiated tier wants the preview to include user content or a system theme (WD-1) and the name to be 'descriptive and unique' (WD-4.5) (https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide). Android recommends previewLayout use 'the same layout as the actual widget, with realistic default or test values', plus generated previews on Android 15+ (https://developer.android.com/develop/ui/views/appwidgets/previews). Glance added providePreview / GlanceAppWidgetManager.setWidgetPreview in 1.2.0, now stable (https://developer.android.com/jetpack/androidx/releases/glance).",
+     "recommendation": "Give each price widget its own previewLayout with realistic sample values: price, a green sparkline drawable, and for Market the metrics and holdings capsule. Upgrade to Glance 1.2.0 and push generated previews after the first successful quote, so the picker shows the user's live price and theme. Rename the widgets to 'Bert's day', 'BERT price' and 'BERT market desk'. Make the narrowest countdown read 'FLAPPY 59d', or drop it, rather than a bare number. Add a small refresh tap target on the price widgets.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/res/xml/bert_widget_info.xml",
+      "android/app/src/main/res/xml/bert_market_widget_info.xml",
+      "android/app/src/main/res/layout/bert_widget_loading.xml",
+      "android/app/src/main/res/values/strings.xml",
+      "android/app/src/main/java/global/bert/widget/widget/BERTDailyWidget.kt:126-133",
+      "docs/evidence/2026-10-02/release-0.8.1/device/bert-2x2-font130-s25.png",
+      "https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide",
+      "https://developer.android.com/develop/ui/views/appwidgets/previews",
+      "https://developer.android.com/jetpack/androidx/releases/glance"
+     ]
+    },
+    {
+     "title": "The shell has no motion, haptics or brand typography, so it reads as a stock Material app",
+     "area": "home",
+     "current_state": "A source grep finds no animate*/Animated*/Crossfade/animateContentSize, no haptic feedback, no FontFamily and no res/font. The theme sets fontFamily 'sans' (res/values/styles.xml:4). Every screen is the same stack of rounded navy Cards with orange 11sp eyebrow labels (BERTComponents.kt:53-60). Refresh is a text button rather than pull-to-refresh (HomeScreen.kt:83, MarketScreen.kt:70-72). Tab switches cut instantly. A 'BERT \u00b7 v0.8.1' footer sits on every screen (MainActivity.kt:209). Next to the Lost Trail title screen, the app shell looks like a settings app.",
+     "best_in_class": "Material 3 treats motion and expressive type as part of brand identity and hierarchy, not decoration (https://m3.material.io/styles/motion/overview; https://m3.material.io/styles/typography/overview). Duolingo shows that character state changes are what users respond to (https://blog.duolingo.com/widget-feature).",
+     "recommendation": "A polish pass with a strict budget. (1) One display face for headings that echoes the game's pixel or rounded-slab lettering, keeping a readable body face. (2) Five motions: a Bert portrait or mood pill entrance on Home, an animated tab-content crossfade, an animated leaderboard rank change, pull-to-refresh with a small Bert bark or wag frame, and a save/share confirmation. (3) Haptic ticks on save, share and alert toggles. (4) Move the version footer into an About sheet. Don't add more cards.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/res/values/styles.xml:3-6",
+      "android/app/src/main/java/global/bert/widget/BERTComponents.kt:53-60",
+      "android/app/src/main/java/global/bert/widget/MainActivity.kt:209",
+      "android/app/src/main/java/global/bert/widget/HomeScreen.kt:83",
+      "https://m3.material.io/styles/motion/overview",
+      "https://m3.material.io/styles/typography/overview"
+     ]
+    },
+    {
+     "title": "Cold start probably flashes a light cream window before the dark navy app",
+     "area": "first-run",
+     "current_state": "The launch theme is Theme.BERT, with parent android:style/Theme.Material.Light.NoActionBar, windowLightStatusBar=true and statusBarColor #FFF7ED. It sets no windowBackground, no windowSplashScreenBackground and no splash icon (res/values/styles.xml:3-6). Compose only switches to navy and dark bars in MainActivity.onCreate (MainActivity.kt:50-52). UNVERIFIED on device: the first frame (Android 12+ system splash and starting window) should use the light theme's window background behind the launcher icon, then cut to navy.",
+     "best_in_class": "Android's splash docs say SplashScreen 'uses the windowBackground of your theme if windowBackground is a single color', and recommend setting windowSplashScreenBackground and an icon explicitly (https://developer.android.com/develop/ui/views/launch/splash-screen).",
+     "recommendation": "Make the launch theme dark: windowBackground #071A2F, windowSplashScreenBackground #071A2F, dark status bar, and androidx.core:core-splashscreen with a clean Bert mark as windowSplashScreenAnimatedIcon. Check on the S25 with a cold launch screen recording.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "android/app/src/main/res/values/styles.xml:3-6",
+      "android/app/src/main/java/global/bert/widget/MainActivity.kt:50-52",
+      "https://developer.android.com/develop/ui/views/launch/splash-screen"
+     ]
+    },
+    {
+     "title": "The copy voice swings between charming and legalistic",
+     "area": "home",
+     "current_state": "Good lines: 'Hey, pack.', 'Follow your nose.', 'Your words. Bert's face.' The plumbing undercuts them. Home shows two muted lines, 'Source refreshed 1m ago' and 'Latest from Berthalla' (HomeScreen.kt:78-79). The loading panel repeats itself: 'Fetching a BERT quote\u2026' over 'Fetching a validated BERT quote' (BERTComponents.kt:33). The error panel says 'No market value has been guessed or substituted.' (BERTComponents.kt:44). Alerts opens with caveats: 'Off unless you switch them on. Checked about every 15 minutes \u2026 so they are not instant.' (AlertsScreen.kt:56-57). Market has a 'KNOW WHAT YOU'RE LOOKING AT' panel with the raw mint (MarketScreen.kt:78-91). The honesty is right, but the placement is wrong: caveats take the prime spots.",
+     "best_in_class": "Google Play asks listings and UI to lead with the core experience, which means the value first and the qualifiers after (https://support.google.com/googleplay/android-developer/answer/9866151). Duolingo cut its widget down to the single message that drives action (https://blog.duolingo.com/widget-feature).",
+     "recommendation": "One copy pass in Bert's voice. Replace the two Home lines with one: 'Updated 9:12'. Loading: 'Sniffing out the price\u2026'. Alerts header: 'Bert will nudge you' as the headline, with the 15-minute caveat as one muted line under the toggles. Move the mint, data sources and 'informational only' into an (i) sheet. Keep every factual claim; just lower its rank.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/HomeScreen.kt:78-79",
+      "android/app/src/main/java/global/bert/widget/BERTComponents.kt:33",
+      "android/app/src/main/java/global/bert/widget/BERTComponents.kt:44",
+      "android/app/src/main/java/global/bert/widget/AlertsScreen.kt:56-57",
+      "android/app/src/main/java/global/bert/widget/MarketScreen.kt:78-91",
+      "https://support.google.com/googleplay/android-developer/answer/9866151"
+     ]
+    },
+    {
+     "title": "Explore is mostly a link directory, and the four tabs each feel thin",
+     "area": "home",
+     "current_state": "Explore has one native item (Lost Trail) and six cards that leave the app: Flappy in Telegram, Music in the browser, X, the Telegram community, Woofhub and bert.global (ExploreScreen.kt:22-30, BERTLinks.kt:10-17). The Home tournament card also exits to Telegram (HomeScreen.kt:155), as does 'Draw Bert' in Create (CreateScreen.kt:33). Create splits a single tool into Art, Saved and Personalize tabs (MainActivity.kt:177). Tools splits Market, Holdings and Alerts (MainActivity.kt:178). So a new user meets 4 bottom tabs plus 6 sub-tabs for about 5 native features.",
+     "best_in_class": "The prior critique warned that 'A directory alone will not create a strong repeat-use habit' and said not to 'announce integrations that are just links' (docs/CRITIQUE-2026-09-08.md, Judgment and Next features). Nintendo Today! keeps external destinations inside a native feed and calendar context (https://www.nintendo.com/us/mobile-apps/nintendo-today/).",
+     "recommendation": "Make Explore 'Play': Lost Trail as the hero, Flappy with the live tournament summary (moved off Home or mirrored), and Music shown as three native track tiles that open YouTube. Collapse the remaining four links into one compact 'Around the pack' row of icons. Merge Saved into Art as a horizontal 'Your cards' strip above the editor, which removes a tab. Consider whether Holdings and Alerts belong as sections of a single Market screen rather than tabs.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/ExploreScreen.kt:22-30",
+      "android/app/src/main/java/global/bert/widget/BERTLinks.kt:10-17",
+      "android/app/src/main/java/global/bert/widget/MainActivity.kt:177-178",
+      "android/app/src/main/java/global/bert/widget/CreateScreen.kt:33",
+      "docs/CRITIQUE-2026-09-08.md",
+      "https://www.nintendo.com/us/mobile-apps/nintendo-today/"
+     ]
+    },
+    {
+     "title": "Create is a blank-canvas tool with no prompts and no link to Bert's day",
+     "area": "create",
+     "current_state": "The caption field always starts on 'woofmornin. the mayor is in.' (CreateScreen.kt:46). Below it sit four rows of chips (BERT art, Layout, Size, Colours; CreateScreen.kt:123-132). There are no suggested captions, no 'use today's dispatch', no meme templates and no seasonal art. The art set mixes three Bert renderings: the real photo, a soft-3D cartoon in the wallpapers, and the pixel game sprite (CaptionCard.kt:24-30; docs/play/screenshots/6-create.png). After saving, the only next steps are 'View collection' and a generic share sheet (CreateScreen.kt:155-176).",
+     "best_in_class": "In the prior research, LEGO Play's create-and-share loop is the reference for giving fans something to make and share (docs/RESEARCH-2026-09-08.md, citing https://www.lego.com/en-us/service/help-topics/article/lego-play-app). Duolingo shows that the useful creative input is today's context, not a blank field (https://blog.duolingo.com/widget-feature).",
+     "recommendation": "Seed the field with today's dispatch and offer 6-8 tappable caption chips that rotate with the day or season ('gm pack', 'the mayor disapproves', a tournament line while one is live). Add a one-tap 'Make a card from this' on the Home dispatch. Group the art by style ('Real Bert', 'Cartoon', 'Pixel') so the mix reads as intentional. Offer Telegram and X as direct share targets ahead of the generic sheet, since that is where the pack is.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/CreateScreen.kt:46",
+      "android/app/src/main/java/global/bert/widget/CreateScreen.kt:123-176",
+      "android/app/src/main/java/global/bert/widget/CaptionCard.kt:24-30",
+      "docs/play/screenshots/6-create.png",
+      "docs/RESEARCH-2026-09-08.md",
+      "https://blog.duolingo.com/widget-feature"
+     ]
+    },
+    {
+     "title": "Alerts are one-shot and land on the wrong screen, and there is no daily opt-in nudge",
+     "area": "alerts",
+     "current_state": "Each price alert fires once and then stays disarmed until the user edits it ('Each alert fires once, then waits until you change it', AlertsScreen.kt:84; aboveFired/belowFired in BERTAlerts.kt:62-75). Tapping any notification opens Home (BERTNotifier.kt:37-39). All channels use IMPORTANCE_DEFAULT (BERTNotifier.kt:27). The dispatch alert fires on every new post, with no choice of 'once each morning at a time I pick' (BERTAlerts.kt:55-60). Hold periods between alerts are UNVERIFIED on device because WorkManager timing varies.",
+     "best_in_class": "Android's notification guidance says a tap should open the content the notification is about (https://developer.android.com/develop/ui/views/notifications/build-notification#click). Duolingo's whole retention model is one predictable daily reminder tied to the character (https://blog.duolingo.com/widget-feature).",
+     "recommendation": "Re-arm price alerts automatically once the price crosses back by a margin (for example 3%), and show 'last fired 2h ago'. Send each notification type to its own destination (see the deep-link finding). Add an opt-in 'Bert's morning note': one notification at a time the user picks, with the mood photo as a large icon and the dispatch text. That is the daily habit loop, delivered without accounts.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/AlertsScreen.kt:84",
+      "android/app/src/main/java/global/bert/widget/data/BERTAlerts.kt:55-75",
+      "android/app/src/main/java/global/bert/widget/alerts/BERTNotifier.kt:27-39",
+      "https://developer.android.com/develop/ui/views/notifications/build-notification#click",
+      "https://blog.duolingo.com/widget-feature"
+     ]
+    },
+    {
+     "title": "The 14-day closed test needs testers to use every feature, but the app gives them no guided path",
+     "area": "retention",
+     "current_state": "There is no first-run screen, no checklist and no 'what's new'. A new tester lands on Home ('Hey, pack.') and has to find the widgets (Create > Personalize, StudioScreen.kt:180-195), alerts (Tools > Alerts) and the game (Explore) on their own. LISTING.md and NEXT-SESSION.md show the app is in internal testing and must pass a 12-tester, 14-day closed test.",
+     "best_in_class": "The Play production-access form asks whether testers 'used all available app features', whether usage matched expected production behaviour, and how feedback was collected (https://support.google.com/googleplay/android-developer/answer/14151465).",
+     "recommendation": "Add a dismissible 'Get started with Bert' card on Home with four ticks: add a Bert widget, play World 1, make a card, switch on one alert. Each opens its destination, and progress is stored locally only. Add an in-app 'Send feedback' link (Telegram or mailto) in an About sheet. This answers the production questionnaire and doubles as onboarding for real users.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/java/global/bert/widget/StudioScreen.kt:180-195",
+      "docs/play/LISTING.md",
+      "docs/NEXT-SESSION.md",
+      "https://support.google.com/googleplay/android-developer/answer/14151465"
+     ]
+    },
+    {
+     "title": "The launcher icon is a flat photo with no foreground or monochrome layer, and there are no app shortcuts",
+     "area": "platform",
+     "current_state": "The adaptive icon puts the whole photo in the background layer, with a transparent foreground and no <monochrome> layer (res/mipmap-anydpi-v26/ic_launcher.xml:3-4). The photo will be mask-cropped and loses parallax, and themed-icon users get either no theming or the OS's automatic treatment of a photo. The manifest declares no static shortcuts (AndroidManifest.xml has no android.app.shortcuts meta-data).",
+     "best_in_class": "Android: the logo belongs in the foreground layer within the 66\u00d766 dp safe zone. For Android 13+ themed icons, apps should 'provide a single layer for the monochrome version', and Android 16 QPR 2 auto-themes apps that don't (https://developer.android.com/develop/ui/views/launch/icon_design_adaptive). Static shortcuts are packaged in a resource file, and most launchers show up to four (https://developer.android.com/develop/ui/views/launch/shortcuts).",
+     "recommendation": "Split the icon into a colour background plus a cut-out Bert head (red hat) as the foreground, and add a one-colour silhouette as monochrome. Add three static shortcuts: 'Continue the Lost Trail', 'BERT price' and 'Make a card'.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml:3-4",
+      "android/app/src/main/AndroidManifest.xml",
+      "https://developer.android.com/develop/ui/views/launch/icon_design_adaptive",
+      "https://developer.android.com/develop/ui/views/launch/shortcuts"
+     ]
+    }
+   ]
+  },
+  {
+   "lens": "engineering-quality-audit",
+   "findings": [
+    {
+     "title": "Use the existing release key as the Play app-signing key now, before open testing, so sideloaded users can move to Play without losing their data",
+     "area": "play-store",
+     "current_state": "docs/play/LISTING.md:5 says the existing release key is only the Play *upload* key, which means Play generated a new app-signing key. docs/NEXT-SESSION.md:33 and :70 plan to tell every berthalla.io APK user to uninstall and reinstall from Play, because the two signatures cannot update each other. Uninstalling wipes holdings (BERTHoldingsStore SharedPreferences), saved caption cards (CaptionLibrary filesDir) and Lost Trail progress (WebView DOM storage). Backup is also off (AndroidManifest.xml allowBackup=false plus backup_rules.xml excludes everything), so nothing can be restored afterwards.",
+     "recommendation": "While the app is still only on internal or closed testing, change Play App Signing to use your own key: export the current bert-widget release key with PEPK, then create and register a fresh upload key. Play builds would then carry the same signature as the berthalla.io APKs, so users can install the Play build over the sideloaded APK and keep their data. If that window has already closed, ship a small export/import first (holdings plus a game-save code; cards can already be shared out) and update the planned migration note.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://support.google.com/googleplay/android-developer/answer/9842756",
+      "/opt/bert-widget/docs/play/LISTING.md:5",
+      "/opt/bert-widget/docs/NEXT-SESSION.md:33",
+      "/opt/bert-widget/android/app/src/main/AndroidManifest.xml:16-18",
+      "UNVERIFIED: the current Play Console key state. It is inferred from LISTING.md, and whether any open-testing or production release exists was not checked."
+     ]
+    },
+    {
+     "title": "The owner has no way to see crashes or ANRs: there is no telemetry, and Play vitals will show almost nothing during the closed test",
+     "area": "engineering",
+     "current_state": "The source contains no crash or ANR reporting of any kind. grep for UncaughtExceptionHandler, ApplicationExitInfo, StrictMode, Sentry and Crashlytics under android/app/src/main/java finds nothing. The only plan is uploading mapping-0.8.1.txt for Play (LISTING.md:6). Play vitals only counts Play installs on certified devices from users who opted in to sharing usage data, and it hides data until there is enough to anonymise. A 12-tester closed test will likely show nothing. All sideloaded APK users are invisible.",
+     "recommendation": "Smallest version, with no tracking: (1) review the Play pre-launch report that runs automatically on every bundle upload, which covers stability, compatibility, performance and accessibility on Google lab devices; (2) on launch, read ActivityManager.getHistoricalProcessExitReasons (API 30+). If the last exit was a crash or ANR, show a one-time 'BERT closed unexpectedly. Send report?' prompt that opens a share or email intent with the exit reason, trace and version. Nothing leaves the phone unless the user sends it, so the 'no data collected' answer stays true. Also add a 'Report a problem' row under Tools.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/topic/performance/vitals",
+      "https://support.google.com/googleplay/android-developer/answer/9842757",
+      "https://developer.android.com/reference/android/app/ApplicationExitInfo",
+      "/opt/bert-widget/docs/play/LISTING.md:6",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/BERTApplication.kt:1-12"
+     ]
+    },
+    {
+     "title": "Sideloaded users are never told an update exists, and Play users have no in-app update prompt",
+     "area": "engineering",
+     "current_state": "No code compares the installed version with a published one. The version only appears as the footer text 'BERT \u00b7 v0.8.1' (MainActivity.kt:209). The app already polls berthalla.io/status.json every 5 minutes (MainActivity.kt:128, BERTActivityRepository.kt), but BERTActivity.parse reads no version field (BERTActivity.kt:223-248). Someone who sideloaded 0.7.x keeps it forever, including old data-source fallbacks the owner wants to retire (NEXT-SESSION.md, '~15 October... propose retiring bert-widget.service').",
+     "recommendation": "Add an optional `android: {latest: 21, min: 17, url: \"https://berthalla.io/app/\"}` object to status.json and parse it as a bounded int. On Home, show a dismissible 'Update available' card when versionCode < latest. Make it non-dismissible when versionCode < min, which is your lever before shutting down the fallback server. Show it only when PackageManager.getInstallSourceInfo(packageName).installingPackageName is not com.android.vending. For Play installs, add Play In-App Updates (flexible flow) later.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/guide/playcore/in-app-updates",
+      "https://developer.android.com/reference/android/content/pm/PackageManager#getInstallSourceInfo(java.lang.String)",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/MainActivity.kt:209",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTActivity.kt:223-248"
+     ]
+    },
+    {
+     "title": "WorkManager 2.11.2 predates fixes for exactly the retry and periodic-reschedule paths the refresh worker relies on",
+     "area": "engineering",
+     "current_state": "build.gradle.kts pins work-runtime 2.11.2. BERTRefreshWorker.doWork returns Result.retry() on any failure and catches generic Exception, which also swallows coroutine CancellationException (work/BERTRefreshWorker.kt:57-70). After that catch it calls the suspend updateAllBERTWidgets from an already-cancelled coroutine. On widget-plus-alert devices, Bert's feed is fetched twice per run: refreshActivityForDailyWidget (:30-36) and then checkAlerts calls refresh() again (:43-48), despite the comment saying it uses the stored copy. Compose BOM is 2026.06.00 while 2026.09.00 is available.",
+     "recommendation": "Bump to work-runtime 2.12.0 (stable 23 Sep 2026; minSdk 24, which is fine). Its changelog includes 'Fixed retried work failing to schedule with the OS' and 'Fixed a case where periodic work that failed from an uncaught exception was not rescheduled', both of which affect widget and alert freshness. In doWork, rethrow CancellationException before the generic catch. In checkAlerts, use BERTActivityRepository.load() when the widget refresh already ran this cycle. Bump the Compose BOM in the same release.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/jetpack/androidx/releases/work",
+      "https://developer.android.com/develop/ui/compose/bom/bom-mapping",
+      "/opt/bert-widget/android/app/build.gradle.kts:111-114",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/work/BERTRefreshWorker.kt:30-70"
+     ]
+    },
+    {
+     "title": "Alerts-only users (no widget placed) can have alerts delayed to once a day, and tournament or dispatch alerts are skipped whenever the price fetch fails",
+     "area": "alerts",
+     "current_state": "Background work is scheduled when a widget is placed or any alert is on (BERTRefreshWorker.kt:76-79). Android exempts apps with active widgets from the restricted standby bucket, but an alerts-only user who rarely opens BERT can drift to 'rare' or 'restricted', where jobs run once a day in a 10-minute batch. The UI only says 'Checked about every 15 minutes while your phone allows background work' (AlertsScreen.kt:372). Also, doWork calls BERTQuoteRepository.refresh() first (:58), so if that throws, checkAlerts (:60) never runs. Tournament-ending and new-dispatch alerts therefore depend on the price sources being up. Notification channels are only created when the first alert posts (BERTNotifier.kt:170), so users can't tune them in system settings beforehand.",
+     "recommendation": "(1) When someone switches on an alert and has no widget, show 'Tip: placing a BERT widget keeps alerts on time' with the existing pin button (StudioScreen.kt pinWidget). (2) Run checkAlerts in its own try block so a quote failure doesn't suppress activity alerts. (3) Call BERTNotifier.ensureChannels when alerts are enabled (AlertsScreen.enable), not at first post. (4) Make the copy honest: 'may be delayed by hours if you rarely open BERT'.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/topic/performance/appstandby",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/work/BERTRefreshWorker.kt:57-79",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/AlertsScreen.kt:56-57",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/alerts/BERTNotifier.kt:158-170"
+     ]
+    },
+    {
+     "title": "Widget picker shows one generic placeholder for both price widgets; Glance 1.2.0 adds generated previews",
+     "area": "widgets",
+     "current_state": "Glance is pinned at 1.1.1 (build.gradle.kts:111). The Compact and Market widgets both use android:previewLayout=\"@layout/bert_widget_loading\" (res/xml/bert_widget_info.xml, bert_market_widget_info.xml). That layout is a token icon, '$BERT' and 'LIVE TOKEN PRICE' on a fixed #071A2F (res/layout/bert_widget_loading.xml), so in the picker the two look the same and neither shows a price, chart, holdings or the chosen theme. The Glance roots don't use GlanceModifier.appWidgetBackground() (widget/BERTWidget.kt:79-83, BERTDailyWidget.kt:93), so launchers can't apply the Android 12+ widget-to-app launch transition.",
+     "recommendation": "Upgrade to Glance 1.2.0 (stable 26 Aug 2026; raises minSdk to 23, which is fine). Override GlanceAppWidget.providePreview to render the real content with cached or fixture data, and call GlanceAppWidgetManager.setWidgetPreview once after the first successful quote, which gives Android 15+ pickers accurate live previews. Give the Market widget its own static previewLayout for older devices. Add .appWidgetBackground() to each root Box. Optionally move from SizeMode.Exact to Responsive with 3-4 sizes, since Glance docs say Exact fully rebuilds on every size change.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/jetpack/androidx/releases/glance",
+      "https://developer.android.com/docs/quality-guidelines/widget-quality",
+      "https://developer.android.com/develop/ui/compose/glance/build-ui",
+      "https://developer.android.com/develop/ui/views/appwidgets/enhance",
+      "/opt/bert-widget/android/app/src/main/res/layout/bert_widget_loading.xml",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/widget/BERTWidget.kt:64-90"
+     ]
+    },
+    {
+     "title": "Bert's-feed requests send the phone model and OS build string to berthalla.io, where nginx logs them along with the IP, contrary to the privacy page",
+     "area": "trust",
+     "current_state": "BERTHttp sets User-Agent 'BERT-Android' (data/BERTHttp.kt:20), but BERTActivityRepository.refresh opens its own HttpURLConnection without a User-Agent (data/BERTActivityRepository.kt:18-24). Android's default http.agent is therefore sent. In /var/log/nginx/access.log, current status.json hits carry 'Dalvik/2.1.0 (Linux; U; Android 16; <device model> Build/<build id>)'. berthalla.io logs with the default access_log (/etc/nginx/nginx.conf:53), and the owner plans to analyse those logs (NEXT-SESSION.md). The published privacy page says requests contain no device identifier and that Berthalla sees only 'Your IP address, as with any website'. Play counts retained data as collected unless it is processed ephemerally. A device model isn't a listed identifier, so this is a mismatch with what the page claims, not a clear violation.",
+     "recommendation": "Route BERTActivityRepository through BERTHttp so it uses the same UA, timeouts and size cap. Its no-redirect behaviour can stay as a flag. Then either turn off or anonymise access logging for /status.json and /widget/api/* (a custom log_format without $remote_addr, or with only a truncated one), or add one line to the privacy page saying berthalla.io server logs keep IP and user agent for N days for abuse and operations. Keep the Data safety answer consistent with whichever you choose.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://support.google.com/googleplay/android-developer/answer/10787469",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTActivityRepository.kt:18-24",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTHttp.kt:20",
+      "/opt/berthalla/website/app/privacy/index.html",
+      "/var/log/nginx/access.log (status.json user-agent lines, checked read-only)"
+     ]
+    },
+    {
+     "title": "Lost Trail restarts from the last lantern when the window is resized (split screen, foldables, tablets)",
+     "area": "game",
+     "current_state": "The LostTrailActivity manifest entry declares configChanges=\"orientation|screenSize|smallestScreenSize|keyboardHidden\" but not screenLayout (AndroidManifest.xml:35-37). A multi-window, freeform or fold change that alters screenLayout destroys the activity. onCreate then reloads the game ('Re-creation opens the stored lantern', LostTrailActivity.kt:121-122), losing in-level progress. On Android 16 with targetSdk 36, sw600dp devices ignore orientation and resizability restrictions, so resizing will happen more often.",
+     "recommendation": "Add screenLayout to match Android's documented set, so the value becomes \"screenSize|smallestScreenSize|orientation|screenLayout|keyboardHidden\". The Compose UI already reads LocalConfiguration, and the WebView simply re-lays out. Add a Robolectric check that a screenLayout configuration change doesn't recreate the activity.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/guide/topics/resources/runtime-changes",
+      "https://developer.android.com/about/versions/16/behavior-changes-16",
+      "/opt/bert-widget/android/app/src/main/AndroidManifest.xml:35-37",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/LostTrailActivity.kt:121-122"
+     ]
+    },
+    {
+     "title": "The widget 'DELAYED' and freshness text is 8sp, the smallest text on the widget",
+     "area": "accessibility",
+     "current_state": "The compact widget's freshness or 'DELAYED' footer is 8sp (widget/BERTWidget.kt:143). The header status pill is 8sp on compact (:228), and the market footer freshness, metric labels, 'YOUR POSITION' and '24H' are all 8sp (:116, :243, :269, :280, :285). The September critique already flagged 'small widget typography' in lint (docs/CRITIQUE-2026-09-08.md:48). The stale-price warning is the safety-relevant signal on a price widget, and it is the hardest thing to read.",
+     "recommendation": "Raise freshness and status text to at least 10-11sp and keep decorative eyebrows at 8-9sp if you must. Where space is tight, drop the source/DEX footer before shrinking the freshness line. Extend BERTWidgetRenderTest to assert a minimum sp for the freshness and status text nodes.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/docs/quality-guidelines/widget-quality",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/widget/BERTWidget.kt:143",
+      "/opt/bert-widget/docs/CRITIQUE-2026-09-08.md:48",
+      "UNVERIFIED: no official minimum widget text size exists. 10-11sp is a recommendation."
+     ]
+    },
+    {
+     "title": "The listing says every widget shows when its data is from, but the Bert widget shows no timestamp",
+     "area": "widgets",
+     "current_state": "docs/play/LISTING.md:22 says 'Every widget shows when its data is from, even offline.' The price widgets do this (freshnessLabel, BERTWidget.kt:305-310). BERTDailyWidget renders mood, dispatch and tournament countdown with no age or time at all (widget/BERTDailyWidget.kt:66-141). Its countdown is whole hours computed at render time (:122-124), so it can show '0h LEFT' for up to an hour, and it only refreshes on the 15-minute worker or the 30-minute updatePeriodMillis.",
+     "recommendation": "Either add a small 'UPDATED 14:05' or 'SAVED \u00b7 2 OCT' line (reuse formatObservedAt with activity.updatedAtEpochMillis) and show '<1h LEFT' instead of '0h LEFT', or soften the listing sentence to cover only the price widgets. The first option is better.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "/opt/bert-widget/docs/play/LISTING.md:22",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/widget/BERTDailyWidget.kt:66-141"
+     ]
+    },
+    {
+     "title": "The scheduling paths that fail silently in the field have no tests",
+     "area": "engineering",
+     "current_state": "The tests cover UI, state restoration, rendering, contrast, parsing and alert rules well (BERTUiTest.kt, BERTWidgetRenderTest.kt, BERTAlertDeliveryTest.kt). Nothing covers BERTRefreshWorker.doWork, syncSchedule (widget placed, alerts on, both off), BERTWidgetReceiverBase.onEnabled/onDisabled, or the stale-render scheduling end to end. grep finds no TestListenableWorkerBuilder or WorkManagerTestInitHelper under src/test. A regression in these paths shows up only as a widget that quietly stops updating.",
+     "recommendation": "Add androidx.work:work-testing and write Robolectric tests for: (a) doWork with a failing quote still runs activity alerts (after the change above); (b) syncSchedule enqueues work when alerts are on and cancels it when widgets and alerts are both off; (c) onDisabled after the last widget cancels the work unless alerts are on; (d) doWork rethrows cancellation.",
+     "impact": "low",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/develop/background-work/background-tasks/testing/persistent/worker-impl",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/work/BERTRefreshWorker.kt:55-101",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/widget/BERTWidget.kt:343-353"
+     ]
+    },
+    {
+     "title": "Small main-thread disk and binder work at process start and first frame",
+     "area": "engineering",
+     "current_state": "BERTApplication.onCreate runs syncSchedule on the main thread for every process start, including widget-broadcast and worker starts. That means three AppWidgetManager.getAppWidgetIds binder calls, a SharedPreferences load and WorkManager.getInstance (BERTApplication.kt:8-11, BERTRefreshWorker.kt:76-100). MainActivity's first composition opens five SharedPreferences files and parses cached JSON synchronously (MainActivity.kt:60-71). BERTAlertStore.save uses commit() from a click handler on the main thread (BERTAlerts.kt:287-297 via AlertsScreen.kt:358). There is no StrictMode in debug builds. These files are small, so this is cold-start polish, not an ANR risk.",
+     "recommendation": "Move syncSchedule off the main thread, or call it only from the receivers and the alert toggles where it already runs. Load the cached quote and activity in a LaunchedEffect on Dispatchers.IO; the Loading state already exists. Use apply() for alert settings. Enable StrictMode thread and VM policies in debug and preview builds so regressions show up.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/reference/android/os/StrictMode",
+      "https://developer.android.com/topic/performance/vitals/launch-time",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/BERTApplication.kt:8-11",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/MainActivity.kt:60-71"
+     ]
+    }
+   ],
+   "strengths": [
+    "WebView hardening for Lost Trail is excellent: one allow-listed appassets URL served via shouldInterceptRequest with a strict CSP, blockNetworkLoads, file and content access off, no JS bridge, every navigation blocked, and onRenderProcessGone handled so a killed renderer doesn't take the app down (LostTrailActivity.kt:1-145).",
+    "targetSdk 36 readiness: enableEdgeToEdge plus WindowInsets.safeDrawing in both activities, and back handled only through AndroidX OnBackPressedDispatcher/BackHandler with no onBackPressed overrides, so Android 16's default predictive back works as is.",
+    "Network layer is defensive: 5s connect and 8s read timeouts, byte caps on every response (BERTHttp.readUtf8WithLimit), mint, chain and URL validation, a direct source with server fallback, and last-good cached values with an honest 'Delayed' state rather than an error screen.",
+    "Widget freshness is thought through: a revision key forces Glance sessions to reload data, a no-network stale-render worker flips the label to DELAYED offline, and background work is scheduled only while a widget or alert exists and is cancelled otherwise.",
+    "Notification permission is requested only when an alert is switched on, alert memory advances only for notices actually posted, and the settings shortcut covers permanent denial.",
+    "Release hygiene: R8 minify plus resource shrinking with a minimal keep rule for Glance class names, a preview build type that ships the same R8 output, mapping uploaded for Play, cleartext disabled, backup and device transfer fully excluded, and the unused WorkManager foreground service and permission removed.",
+    "Accessibility and process-death work is unusually thorough for a small app: rememberSaveable across destinations and tabs, StateRestorationTester tests, 2x font-scale layouts, a labelled-tappables audit test, contrast tests and live-region announcements."
+   ],
+   "verdict": "Judged as Android engineering, this app is already above the bar for a Play production release. The WebView sandbox, edge-to-edge and predictive-back readiness, input validation, offline fallbacks and accessibility testing are all in good shape. The biggest risks are around release operations rather than code. Play currently signs with a Google-generated key, so every existing sideloaded user faces a reinstall that wipes their data, and that can still be avoided cheaply because the app has not reached open testing. Once it ships, the owner has no way to learn about crashes: there is no telemetry, sideloaders are invisible to Play vitals, and the closed test is too small for vitals to report anything. Sideloaded installs also have no update path. In code, the most valuable fixes are bumping WorkManager to 2.12.0, whose retry and reschedule fixes apply directly to this worker, and upgrading Glance to 1.2.0 for accurate widget previews. Alerts need small reliability and copy fixes for users without a widget, and the feed request's user agent needs to match what the privacy page says."
+  },
+  {
+   "lens": "platform-and-play-bar",
+   "verdict": "Measured against first-party Android and Play guidance as of 12 Oct 2026, the app's engineering is solid: it targets API 36 (meeting the 31 Aug 2026 Play deadline), is edge-to-edge, has a tight privacy footprint, and its widgets are resizable and label stale data honestly. The gaps are less about code quality and more about Play process and platform polish. Two items could block or delay launch. First, the app is only in internal testing, which does not count toward the 12-tester / 14-day closed-test gate for new personal accounts. Second, there are privacy-policy and listing-contact gaps (no in-app privacy link, no contact email) that Play's User Data policy requires. Widgets miss the Tier 3/Tier 2 line on previews and the Tier 1 line on theming, because they ship only a static \"loading\" previewLayout and a single fixed dark palette. Large-screen layout, the monochrome themed icon and the splash screen are cheap polish items. The sideloaded APK needs to be registered under Android developer verification, which began enforcement on 30 Sep 2026. Android 16 Live Updates and Material 3 Expressive are not worth adopting for this app.",
+   "strengths": [
+    "targetSdk 36 / compileSdk 36 (android/app/build.gradle.kts) already satisfies Play's requirement that new apps and updates target API 36 from 31 Aug 2026 (https://support.google.com/googleplay/android-developer/answer/11926878).",
+    "Edge-to-edge is done properly: enableEdgeToEdge plus WindowInsets.safeDrawing and consumeWindowInsets in MainActivity.kt:50,160 and LostTrailActivity.kt:57,110. Android 16 removes the opt-out for apps targeting 36 (https://developer.android.com/about/versions/16/behavior-changes-16).",
+    "Back handling uses the supported APIs (Compose BackHandler at MainActivity.kt:156, OnBackPressedCallback at LostTrailActivity.kt:90), not onBackPressed or KEYCODE_BACK, which stop being dispatched when targeting 36.",
+    "Widgets: resizable at 2x2 and 4x2 (targetCellWidth/Height in res/xml/*_widget_info.xml), unique names (BERT \u00b7 Compact/Market/Bert), a description for each, and a stale-data label with Amber styling. A stale-render WorkManager job (work/BERTRefreshWorker.kt:113-131) re-renders offline. updateAllBERTWidgets runs after holdings are saved (MainActivity.kt:136-139), which meets the in-app-action refresh rule WT-3.2 (https://developer.android.com/docs/quality-guidelines/widget-quality). Render tests are said to pin font scale and contrast (docs/NEXT-SESSION.md).",
+    "Permissions are minimal and contextual. POST_NOTIFICATIONS is requested only when an alert is switched on, and FOREGROUND_SERVICE is stripped from the manifest (AndroidManifest.xml:5-10), keeping the Play foreground-service declaration out of scope. Cleartext is disabled, backup and device transfer are excluded (xml/backup_rules.xml), and the WebView game is locked down (LostTrailActivity.kt:52-63 and its CSP).",
+    "The privacy story is honest and verifiable: no accounts, holdings on-device only, and the privacy policy names DEX Screener, GeckoTerminal and Berthalla as IP-visible endpoints. That fits Play's definition of 'collect' as data transmitted off-device (https://support.google.com/googleplay/android-developer/answer/10787469).",
+    "Android 17's RemoteViews bitmap cap (1.5x screen area x 4 bytes, fatal if exceeded) is not a risk. The photos are resource-id images and the only runtime bitmap is the 600x180 sparkline (BERTSparkline.kt:13) (https://developer.android.com/about/versions/17/behavior-changes-17)."
+   ],
+   "findings": [
+    {
+     "title": "The 12-tester / 14-day clock has not started: the app is only in internal testing",
+     "area": "play-store",
+     "current_state": "docs/NEXT-SESSION.md says the app has been in Play internal testing since 2 Oct, and the berthalla.io tester form publishes the internal-test opt-in link. The same memo says to 'expect the 12-tester / 14-day closed test'. No closed-testing track is mentioned as created, so no testers are accumulating toward the gate.",
+     "recommendation": "Create a Closed testing track now, promote 0.8.1 to it, and put the 12+ sign-ups on its email list or a Google Group. Aim for 20+ so that dropouts do not reset the count. Move the tester-form opt-in link from the internal track to the closed track. Ask testers to use all features (alerts, widgets, game, Create). Ship at least one tester-driven update during the 14 days, and keep a short log of recruitment, feedback and changes. The 'Apply for production' form asks about all three. Google's Dec 2024 change from 20 to 12 testers is reported by third-party sources only, but the current Play Help page confirms 12.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://support.google.com/googleplay/android-developer/answer/14151465",
+      "https://www.testerscommunity.com/blog/why-apps-fail-google-play-production-access",
+      "https://ontest.app/blog/google-play-closed-testing-rejected-reasons-fix-2026"
+     ]
+    },
+    {
+     "title": "Widget picker previews: only a static 'loading' layout, no previewImage or generated preview",
+     "area": "widgets",
+     "current_state": "All three widget XMLs set android:previewLayout to the loading layouts (res/xml/bert_widget_info.xml:9, bert_market_widget_info.xml:9, bert_daily_widget_info.xml:9), which hold a token icon and placeholder text. There is no android:previewImage and no providePreview/setWidgetPreviews. Glance is pinned at 1.1.1 (build.gradle.kts:107).",
+     "recommendation": "Treat this as the top widget fix. Google's widget-quality checklist lists a missing preview as Tier 3 (WD-4.3) and requires an accurate preview for Tier 2 (WD-4). Tier 1 wants previews with user content or system theme (WD-1). (1) Add real previewImage screenshots for each widget. These are the fallback below Android 15 and on 15+ when no generated preview exists. (2) Upgrade Glance to 1.2.0 (stable per the AndroidX release page, dated 26 Aug 2026) and override GlanceAppWidget.providePreview to render the same content composable with sample data. Publish it with GlanceAppWidgetManager.setWidgetPreviews on first launch. It is rate-limited to about 2 calls per hour. (3) Override previewSizeMode with SizeMode.Responsive so nothing is dropped from the preview, because these widgets use SizeMode.Exact (BERTWidget.kt:64).",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/docs/quality-guidelines/widget-quality",
+      "https://developer.android.com/develop/ui/compose/glance/generated-previews",
+      "https://developer.android.com/jetpack/androidx/releases/glance"
+     ]
+    },
+    {
+     "title": "Widget Tier 2 gaps: no manual refresh, no max size, no system corner radius",
+     "area": "widgets",
+     "current_state": "Tapping anywhere on the price widgets only launches MainActivity (BERTWidget.kt:82). The empty state says 'Open BERT to refresh' (BERTWidget.kt:260), and no refresh action exists. res/xml/*_widget_info.xml set no maxResizeWidth/maxResizeHeight, and the Bert widget (4x2) and compact widget can be stretched, which only adds blank space. The widget root is a fully rectangular background (BERTWidget.kt:81) with no appWidgetBackground() or system corner radius. grep finds no use of appWidgetBackground or system_app_widget_background_radius.",
+     "recommendation": "Add a small refresh icon button to the Market and Compact widgets, wired to a Glance actionRunCallback that enqueues a one-time BERTRefreshWorker. This meets WT-2 (manual refresh when data refreshes faster than the UI) and fixes the 'Open BERT to refresh' dead end. Set maxResize values per widget (WL-4.1). Apply GlanceModifier.appWidgetBackground() plus the system radius, so launchers round the widget like their other widgets (Tier 1 WS-2). The rounding behaviour per launcher is UNVERIFIED, so check on the S25 and one other launcher.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/docs/quality-guidelines/widget-quality",
+      "https://developer.android.com/develop/ui/compose/glance/build-ui"
+     ]
+    },
+    {
+     "title": "Widget Tier 1 theming: one fixed dark palette, no GlanceTheme, no light or dynamic variant",
+     "area": "widgets",
+     "current_state": "Widgets colour themselves from a custom WidgetPalette via ColorProvider (BERTWidget.kt:81, 105-143) that follows the Theme Studio pack. There is no GlanceTheme, no glance-material3 ColorProviders, and no light or wallpaper-derived palette (grep for dynamicColor/isSystemInDarkTheme returns nothing). The app is dark-only (BERTComponents.kt:64).",
+     "recommendation": "Keep the Bert-orange navy pack as the default brand look, since it matches the app, and add one 'Match my phone' option. Wrap the content in GlanceTheme with ColorProviders(light, dark) and the Android 12+ dynamic-color branch, as documented. This ticks WC-1 and WC-2 (device or brand theming, light and dark palettes) toward Tier 1. For a memecoin community widget the brand look may be the better default, so this is optional polish, not a blocker.",
+     "impact": "low",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/develop/ui/compose/glance/theme",
+      "https://developer.android.com/docs/quality-guidelines/widget-quality"
+     ]
+    },
+    {
+     "title": "Developer verification: the sideloaded APK on berthalla.io/app needs to be registered",
+     "area": "platform",
+     "current_state": "The signed APK is still served from https://berthalla.io/app/ alongside Play. NEXT-SESSION.md says Play re-signs the app, so the sideload and Play builds cannot update each other. Nothing in the repo or docs mentions Android developer verification.",
+     "recommendation": "Android developer verification protections began on 30 Sep 2026 for certified devices in Brazil, Indonesia, Singapore and Thailand (Android 7+). They expand globally in 2027. Play auto-registers about 99% of Play apps, but an APK distributed outside Play needs manual package-name registration. Use Play Console (Settings > Verification) and register the package with the APK signed by the release key, since that is the key the sideload uses. Whether one package can hold both the Play-signing key and the sideload key is UNVERIFIED, so read the Play Console guide. The 'limited distribution' path (20 devices) is not suitable for a public APK. This also strengthens the plan to point berthalla.io/app at the Play listing once approved.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/developer-verification",
+      "https://developer.android.com/developer-verification/guides/google-play-console",
+      "https://android-developers.googleblog.com/2026/03/android-developer-verification-rolling-out-to-all-developers.html"
+     ]
+    },
+    {
+     "title": "Privacy policy gaps: no in-app link, no contact, no logs or retention text; listing contact email still missing",
+     "area": "trust",
+     "current_state": "grep finds no 'privacy' string in any .kt file, so the app has no in-app link to the policy. The policy at https://berthalla.io/app/privacy/ lists no contact email (only a GitHub issues link), says nothing about server logs or retention, and has no financial disclaimer. docs/play/LISTING.md:31 still says 'Contact email: owner to supply'. docs/NEXT-SESSION.md describes counting fallback requests in /var/log/nginx/access.log, so Berthalla does retain IP-bearing logs for the fallback path.",
+     "recommendation": "Play's User Data policy requires the privacy policy to be linked both in the Console and inside the app. It must also include developer info and a privacy point of contact, and cover retention and deletion. Add a 'Privacy policy' row in the app (for example under Tools or an About section) that opens the URL. Add a dedicated app or privacy email, and a 'Berthalla server logs' paragraph covering what is logged (IP, timestamp, path), the retention period and the purpose. Keep the Data safety answer of 'none collected' only if that text and the actual logging practice agree. Google says to disclose IPs 'based on how your app uses them' and treats inaccurate declarations as an enforcement matter.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://support.google.com/googleplay/android-developer/answer/10144311",
+      "https://support.google.com/googleplay/android-developer/answer/10787469",
+      "https://berthalla.io/app/privacy/"
+     ]
+    },
+    {
+     "title": "Financial features declaration: the 'none' answer is probably right but Holdings P/L and the prize pool need an explicit rationale",
+     "area": "trust",
+     "current_state": "docs/play/LISTING.md:52-54 declares no financial features. The Play list of declarable features includes cryptocurrency wallet, cryptocurrency exchange, NFT sales/awards, 'stock trading and portfolio management', financial advice and 'Other'. The app has a Holdings screen (amount, cost basis, estimated P/L), a Home card showing a '$X prize pool, top 5 paid' for a Telegram tournament (HomeScreen.kt:141), and a single line 'Informational market data only.' (MarketScreen.kt:89). The category is Entertainment (LISTING.md:30).",
+     "recommendation": "Keep the 'My app doesn't provide any financial features' answer. The app has no wallet, no custody and no trading, and Google's crypto exchange and wallet policy excludes non-custodial wallets and does not address price trackers. Whether a local cost-basis tracker counts as 'portfolio management' is UNVERIFIED, so write a short note for review if Play asks. Strengthen the in-app wording: put 'not financial advice, local record only' on the Holdings screen and the Market widget footer. Do not glamorise earnings in copy, because the Blockchain-based Content policy bars promoting earnings from trading or play (policy text via secondary sources only). Describe the tournament as a third-party Telegram game that the app only displays and links to, as LISTING.md already does.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "low",
+     "sources": [
+      "https://support.google.com/googleplay/android-developer/answer/13849271",
+      "https://support.google.com/googleplay/android-developer/answer/16329703",
+      "https://support.google.com/googleplay/android-developer/answer/9876821",
+      "https://gamesbeat.com/google-play-updates-its-policies-permitting-blockchain-games-and-apps/"
+     ]
+    },
+    {
+     "title": "Large screens: no adaptive layout, and Android 16/17 stop honouring orientation and resizability limits",
+     "area": "platform",
+     "current_state": "The UI is a single-column phone layout with a bottom NavigationBar (MainActivity.kt:284). grep finds no WindowSizeClass, NavigationRail, NavigationSuiteScaffold or content max-width in the app. The only responsive code is BoxWithConstraints in HoldingsScreen.kt:71. Play screenshots are phone-only (docs/play/screenshots/1-6, 720x1280). The manifest sets no screenOrientation or resizeableActivity, so there is nothing to opt out of.",
+     "recommendation": "At sw>=600dp, targetSdk 36 ignores orientation, aspect-ratio and resizability limits (opt-out removed for API 37), so Home/Explore/Create/Tools will stretch full-width on tablets, foldables and ChromeOS. Smallest useful change: cap content width (about 640-840dp, centred) and switch to a NavigationRail or NavigationSuiteScaffold from window width class Medium upward. Put the two-pane Create/Saved split behind the same breakpoint if time allows. Test at the 841x701dp foldable and 1024x640dp tablet sizes that Google lists. Add 7-inch and 10-inch screenshots to the listing. Play's pre-launch report also tests tablets. This is a polish item, not a gate.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/about/versions/16/behavior-changes-16",
+      "https://developer.android.com/about/versions/17/behavior-changes-17",
+      "https://developer.android.com/docs/quality-guidelines/large-screen-app-quality",
+      "https://developer.android.com/develop/ui/compose/layouts/adaptive/support-different-display-sizes"
+     ]
+    },
+    {
+     "title": "Themed icon: no monochrome layer, and the icon is a full-bleed photo in the background layer",
+     "area": "first-run",
+     "current_state": "mipmap-anydpi-v26/ic_launcher.xml:3-4 has a PNG photo background and a transparent foreground, with no <monochrome> element. A photo-only adaptive icon gives the themed-icon pipeline nothing sensible to tint.",
+     "recommendation": "Add a monochrome layer reusing the existing paw vector (drawable/ic_notification.xml) or a simple Bert silhouette, sized inside the 66dp safe zone. Android 13+ themed icons need it. Android 16 QPR2 auto-themes icons that lack one, but the result for a raster photo background is UNVERIFIED and likely a blob. Consider moving the photo to the foreground layer on a flat navy background, so the Android 12+ splash icon and launcher masks crop cleanly.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/develop/ui/views/launch/icon_design_adaptive"
+     ]
+    },
+    {
+     "title": "Cold-start splash is probably a light flash on a dark app",
+     "area": "first-run",
+     "current_state": "res/values/styles.xml defines Theme.BERT with parent android:style/Theme.Material.Light.NoActionBar, windowLightStatusBar=true and statusBarColor #FFF7ED. There is no windowBackground, no windowSplashScreenBackground, and no core-splashscreen dependency. The Compose UI is dark navy, so system bars are only fixed later by enableEdgeToEdge. I did not run the app, so the flash is UNVERIFIED.",
+     "recommendation": "Define a splash or window-background style with the navy surface and the Bert icon (androidx.core:core-splashscreen, or android:windowSplashScreenBackground on API 31+). Switch the base theme to a DayNight or dark parent so the pre-Compose frame matches. It is cheap and visible on first launch, which is what testers and the pre-launch report see first.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "low",
+     "sources": [
+      "https://developer.android.com/develop/ui/views/launch/splash-screen"
+     ]
+    },
+    {
+     "title": "Play listing gaps: no widget screenshot, no tablet screenshots, 85 bundled locales, and contact still open",
+     "area": "play-store",
+     "current_state": "The listing has 6 phone screenshots built from review fixtures and a feature graphic (docs/play/LISTING.md:36-41). NEXT-SESSION.md says a home-screen widget Play screenshot was offered but not done, that the 85 'localisations' are AndroidX translations and not countries, and that trimming to English via androidResources.localeFilters was deferred. The category is Entertainment (LISTING.md:30).",
+     "recommendation": "Add 1-2 widget screenshots on a real home screen (the widgets are a headline feature and the best-looking asset), plus 7-inch and 10-inch tablet screenshots, which Google recommends. Add localeFilters = listOf('en') in a later release, or keep the translations deliberately, because the extra AndroidX locale resources can make Play show the app as supporting languages it does not. The Entertainment category is defensible. Revisit it only if the review process asks.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/docs/quality-guidelines/large-screen-app-quality",
+      "https://support.google.com/googleplay/android-developer/answer/9859152"
+     ]
+    },
+    {
+     "title": "Do not chase Android 16 Live Updates or Material 3 Expressive for this app",
+     "area": "platform",
+     "current_state": "Alerts post plain BigText notifications on IMPORTANCE_DEFAULT channels (alerts/BERTNotifier.kt:27-47). The UI uses a custom darkColorScheme on stable Material 3 (BERTComponents.kt:64). The release notes were checked for Expressive and Live Updates.",
+     "recommendation": "Skip both. Live Updates / progress-centric notifications are documented for user-initiated start-to-end journeys such as rideshare, delivery and navigation, and promotion needs an extra permission, so a price or tournament alert is a poor fit and risks policy pushback. Material 3 Expressive APIs (MaterialExpressiveTheme) are still alpha, with 1.5.0-alpha26 reported in Aug 2026 (third-party, UNVERIFIED), and the app's own brand look is a strength. Better use of time: predictive-back polish (PredictiveBackHandler for the tab-to-Home back, since the LostTrailActivity callback is async and always consumes Back) and making alert channels lower importance for price alerts.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/about/versions/16/features/progress-centric-notifications",
+      "https://developer.android.com/about/versions/16/behavior-changes-16",
+      "https://composables.com/material3/materialexpressivetheme"
+     ]
+    },
+    {
+     "title": "Vitals and pre-launch hygiene during the closed test",
+     "area": "engineering",
+     "current_state": "The release is minified (build.gradle.kts release block), a mapping file is uploaded with the AAB (LISTING.md:5-6), and the game WebView handles renderer loss (LostTrailActivity.kt:70-77). There is no in-app crash reporter, so Play vitals and the pre-launch report are the only crash signal.",
+     "recommendation": "Play's bad-behaviour thresholds are a 1.09% user-perceived crash rate and a 0.47% ANR rate overall (8% per phone model), measured over 28 days. Exceeding them can reduce visibility. Reports on production-access rejections also cite unfixed crashes and ANRs during the closed test. Treat the pre-launch report as a gate on each closed-test upload and check it before sending testers an update. Test the WebView game on low-RAM devices (4 GB, with a 2 GB foreground memory threshold). The pre-launch report is automatic and not required by Play.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/topic/performance/vitals",
+      "https://support.google.com/googleplay/android-developer/answer/9842757",
+      "https://www.indiehackers.com/post/google-play-production-access-rejected-why-fixes-1efcef20e8"
+     ]
+    }
+   ]
+  },
+  {
+   "lens": "character-companion-benchmark",
+   "verdict": "The app is honest and tidy, but it is a dashboard that happens to have a mascot. Bert is a static photo plus a text pill. There is no daily ritual, no collectible, no sharing loop from the core content (the dispatch) and no memory of past dispatches. The best character-companion apps (Duolingo, Finch, Pokemon GO's widgets) make the home-screen widget the main surface. Their character changes visibly with state, their widgets show an evolving state, and they use gentle appointment mechanics. BERT already has the raw materials for all of this: a six-label mood engine, a dispatch, a tournament clock, a caption-card maker with a collection, and a share intent. The materials are just not connected. The smallest high-value moves are: (1) make the widget and Home portrait change with the six moods, (2) a one-tap \"make this dispatch a card\" that feeds the existing collection and share intent, (3) a local-only, non-punitive \"days with Bert\" counter and dispatch journal, (4) character-voiced, capped notifications. The key cautions are the loss-aversion streak and guilt-copy patterns that Duolingo is criticised for. None of the findings below rely on them. Mood is derived from BERT's price change (berthalla/mood/state.py: MoodInputs.bert_change_pct), so mood art must stay framed as character, not a signal. Public retention numbers for these apps are mostly observational or third-party. Anything not first-party is marked UNVERIFIED.",
+   "strengths": [
+    "Notification permission is requested in context, only when the person switches an alert on (AlertsScreen.kt:47-52). All alerts are off by default (data/BERTAlerts.kt:109), and memory only advances when a notice was actually shown (work/BERTRefreshWorker.kt:52). That is already better than most mascot apps on the dark-pattern axis.",
+    "The Bert widget has the right bones: a full-height portrait, a mood pill, auto-fitted dispatch text and a tournament countdown footer (widget/BERTDailyWidget.kt:233-312). It also has honest stale and unconfirmed states for the tournament (BERTActivity.kt:87-93).",
+    "Caption-card creation, a private collection and a system share sheet already exist (CaptionCard.kt:133-139, SavedCardsScreen.kt, CaptionLibrary.kt). This is the only user-generated-content and sharing loop most memecoin apps lack.",
+    "The server already emits six named moods (giddy, smug, content, restless, anxious, melancholy; berthalla/generate/persona.py:4-6). The data needed for mood-driven art, copy and collection exists today.",
+    "Wide-reach design choices are right for a community of this kind: no accounts, local-only holdings, offline game, and an honest 'source refreshed Xm ago' line (HomeScreen.kt:70-79). Low-pressure design is the Neko Atsume lesson, and the app already follows it."
+   ],
+   "findings": [
+    {
+     "title": "Make Bert's face change with his mood (widget and Home), not just a text pill",
+     "area": "widgets",
+     "current_state": "The Bert widget always draws the same portrait (R.drawable.bert_widget_portrait / bert_widget_banner / bert_token, widget/BERTDailyWidget.kt:268,274,278). Mood is only a 9sp orange pill (BERTDailyWidget.kt:315-320). Home uses the static launcher icon with a fixed 'Hey, pack.' (HomeScreen.kt:36-45). The server has six mood labels (giddy, smug, content, restless, anxious, melancholy) and a circadian 'small_hours' phase for restless (berthalla/mood/state.py:mood_label).",
+     "best_in_class": "Duolingo's widget shows Duo relaxed and happy when the lesson is done and increasingly panicked as midnight nears. Duolingo reports widget users have 'far better retention', controlled for commitment, but it is observational and the number is not published (https://blog.duolingo.com/widget-feature). Finch's widget is 'a window into your pet's life': adventure in progress, rewards ready, seasons and evolutions shown (https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl; Sensor Tower-derived D1/D7 54%/37% there is third-party, UNVERIFIED). Android's widget quality guide rewards widgets whose content is live and relevant (https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide).",
+     "recommendation": "Commission or select six Bert images, one per mood label. They can be real-dog photos in matching expressions (Bert is a real Pomeranian) or the cartoon. Map label to drawable in DailyContent and in the Home header, and fall back to today's portrait for an unknown label. Vary the Home greeting by mood and UTC hour using a small bundled string table written in Bert's voice. Keep the pill. Frame it as character: the mood is price-derived, so never copy that implies a market call (the Sept critique already warns about this, docs/RESEARCH-2026-09-08.md:54). Smallest version: 3 groupings (up, flat, down) if six assets is too much.",
+     "impact": "high",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://blog.duolingo.com/widget-feature",
+      "https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl",
+      "https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/widget/BERTDailyWidget.kt:268",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/HomeScreen.kt:36",
+      "/opt/berthalla/berthalla/mood/state.py"
+     ]
+    },
+    {
+     "title": "One-tap 'Make this a card' and 'Share Bert' from the dispatch (close the Home to Create to share loop)",
+     "area": "create",
+     "current_state": "The Home dispatch is read-only text with Refresh and 'Bert on X' buttons (HomeScreen.kt:60-69, 82-85). The caption-card maker and share intent exist (CaptionCard.kt:133-139, CreateScreen.kt) but nothing links the dispatch to them. The widget tap only opens MainActivity (BERTDailyWidget.kt:264).",
+     "best_in_class": "Duolingo's Year in Review share cards are the best documented character sharing loop. Duolingo reports that the top 10% of XP earners made up over half of 2020 shares, so it added personality-style cards to make sharing appeal regardless of performance (https://blog.duolingo.com/year-in-review-behind-the-scenes). Locket's whole product is a widget that is also a share surface (https://techcrunch.com/2022/01/11/locket-an-app-for-sharing-photos-to-friends-homescreens-hits-the-top-of-the-app-store, growth figures are company claims, UNVERIFIED).",
+     "recommendation": "Add a 'Make it a card' button under the dispatch that opens Create with the dispatch text pre-filled (the app already has a 'long-update expansion' flow). Add a 'Share' button that renders the card, with the mood image from the first finding and the existing card style, through the existing FileProvider share intent. Every shared card carries a small 'BERT app' mark. This turns each daily dispatch into a potential community post with almost no new code.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://blog.duolingo.com/year-in-review-behind-the-scenes",
+      "https://techcrunch.com/2022/01/11/locket-an-app-for-sharing-photos-to-friends-homescreens-hits-the-top-of-the-app-store",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/HomeScreen.kt:60",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/CaptionCard.kt:133"
+     ]
+    },
+    {
+     "title": "A forgiving 'days with Bert' counter instead of a loss-aversion streak",
+     "area": "retention",
+     "current_state": "No streak, visit counter, badge or achievement anywhere in the source (grep for streak/badge/achievement/sticker over android/app/src/main/java returns nothing relevant). Home shows the same cards on day 1 and day 100.",
+     "best_in_class": "Pokemon GO ships an official Daily Streaks widget that shows catch and spin streak progress (https://leekduck.com/posts/how-to-add-pokemon-go-widgets/). Duolingo says half of widget-installed learners have a streak of at least six months (https://blog.duolingo.com/widget-feature). Smashing's 2026 streak guide recommends grace windows, freezes, decay-instead-of-reset, milestone celebration at 7/30/100/365 and a tiny required action. It cites Duolingo's iOS widget at +60% commitment and a red-badge A/B test at +6% DAU, both via secondary sources and UNVERIFIED. It warns that streaks become compulsion when driven by fear or guilt (https://www.smashingmagazine.com/2026/02/designing-streak-system-ux-psychology/). Critiques of Duolingo's guilt copy and streak anxiety are mostly anecdotal (https://screenwiseapp.com/guides/duolingo-and-the-streak-obsession).",
+     "recommendation": "Count 'days you visited Bert' as a cumulative total with no reset, stored locally. Show it quietly as 'Day 12 with Bert'. Celebrate 7/30/100 with a new card background or a Bert line. Never show 'streak at risk', never push about it, never charge to repair it. A day counts when the app opens or when a dispatch is read from the widget tap. Smallest version: one SharedPreferences set of dates plus one line on Home.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://leekduck.com/posts/how-to-add-pokemon-go-widgets/",
+      "https://blog.duolingo.com/widget-feature",
+      "https://www.smashingmagazine.com/2026/02/designing-streak-system-ux-psychology/",
+      "https://screenwiseapp.com/guides/duolingo-and-the-streak-obsession"
+     ]
+    },
+    {
+     "title": "Local 'Bert's journal': keep every dispatch and mood the device has seen",
+     "area": "home",
+     "current_state": "status.json exposes only the latest post and mood, with no archive or per-post id (live fetch of https://berthalla.io/status.json: fields updated_at, mood, latest_post, bert, flappy; docs/RESEARCH-2026-09-08.md:21). The app stores one activity snapshot, so a dispatch missed between visits is gone. The alert memory keeps a single lastDispatch string (data/BERTAlerts.kt:121).",
+     "best_in_class": "Locket keeps a browsable history of what was sent and builds recaps from it (https://techcrunch.com/2025/08/06/photo-sharing-app-locket-is-banking-on-a-new-celebrity-focused-feature-to-fuel-its-growth, and the same page for Rollcall; claims are company statements, UNVERIFIED). Nintendo Today! pairs a daily calendar with an animated character (https://mobilesyrup.com/2025/03/27/nintendo-today-mobile-app-launch/). Pokemon Sleep's Sleep Style Dex gives a visible record of what you have seen (feature description only, retention UNVERIFIED).",
+     "recommendation": "Append each new dispatch (dedupe on text hash, store the mood and the time first seen) to a small local file, capped at about 200 entries. Add a 'Bert's journal' list under Home. Each entry gets the Make-a-card and Share actions from the second finding. Keep it device-only like holdings. Label the timestamp as 'first seen', not 'posted', because the source has no publication date. Also ask the server owner for a stable id and posted_at later.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://berthalla.io/status.json",
+      "https://techcrunch.com/2025/08/06/photo-sharing-app-locket-is-banking-on-a-new-celebrity-focused-feature-to-fuel-its-growth",
+      "https://mobilesyrup.com/2025/03/27/nintendo-today-mobile-app-launch/",
+      "/opt/bert-widget/docs/RESEARCH-2026-09-08.md:21",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTAlerts.kt:121"
+     ]
+    },
+    {
+     "title": "Give the dispatch notification Bert's voice, a cap and quiet hours",
+     "area": "alerts",
+     "current_state": "One generic notice titled 'New from Bert' with the raw dispatch cut to 240 characters (data/BERTAlerts.kt:160). Channels use IMPORTANCE_DEFAULT (alerts/BERTNotifier.kt:371). The notification has a monochrome small icon only, no mood and no large image. There is no daily cap or quiet-hours setting. The check runs every 15 minutes at best (work/BERTRefreshWorker.kt:85), so it is not real-time.",
+     "best_in_class": "Duolingo's own KDD'20 paper shows that rotating notification content matters, because novelty effects wear off and message variety re-engages. The bandit lifted DAU by 0.5% and new-user retention by 2%, modest gains that show the ceiling of copy tuning (https://research.duolingo.com/papers/yancey.kdd20.pdf). Popular coverage of its guilt-trip copy ('You made Duo sad') is criticism, not measurement (https://vicki.substack.com/p/duo-the-push-and-the-bandits). Android recommends separate channels so users can tune importance per type (https://developer.android.com/develop/ui/views/notifications/build-notification).",
+     "recommendation": "Put the mood in the title ('Bert is feeling smug'), use the Bert portrait as the large icon, and add a per-day cap (for example one dispatch notice per day, the latest wins) plus a user-set quiet-hours window. Set the dispatch channel to a lower importance so it never makes noise. Do not copy Duo's guilt framing. Never notify about visit counts or inactivity. This keeps the opt-in trust the app already earned.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://research.duolingo.com/papers/yancey.kdd20.pdf",
+      "https://vicki.substack.com/p/duo-the-push-and-the-bandits",
+      "https://developer.android.com/develop/ui/views/notifications/build-notification",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTAlerts.kt:160",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/alerts/BERTNotifier.kt:371"
+     ]
+    },
+    {
+     "title": "Promote the Bert widget at the right moment (and show 'new' on it)",
+     "area": "widgets",
+     "current_state": "Widget pinning lives in the Studio section under Create (StudioScreen.kt:180-198). Home has no widget prompt. The picker preview is a static layout of a typical widget (res/layout/bert_daily_loading.xml, referenced by xml/bert_daily_widget_info.xml previewLayout), not the user's content. The widget itself has no 'new dispatch' indicator or age (DailyContent never renders updatedAt).",
+     "best_in_class": "Duolingo tested an in-app widget promotion shown right after a finished lesson, with an animated explainer, and reports 'widget installs skyrocket' (no figure published) (https://blog.duolingo.com/widget-feature). Android's quality tiers want previews that include user content or the system theme and a manual refresh option on widgets (https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide).",
+     "recommendation": "Show a dismissible Home card, 'Put Bert on your home screen', after the person first reads or expands a dispatch (and only when no BERT widget is placed, which BERTRefreshWorker.hasPlacedWidgets already knows). Use the existing pin action. Add a small 'NEW' marker or 'Xh ago' on the widget when the dispatch is under about 6 hours old, using the same stale rules. This is the cheapest way to move people to the surface with the highest daily-open rate for Duolingo and Finch.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://blog.duolingo.com/widget-feature",
+      "https://developer.android.com/design/ui/mobile/guides/widgets/widget_quality_guide",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/StudioScreen.kt:190",
+      "/opt/bert-widget/android/app/src/main/res/xml/bert_daily_widget_info.xml"
+     ]
+    },
+    {
+     "title": "Make the tournament a story with a start, an ending and a result, plus a seasonal skin",
+     "area": "home",
+     "current_state": "The tournament card shows a countdown, pool and top 5 (HomeScreen.kt:126-158). The only notification is one 'ends in under 24h' notice (data/BERTAlerts.kt:143-155). There is no 'tournament started', no 'final result' notice, and no season-specific look (event name 'The Autumn Arc' from status.json is shown as plain text, HomeScreen.kt:138). The widget shows the event only while it is open (BERTDailyWidget.kt:257).",
+     "best_in_class": "Finch's widget changes with seasons and pet evolutions (https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl). Nintendo Today! lets people pick franchise-themed content and wallpapers (https://appleinsider.com/articles/25/03/27/new-nintendo-today-app-is-aimed-squarely-at-nintendos-biggest-fans, page returned 403 to my fetch so I rely on the search summary, UNVERIFIED). Pudgy Party ran monthly seasons with passes and leaderboards, and the project has since announced it is winding the game down, so it is a cautionary data point, not proof (https://www.blockchaingamer.biz/?p=42435; https://decrypt.co/351686/gg-2025-game-of-the-year-pudgy-party).",
+     "recommendation": "Add a 'results are in' state to the Home card and widget for about 48 hours after end: final top 5 and Bert's mood line. Add an opt-in 'tournament started / final results' notice on the existing tournament channel. Tie one seasonal accent (colour or frame on the Bert image) to the event name for the length of the season. Do not add overtaken-you alerts, which push compulsive checking.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl",
+      "https://appleinsider.com/articles/25/03/27/new-nintendo-today-app-is-aimed-squarely-at-nintendos-biggest-fans",
+      "https://www.blockchaingamer.biz/?p=42435",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/HomeScreen.kt:126",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTAlerts.kt:143"
+     ]
+    },
+    {
+     "title": "Surface the Lost Trail on Home and the launcher (resume, lanterns, shortcut)",
+     "area": "game",
+     "current_state": "The offline platformer is only reachable via Explore (ExploreScreen.kt). Home does not mention it (HomeScreen.kt:93-97). Progress lives in the game's 'saved lanterns' (LostTrailActivity.kt:81), which native code does not read. There is no static app shortcut or widget for it.",
+     "best_in_class": "Pokemon GO's widgets put in-game progress (eggs, buddy distance, daily streaks) on the home screen so the game is worth opening without being open (https://leekduck.com/posts/how-to-add-pokemon-go-widgets/). Niantic recommends Adventure Sync so progress accrues while closed (same page). Neko Atsume rewards short, unpressured check-ins (https://apps.apple.com/us/app/neko-atsume-kitty-collector/id923380510, listing text via search summary, UNVERIFIED).",
+     "recommendation": "Add a Home tile 'Continue The Lost Trail' that opens LostTrailActivity directly (and a static launcher shortcut for it). Optionally show a lantern count if the game can write it to a native-readable place such as a SharedPreferences bridge from the WebView. Feasibility of reading the WebView's saved state is UNVERIFIED. A bridge needs a small JS interface plus a version-safe format. Without the bridge the tile and shortcut alone are still worth it.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://leekduck.com/posts/how-to-add-pokemon-go-widgets/",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/LostTrailActivity.kt:81",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/HomeScreen.kt:93"
+     ]
+    },
+    {
+     "title": "A 'tap Bert' micro-interaction on the widget, with bundled lines",
+     "area": "widgets",
+     "current_state": "Every tap on the Bert widget launches MainActivity (BERTDailyWidget.kt:264). The widget cannot be touched without opening the app, and its content only changes when the server dispatch changes.",
+     "best_in_class": "Widgetable lets friends co-parent virtual pets, with sleep and mood widgets. Appfigures recorded it rising to #5 in the US App Store in July 2023, which shows demand but says nothing about retention (https://appfigures.com/resources/insights/20230721/2-are-widgets-making-a-comeback-widgetable-is). Finch uses an in-widget state (adventure in progress, ready to collect) rather than only a link (https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl). Neko Atsume shows the low-pressure end of the spectrum: you set things up and wait, with one optional 99-cent purchase (https://coppellstudentmedia.com/61801/entertainment/neko-atsume-kitty-collector-an-app-that-lets-you-charm-cute-cats/, student newspaper, low weight).",
+     "recommendation": "Make the portrait tappable with a Glance callback that swaps the text for a short line from a bundled pack of 30-60 lines written by the team in Bert's voice, keyed to mood, then reverts after a few minutes. Offline, no server, no tokens, no pay-to-feed. Human-written lines also keep Bert from being presented as an AI. Cap to once per few seconds to avoid battery abuse. Treat the Widgetable evidence as demand only.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "low",
+     "sources": [
+      "https://appfigures.com/resources/insights/20230721/2-are-widgets-making-a-comeback-widgetable-is",
+      "https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl",
+      "https://coppellstudentmedia.com/61801/entertainment/neko-atsume-kitty-collector-an-app-that-lets-you-charm-cute-cats/",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/widget/BERTDailyWidget.kt:264"
+     ]
+    },
+    {
+     "title": "'Bert's week' recap card from the local journal",
+     "area": "retention",
+     "current_state": "No periodic recap exists. Mood data is shown only as the current label (HomeScreen.kt:59).",
+     "best_in_class": "Duolingo Year in Review is the reference for a character-led recap that people share. Duolingo notes that sharing skews to top performers, so it added personality-style cards and a leaderboard badge for sharing (https://blog.duolingo.com/year-in-review-behind-the-scenes). Share rates are not published, so effect size is UNVERIFIED. Locket's weekly Rollcall prompts sharing of the week's photos (https://techcrunch.com/2025/08/06/photo-sharing-app-locket-is-banking-on-a-new-celebrity-focused-feature-to-fuel-its-growth, company claims).",
+     "recommendation": "Once the journal (fourth finding) exists, generate a Sunday 'Bert's week' card on-device: the dominant mood, how many dispatches were seen, one pinned line, and the days-with-Bert total. It uses the same card renderer and share sheet. Offer it as an opt-in notification, never automatic. A month into closed testing, this is the cheapest recurring reason to share.",
+     "impact": "low",
+     "effort": "M",
+     "confidence": "low",
+     "sources": [
+      "https://blog.duolingo.com/year-in-review-behind-the-scenes",
+      "https://techcrunch.com/2025/08/06/photo-sharing-app-locket-is-banking-on-a-new-celebrity-focused-feature-to-fuel-its-growth"
+     ]
+    },
+    {
+     "title": "Name the community pattern gap: no peer visibility, so add a no-account 'pack' touchpoint",
+     "area": "retention",
+     "current_state": "There are no accounts, no profiles and no peer data besides the top-5 leaderboard names from Telegram (BERTActivity.kt:51-59). The app has no way to know whether anyone else is using it. The competing memecoin and NFT community apps found (Pudgy Party, Doodles via Binance) are games or partner campaigns rather than companion apps, so there is no direct benchmark. I found nothing for BONK or Bored Ape (searches returned nothing relevant).",
+     "best_in_class": "Locket's 'no public feed or follower count' model keeps peer presence small and personal (https://techcrunch.com/2022/01/11/locket-an-app-for-sharing-photos-to-friends-homescreens-hits-the-top-of-the-app-store). Pudgy Party reports 1M downloads in a month and a 4.9 App Store rating, but it is a full multiplayer game with an NFT economy, far from BERT's scope (https://gamesbeat.com/pudgy-party-gets-a-million-downloads-in-a-month-for-hybrid-web2-web3-game/, company claims, UNVERIFIED).",
+     "recommendation": "Skip real-time multiplayer. Instead add one lightweight, server-side-optional touchpoint: a 'Pack count' or 'pack mood' line on Home sourced from a field in status.json (for example an anonymous daily count of cards shared, if the server can count it). That field does not exist today. The purpose is a feeling of belonging, not a metric. Treat as a later step after the first seven findings.",
+     "impact": "low",
+     "effort": "L",
+     "confidence": "low",
+     "sources": [
+      "https://techcrunch.com/2022/01/11/locket-an-app-for-sharing-photos-to-friends-homescreens-hits-the-top-of-the-app-store",
+      "https://gamesbeat.com/pudgy-party-gets-a-million-downloads-in-a-month-for-hybrid-web2-web3-game/",
+      "https://decrypt.co/209174/pudgy-penguins-reveals-pudgy-world-nft-game-rollout-plans",
+      "/opt/bert-widget/android/app/src/main/java/global/bert/widget/data/BERTActivity.kt:51"
+     ]
+    },
+    {
+     "title": "Decide how to know any of this works (private, opt-in measurement before the 14-day closed test)",
+     "area": "trust",
+     "current_state": "The app has no accounts and no analytics, and holdings never leave the device. That is a strong privacy stance, but it means none of the retention hypotheses above can be tested. The only signal during the 12-tester, 14-day closed test is what testers say.",
+     "best_in_class": "Every benchmark here (Duolingo, Finch, Pokemon Sleep) is judged by retention: D1/D7 is the standard. The only published Finch and Duolingo figures I found are third-party estimates (Finch 54%/37% vs Duolingo 51%/35%, via Deconstructor of Fun citing Sensor Tower, UNVERIFIED). Pokemon Sleep publishes downloads (28M+ by May 2025, Guinness record) but no retention (https://gonintendo.com/contents/49606-pokemon-sleep-reaches-over-1-billion-sleep-sessions).",
+     "recommendation": "Before adding mechanics, define 3 questions to answer with the free Play Console retention and engagement reports. These exist for installs, but my search did not confirm their exact scope for internal or closed tracks, so verify in Console (UNVERIFIED). Also add a one-line, opt-in 'Was this useful?' on the first dispatch and the first card. Keep it local-or-nothing otherwise. Pick the one mechanic per release, so any change in tester behaviour is attributable.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "low",
+     "sources": [
+      "https://www.deconstructoroffun.com/blog/x0hd2ssr80y5n7gv0w967pg7hwd7tl",
+      "https://gonintendo.com/contents/49606-pokemon-sleep-reaches-over-1-billion-sleep-sessions"
+     ]
+    }
+   ]
+  },
+  {
+   "lens": "crypto-widget-benchmark",
+   "verdict": "The price and widget basics are already ahead of most single-token community apps. The data is clean, stale data is flagged honestly on every surface, the sources are labelled, and the trust posture (no accounts, no wallet, on-device holdings) is exactly right for Play. The gap is not polish. The app shows a calm price card, but a $BERT holder opens a tracker to ask \"is anyone buying, who holds it, and will it tell me when something happens\". The app shows only price, 24h change, market cap, 24h volume and liquidity. It has no buy/sell pressure, no shorter-timeframe moves, no holder or concentration view, no percent-move or volume alerts, and no recurring alerts. Most of the cheap wins use fields the app already downloads. DEX Screener's response carries txns buys/sells, 5m/1h/6h price change, FDV and pair age, and the parser drops them (BERTDirectSources.kt:54-59). Alerts are the weakest area against competitors. They are two one-shot price thresholds checked every 15 minutes, with no re-arm or percent-move option, and the notification does not deep-link. The widgets meet Google's \"Standard\" tier on staleness honesty but miss several Tier 2 items (manual refresh, accurate picker preview). Wallet watching is worth offering only as an opt-in, because it would make the app transmit user data and change the Data Safety answers. Web evidence on app-store review complaints was thin (the review-aggregator sites and Play snapshots I could reach carry small samples), so the complaint themes below are directional, not statistical.",
+   "strengths": [
+    "Freshness is handled better than most competitors. Quotes older than 30 min or non-'fresh' are flagged DELAYED (BERTQuote.kt:19-27). Widgets print an absolute 'As of HH:mm' and a stale-render worker re-draws when the quote crosses the threshold, even offline (BERTRefreshWorker.kt:115-148, BERTWidget.kt:225,303-310). This directly targets the 'widget shows an old price as live' complaint seen in crypto-widget reviews.",
+    "Source labelling is explicit: 'DEXSCREENER \u00b7 RAYDIUM' in the 4x2 widget footer (BERTWidget.kt:279), 'Market data from DEX Screener' and 'Informational market data only' on the Market tab (MarketScreen.kt:81,89), chart source stated (MarketScreen.kt:163), and an Open DEX Screener link for verification (MarketScreen.kt:73-75).",
+    "Alert design is restrained and trust-preserving. Everything is off by default, notification permission is requested only when an alert is switched on (AlertsScreen.kt:52-54), which matches Android's 'ask in context after a user action' guidance (https://developer.android.com/develop/ui/views/notifications/notification-permission). The alert state only advances when a notice was actually posted, so a missing permission cannot silently eat an alert (BERTRefreshWorker.kt:52-53), and the screen says plainly that alerts are not instant (AlertsScreen.kt:57-58).",
+    "Holdings entry is careful: the editor echoes the parsed amount ('Saves as 250,000 BERT') to catch grouping slips, distinguishes total cost from per-token price, and labels P/L as an estimate that excludes fees (HoldingsScreen.kt:85-123, 40). The 'wrong decimals' failure that a CoinGecko reviewer blamed for losing money (https://justuseapp.com/en/app/1390323960/coingecko-crypto-monnaie/reviews) is guarded against by 6-decimal formatting under $0.01 (Formatters.kt:10-12).",
+    "Direct-from-source fetching with a validated fallback, mint/chain checks and a size cap on responses (BERTQuoteRepository.kt:25-41, BERTDirectSources.kt:30-49, BERTHttp.kt:21-24) removes a server single point of failure and keeps the privacy story simple ('holdings never leave the device')."
+   ],
+   "findings": [
+    {
+     "title": "Add buy/sell pressure and short-window moves from data the app already downloads",
+     "area": "market",
+     "current_state": "The Market tab shows price, 24h %, market cap, 24h volume and liquidity only (MarketScreen.kt:55-67). The DEX Screener response parsed in BERTDirectSources.kt:54-59 already contains txns (buys/sells for 5m/1h/6h/24h), priceChange for m5/h1/h6, fdv and pairCreatedAt, and all of these are discarded. A live fetch of the BERT token-pairs endpoint on 2026-10-12 showed txns.h24 of 570 buys / 321 sells and txns.h1 of 64 / 25 on the main Raydium pool. grep for buys/sells/holder/ATH in app source finds nothing.",
+     "recommendation": "Parse and store txns and priceChange (m5/h1/h6) in the quote envelope (keep the Berthalla fallback compatible by making them optional). Add a compact 'Activity' card: 1H / 6H / 24H change chips, and 'Buys vs sells' (e.g. 64 buys / 25 sells in the last hour) with a simple ratio bar. Show it as a fact, not a signal, and label it 'transactions on the main pool, via DEX Screener'. Zero new network calls, no new permissions.",
+     "impact": "high",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://api.dexscreener.com/token-pairs/v1/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump",
+      "https://docs.dexscreener.com/api/reference",
+      "BERTDirectSources.kt:54-59",
+      "MarketScreen.kt:65-67"
+     ]
+    },
+    {
+     "title": "Alerts are two one-shot price thresholds; competitors offer recurring, percent-move and volume triggers",
+     "area": "alerts",
+     "current_state": "Only 'above' and 'below' USD thresholds, each firing once until the user edits it (AlertsScreen.kt:84, BERTAlerts.kt:60-73, aboveFired/belowFired flags). No percent-move alert, no volume spike, no new-ATH, no recurring option. Typing a threshold already on the wrong side of the current price fires on the next check, with no warning in the form (BERTAlerts.kt:63-64). CoinGecko offers Once or Recurring per alert plus 'major move' Auto Price Alerts; CoinStats lists price, volume and market-cap alerts plus portfolio-value alerts; DEX Screener's blogged alert types include price, volume and liquidity (secondary sources only).",
+     "recommendation": "Smallest useful set: (1) a 'Moves more than X% in 1h / 24h' alert that is recurring with a cooldown (e.g. no more than once per 6h) and a daily cap; (2) a Once/Repeat toggle per price level, re-arming only after the price crosses back (hysteresis) so it does not spam; (3) warn in the form if the level is already crossed ('BERT is already above this, it will fire immediately'); (4) optionally a 24h-volume-vs-trailing-average spike once the volume is stored. Skip whale-buy and holder-count alerts until a server feed exists.",
+     "impact": "high",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://www.coingecko.com/learn/how-to-set-up-the-price-alert-function-on-coingecko",
+      "https://support.coingecko.com/hc/en-us/articles/50961786314777-Stay-Ahead-of-Price-Moves-with-Auto-Price-Alerts",
+      "https://apps.apple.com/us/app/coinstats-crypto-portfolio/id1247849330",
+      "AlertsScreen.kt:84,87-95",
+      "BERTAlerts.kt:60-73"
+     ]
+    },
+    {
+     "title": "Price alerts can miss spikes: 15-minute polling checks one point-in-time quote",
+     "area": "alerts",
+     "current_state": "Alerts run inside the periodic WorkManager job at the 15-minute minimum (BERTRefreshWorker.kt:85, checkAlerts at :39-53), and compare only the latest stored quote against the threshold (BERTAlerts.kt:60-73). A wick above a level between checks is never seen, and alerts are silent when the quote is older than 30 min. The UI discloses 'not instant' (AlertsScreen.kt:57-58), but no source in the app shows what happened between checks. Doze and App Standby can delay periodic work further; Android's own widget docs warn that WorkManager repeats are subject to the same power restrictions (https://developer.android.com/develop/ui/views/appwidgets/advanced).",
+     "recommendation": "Cheap mitigation: when an alert check runs, also read the already-fetched 5-minute GeckoTerminal candles (BERTMarketHistoryRepository) and test the threshold against candle high/low since the last check, so wicks between polls still fire, with the notification text saying 'touched $X at ~HH:mm'. Add a one-time hint on first enable pointing to battery-optimisation settings if alerts were late (common cause of 'alerts not arriving' reports). Do not add a foreground service, since the manifest deliberately removes it (AndroidManifest.xml:11) and Play review scrutiny would rise.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://developer.android.com/develop/ui/views/appwidgets/advanced",
+      "https://play.google.com/store/apps/details?id=com.crypto.widget&hl=en_US",
+      "BERTRefreshWorker.kt:39-53,85",
+      "BERTAlerts.kt:60-73"
+     ]
+    },
+    {
+     "title": "Widgets have no manual refresh control, and the widget-picker preview is a loading layout",
+     "area": "widgets",
+     "current_state": "None of the three widgets has a refresh action; tapping anything opens MainActivity (BERTWidget.kt:82; grep shows 'refresh' only in the 'Open BERT to refresh' empty state at :260). All three provider XMLs use bert_widget_loading / bert_daily_loading as previewLayout (res/xml/bert_widget_info.xml, bert_market_widget_info.xml, bert_daily_widget_info.xml). Google's widget quality guideline WT-2 (Tier 2) wants manual refresh when data changes faster than the UI, WD-4 wants an accurate picker preview, and WD-1 (Tier 1) wants a preview with user content or system theme. Crypto-widget reviews that I could find are dominated by 'stopped updating' and 'network error' with no way to force it (CryptoCharts Widget, Bitcoin Ticker Widget Play listings).",
+     "recommendation": "Add a small refresh tap target on the Compact and Market widgets (a Glance action that enqueues a one-time expedited BERTRefreshWorker and shows a brief 'Updating\u2026' state), keep body-tap opening the Market tab, and ship real static preview images (or generated previews via Glance/RemoteViews with sample data) so the picker shows the price and sparkline rather than a loading state. Also deep-link the widget tap to Tools > Market instead of the generic home.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/docs/quality-guidelines/widget-quality",
+      "https://play.google.com/store/apps/details?id=net.coconutdev.cryptochartswidget&hl=en&gl=US",
+      "https://play.google.com/store/apps/details?id=st.brothas.mtgoxwidget&hl=en_US",
+      "BERTWidget.kt:82,260",
+      "res/xml/bert_widget_info.xml"
+     ]
+    },
+    {
+     "title": "Widgets cannot show the data points holders glance for: 1H move, buy/sell ratio, P/L, break-even",
+     "area": "widgets",
+     "current_state": "Compact 2x2 shows price, 24h %, sparkline and freshness (BERTWidget.kt:93-146). Market 4x2 adds market cap, volume, liquidity and a 'YOUR POSITION' capsule showing only current USD value and token count (BERTWidget.kt:235-252). The widget never shows unrealised P/L or % even though cost basis is stored (BERTHoldingsStore.kt:11-15). The widget window is fixed at 24h with no timeframe switch. Market-cap/volume/liquidity occupy the secondary slots instead of buy/sell pressure or a short-window move. Competing trackers advertise portfolio value and live price on the home and lock screen (CoinStats listing) and, for DEX Screener, filters by volume, price change, liquidity and market cap (App Store listing).",
+     "recommendation": "Make the secondary row user-selectable via a widget configuration (system reconfiguration is Tier 1 per WS-4): choose among 24H volume, liquidity, 1H change, buys/sells, or P/L %. In the position capsule, show unrealised gain/loss (percent) when a cost is entered, amber/green by sign. Offer an optional 1H / 24H toggle for the sparkline. Keep the default exactly as today so existing users see no change.",
+     "impact": "medium",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://apps.apple.com/us/app/coinstats-crypto-portfolio/id1247849330",
+      "https://apps.apple.com/app/id1631840457",
+      "https://developer.android.com/docs/quality-guidelines/widget-quality",
+      "BERTWidget.kt:93-146,235-252"
+     ]
+    },
+    {
+     "title": "No holder count, top-holder concentration or burn/supply view, which is the first thing a memecoin holder checks",
+     "area": "single-token community",
+     "current_state": "The app shows nothing about who holds BERT. grep for holder/burn/ATH in source returns nothing outside the user's own holdings. Guides aimed at Solana memecoin buyers consistently name top-10 holder concentration (excluding pools), holder count trend, deployer holdings and bundled wallets as the core screen, and name Solscan, Birdeye and DEX Screener as where to look. Birdeye's mobile positioning stresses whale wallets and smart-money tracking; a Holders tab with supply percentages and holder count over time is described in third-party guides (not confirmed for mobile).",
+     "recommendation": "Do it server-side, not in the app: have the existing Berthalla server compute holder count and top-10/top-20 concentration (excluding known pool/LP accounts) on a schedule from a paid RPC or indexer and publish a tiny JSON next to status.json. The app reads it like the other fallbacks and shows 'Holders: N \u00b7 Top 10 hold X% (excl. pools) \u00b7 as of \u2026'. Note getTokenLargestAccounts only returns 20 token accounts, not owners, and cannot give a total holder count, so the server needs an indexer or DAS getTokenAccounts pagination (total not guaranteed to be unique holders). Mark the figure 'estimate' and link to Solscan for verification.",
+     "impact": "high",
+     "effort": "M",
+     "confidence": "medium",
+     "sources": [
+      "https://blog.bubblemaps.io/how-to-analyze-meme-coin-holders-with-bubblemaps/",
+      "https://www.dextools.io/tutorials/how-to-use-birdeye-solana-defi-analytics-tutorial-2026",
+      "https://www.helius.dev/docs/rpc/guides/gettokenlargestaccounts",
+      "https://www.helius.dev/docs/api-reference/das/gettokenaccounts",
+      "https://apps.apple.com/py/app/birdeye-crypto-data-tool/id6557061634"
+     ]
+    },
+    {
+     "title": "Market data covers only the single deepest pool; BERT trades across 30 pairs",
+     "area": "market",
+     "current_state": "quoteEnvelope picks the single highest-liquidity BERT base-token pool and reports that pool's price, volume and liquidity (BERTDirectSources.kt:30-42,54-59), and the Market tab labels them as the token's '24h volume' and 'Liquidity' (MarketScreen.kt:66-67). A live fetch on 2026-10-12 returned 30 pairs across Raydium, Meteora and Orca; the top Raydium pool had about 92.5% of 24h volume (about $79.6K of roughly $86K by my sum) and roughly $1.09M of liquidity, so the understatement is small today but the label overstates its scope. Pairs where BERT is the quote token are also excluded by the base-token check (BERTDirectSources.kt:34).",
+     "recommendation": "Low-risk fix: relabel to 'Main pool 24h volume' / 'Main pool liquidity' and show the pool (e.g. Raydium Bert/SOL) on the Market tab, not just in the widget footer. Optionally sum volume and liquidity over all base-token SOL/USDC pairs and show 'All pools' with the main-pool share, keeping the displayed price from the deepest pool.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://api.dexscreener.com/token-pairs/v1/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump",
+      "BERTDirectSources.kt:30-42,54-59",
+      "MarketScreen.kt:65-67"
+     ]
+    },
+    {
+     "title": "Optional read-only wallet-address watching could replace manual holdings, but it changes the privacy and Data Safety story",
+     "area": "holdings",
+     "current_state": "Holdings are one manually typed amount and one total-cost figure stored as Doubles in SharedPreferences (HoldingsScreen.kt:85-123, BERTHoldingsStore.kt:11-15), shown as 'no wallet connection' (HoldingsScreen.kt:25). The Play Data Safety text states that no holdings, identifiers or account data are sent (docs/play/LISTING.md). CoinStats lets users paste a wallet address (and supports Solana) and users call it the best for tracking addresses; Birdeye and Phantom partner content describe watching/following wallets. A public address is not a secret, but Play's Data Safety guidance defines 'collection' as transmitting data off the device and says re-associable pseudonymous identifiers must be disclosed even if ephemeral (not explicitly addressed for wallet addresses).",
+     "recommendation": "Keep manual entry as the default. If you add watching, make it explicit opt-in: paste one public address, query balances directly from the phone (getTokenAccountsByOwner filtered by the BERT mint) so the Berthalla server never sees it, and say the RPC provider sees the address and IP. Do not use the free public Solana RPC for production, as its docs say it is not intended for it and limit it to 100 requests/10s per IP. Update Data Safety and the privacy policy before shipping, and warn that anyone can paste someone else's address, so a watched balance is not proof of ownership. Suggested sequencing: ship holder/buy-sell features first, consider this later.",
+     "impact": "medium",
+     "effort": "L",
+     "confidence": "medium",
+     "sources": [
+      "https://apps.apple.com/us/app/coinstats-crypto-portfolio/id1247849330",
+      "https://solana.com/docs/rpc/http/gettokenaccountsbyowner",
+      "https://solana.com/docs/references/clusters",
+      "https://support.google.com/googleplay/android-developer/answer/10787469",
+      "https://trustwallet.com/blog/guides/watch-only-wallet-addresses-explained",
+      "docs/play/LISTING.md"
+     ]
+    },
+    {
+     "title": "Holdings model is a single Double with one lump cost; no per-purchase lots, break-even price or SOL/USD toggle",
+     "area": "holdings",
+     "current_state": "The position is one amount and one total cost (BERTPosition.kt, HoldingsScreen.kt:85-123). Estimated P/L is current value minus total cost (HoldingsScreen.kt:36-40). There is no break-even price, no average entry price shown, no multiple buys, and no way to log a partial sell. Delta and CoinStats are built around transaction-level tracking and wallet sync, with user complaints centring on wrong cost averages when imports go wrong (CoinStats review excerpts).",
+     "recommendation": "Smallest useful additions without becoming a portfolio tracker: display derived 'average entry' (cost / amount) and 'break-even price' lines in the existing card (pure arithmetic on stored values), and keep the existing disclaimer about fees and realised trades. Defer multi-lot support until usage shows demand, as it adds edge cases (sells, transfers) the app deliberately avoids.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://apps.apple.com/us/app/coinstats-crypto-portfolio/id1247849330",
+      "https://support.delta.app/general/what-are-the-main-features-of-delta-cryptocurrency-ico-portfolio",
+      "HoldingsScreen.kt:36-40,85-123"
+     ]
+    },
+    {
+     "title": "Notifications all use default importance and open the generic home, not the relevant tab",
+     "area": "alerts",
+     "current_state": "All three channels are created at IMPORTANCE_DEFAULT (BERTNotifier.kt:27), and every notice carries the same PendingIntent into MainActivity with no destination extra (BERTNotifier.kt:37-39). Price alerts and Bert dispatches share the same behaviour, so a user cannot tell the system to mute dispatches but keep price alerts loud except through channel settings; the notification text of a price alert does not state the data source or its age. Android guidance is to make the purpose of notifications clear in context and respect user volume of notifications (https://developer.android.com/develop/ui/views/notifications/notification-permission).",
+     "recommendation": "Pass a destination extra (price alert goes to Tools > Market; dispatch goes to Home; tournament goes to Home card) and have MainActivity route to it. Add 'as of HH:mm \u00b7 DEX Screener' to price-alert bodies so the trust label travels with the notification. Consider IMPORTANCE_LOW for dispatches so only price alerts alert audibly by default.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "high",
+     "sources": [
+      "https://developer.android.com/develop/ui/views/notifications/notification-permission",
+      "BERTNotifier.kt:27,37-39"
+     ]
+    },
+    {
+     "title": "Trust labelling is good on price but incomplete: no 'not financial advice' line near P/L, no alert-latency note in notification text, and the Play financial declaration answer should be re-checked",
+     "area": "trust",
+     "current_state": "The Market tab says 'Informational market data only' in 12sp muted text (MarketScreen.kt:89). Holdings carry an estimate disclaimer (HoldingsScreen.kt:40) but no 'not financial advice' wording. The Play listing declares that the app 'provides none of the listed regulated financial features' (docs/play/LISTING.md). Google's Financial services policy says apps with any financial features must complete the Financial features declaration form and treats crypto-related products as in scope; it does not address price-only trackers (https://support.google.com/googleplay/android-developer/answer/9876821). The Cryptocurrency Exchanges and Software Wallets policy is about buying, holding or exchanging crypto and about earning tokenised assets (https://support.google.com/googleplay/android-developer/answer/13607354). A price tracker with no trading or earning does not obviously trigger it, but I could not confirm the exact declaration option for this case.",
+     "recommendation": "Add one consistent line under the P/L and alert sections ('Informational only, not financial advice. Prices can differ between venues'). When submitting for the closed-test and production reviews, re-read the Financial features declaration and keep the 'no trading, no custody, no earning' wording. Keep avoiding any 'earn', 'profit' or performance-promise copy in the listing and tournament prize text, which the policy singles out for earning from playing or trading.",
+     "impact": "medium",
+     "effort": "S",
+     "confidence": "medium",
+     "sources": [
+      "https://support.google.com/googleplay/android-developer/answer/9876821",
+      "https://support.google.com/googleplay/android-developer/answer/13607354",
+      "docs/play/LISTING.md",
+      "MarketScreen.kt:89",
+      "HoldingsScreen.kt:40"
+     ]
+    },
+    {
+     "title": "An on-chain buy feed is the signature single-token community feature; the app has no activity stream",
+     "area": "single-token community",
+     "current_state": "Home shows Bert's dispatch and the Flappy Bert tournament card; there is no live token activity. Buy-feed style features are central to memecoin communities and to DEX Screener/Birdeye trade views (recent trades and top traders in third-party descriptions), and the owner already runs a buy bot via Telegram (from project memory, not re-verified in this session). The app is read-only and non-custodial, so a feed fits Play policy if it only displays public trades.",
+     "recommendation": "Phase 1 (no new infra): show 'Last hour: 64 buys, 25 sells' from txns (see the buy/sell finding). Phase 2: let the Berthalla server publish the last ~10 notable buys (size in USD, time, truncated wallet) reusing the existing buy-bot pipeline, and show them as a Home card with an optional 'large buy' notification threshold. Treat wallet addresses as public data but truncate them, and add a 'delayed by up to N min' label. UNVERIFIED: whether the buy-bot's data store exposes these records in a form the status server can serve cheaply.",
+     "impact": "medium",
+     "effort": "L",
+     "confidence": "low",
+     "sources": [
+      "https://apps.apple.com/py/app/birdeye-crypto-data-tool/id6557061634",
+      "https://phantom.com/learn/crypto-101/app-spotlight-birdeye",
+      "https://decrypt.co/237866/pump-fun-vs-moonshot-solana-meme-coin"
+     ]
+    },
+    {
+     "title": "Refresh and fallback behaviour depends on undocumented rate limits and a single user-agent",
+     "area": "engineering",
+     "current_state": "The phone calls DEX Screener's token-pairs endpoint directly (BERTQuoteRepository.kt:25-41) from every install, with User-Agent 'BERT-Android' (BERTHttp.kt:20). DEX Screener's reference page states explicit limits (60 requests/min) for profile, ads and metas endpoints but states none for token-pairs, so the per-IP limit for this endpoint is UNVERIFIED. Fetches happen about every minute while the app is open (MarketScreen.kt:81) and every 15 minutes in the background. A shared-IP carrier network or many users in one place could hit limits and silently fall back to the Berthalla server (BERTQuoteRepository.kt:37), whose capacity is not stated in the app.",
+     "recommendation": "Not urgent for a small tester base. Add lightweight telemetry-free protection: back off after an HTTP 429 and note in the Market card when the fallback source answered (the envelope already records the source name). Before wider launch, confirm DEX Screener's actual limit and terms of use for client-side API use with their support, and make sure the fallback endpoint can handle the full install base.",
+     "impact": "low",
+     "effort": "S",
+     "confidence": "low",
+     "sources": [
+      "https://docs.dexscreener.com/api/reference",
+      "BERTQuoteRepository.kt:25-41",
+      "BERTHttp.kt:20",
+      "MarketScreen.kt:81"
+     ]
+    }
+   ]
+  }
+ ],
+ "verify": {
+  "checks": [
+   {
+    "lens": "product-ux-audit",
+    "title": "Home has no daily ritual: one sentence, a static greeting, nothing to do and no history",
+    "status": "confirmed",
+    "note": "HomeScreen.kt:39/45 fixed 'Hey, pack.', :63 single dispatch, :78-79 the two plumbing lines, :83-84 Refresh/Bert on X, :94-97 three nav-only FeatureLinks. Live status.json (fetched 2026-10-12) keys: updated_at, mood, latest_post, bert{price,change_pct}, flappy. No id, published_at or archive. The '60% chrome' figure is subjective."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Bert, the real dog, is a single reused photo, and his mood never changes what you see",
+    "status": "partly-right",
+    "note": "Right: bert_icon.png, bert_token.jpg, bert_widget_portrait.jpg, bert_widget_banner.jpg and ic_launcher_background.png are all the same red-hat/blue-coat photo (visually checked). Used at MainActivity.kt:254, HomeScreen.kt:42, BERTWidget.kt:210, BERTDailyWidget.kt:97/103/107, CaptionCard.kt:25. Mood is a text pill (HomeScreen.kt:59, BERTDailyWidget.kt:112). 'Meet Bertram' is an external link (ExploreScreen.kt:30). Wrong: notifications do not use the photo; the small icon is a paw vector (drawable/ic_notification.xml, BERTNotifier.kt:43) and there is no large icon. Caveat: 'keep mood separate from price' cannot hold, because the server derives mood from BERT and BTC 24h change (/opt/berthalla/berthalla/mood/state.py:21-30, valence.py:6)."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "The price is invisible on Home, and every widget or notification tap lands there",
+    "status": "confirmed",
+    "note": "HomeScreen.kt:30-98 has no quote. Widget roots use actionStartActivity<MainActivity>() with no params (BERTWidget.kt:82, BERTDailyWidget.kt:93). The notification PendingIntent has no extras (BERTNotifier.kt:37-39). MainActivity never reads an intent (grep finds no getStringExtra). HoldingsScreen.kt:34-40 shows unrealized gain and % vs cost but no daily change. RESEARCH-2026-09-08.md:49 proposed an optional Home market card, which never shipped."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "The store sells the pixel game, but the app hides it with no 'continue' hook",
+    "status": "confirmed",
+    "note": "The feature graphic leads with Lost Trail art and 'PLAY \u2022 CREATE \u2022 WIDGETS' (viewed). The game is only on Explore (ExploreScreen.kt:23), and Home has only text links (HomeScreen.kt:95). Nuance: there is no addJavascriptInterface, but the game already exposes window.BertAppGame {pause, back}, called via evaluateJavascript (LostTrailActivity.kt:95,125). Progress sits in localStorage 'bert-lost-trail-v1' (game index.html), so evaluateJavascript can read it on exit without a game change."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Play screenshots are below Google's 1080px bar, one is clipped, and none show the game or a widget",
+    "status": "confirmed",
+    "note": "All six are 720x1280 (measured; LISTING.md:40). 4-market.png cuts the price under the pinned tabs (viewed). Two of six are Home. There is no gameplay or widget shot; 3-explore shows only the Lost Trail card art. Framing nuance: 1080px is not a publish rule. Per answer/9866151 it is 'highly recommended' and required for screenshot-based promotion eligibility (min 320px to publish). Alt text (<=140 chars) is supported."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Widget picker previews are placeholders, so two price widgets look identical and show no price",
+    "status": "confirmed",
+    "note": "bert_widget_info.xml:9 and bert_market_widget_info.xml:9 both use @layout/bert_widget_loading (token, '$BERT', 'LIVE TOKEN PRICE'). Labels are 'BERT \u00b7 Compact/Market/Bert' (strings.xml:5-8). The bare 'left' fallback is the last form at BERTDailyWidget.kt:130. The cited comment at :129 justifies the 'FLAPPY \u00b7' form, not the bare one, but the S25 evidence bert-2x2-font130-s25.png does show a bare '59d 15h LEFT'. No refresh action exists. Glance 1.1.1 at build.gradle.kts:107."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "The shell has no motion, haptics or brand typography, so it reads as a stock Material app",
+    "status": "confirmed",
+    "note": "grep finds no animate*/Animated*/Crossfade, no haptic, no FontFamily and no res/font dir. styles.xml:4 sets fontFamily sans. SectionLabel is 11sp orange (BERTComponents.kt:58-60). Refresh is a TextButton/Button (HomeScreen.kt:83, MarketScreen.kt:70-72). The version footer is at MainActivity.kt:209."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Cold start probably flashes a light cream window before the dark navy app",
+    "status": "confirmed",
+    "note": "styles.xml:3-6: parent Theme.Material.Light.NoActionBar, windowLightStatusBar true, statusBarColor #FFF7ED, no windowBackground or splash attrs. There is no core-splashscreen dependency (build.gradle.kts:99-114). Dark bars arrive only via enableEdgeToEdge at MainActivity.kt:50. The on-device flash is still UNVERIFIED."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "The copy voice swings between charming and legalistic",
+    "status": "confirmed",
+    "note": "All quotes match: HomeScreen.kt:78-79, BERTComponents.kt:33 (duplicated loading text) and :44, AlertsScreen.kt:57, MarketScreen.kt:80-89. Whether the tone is right is a judgement call."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Explore is mostly a link directory, and the four tabs each feel thin",
+    "status": "confirmed",
+    "note": "ExploreScreen.kt:23 is the only native item. Six cards exit the app (:24-30; BERTLinks.kt:11-17). Other exits: HomeScreen.kt:155 Telegram, CreateScreen.kt:33 Draw Bert. Sub-tabs are Art/Saved/Personalize and Market/Holdings/Alerts (MainActivity.kt:177-178)."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Create is a blank-canvas tool with no prompts and no link to Bert's day",
+    "status": "confirmed",
+    "note": "Default caption at CreateScreen.kt:46. Chip rows at :123-132. Post-save actions are only 'View collection' and the share sheet (:155-176). The art mixes photo, 3D wallpaper crops and the pixel sprite (CaptionCard.kt:24-30). Constraint the reviewer missed: captions are capped at 96 graphemes (CaptionText.kt:6), while dispatches may be up to 800 chars (BERTActivity.kt:26), so 'seed with today's dispatch' needs an excerpt step."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "Alerts are one-shot and land on the wrong screen, and there is no daily opt-in nudge",
+    "status": "confirmed",
+    "note": "One-shot copy at AlertsScreen.kt:84. aboveFired/belowFired at BERTAlerts.kt:60-73; re-armed only by changing the level (:106-107). Every notice opens MainActivity (BERTNotifier.kt:37-39). All channels use IMPORTANCE_DEFAULT (:27). The dispatch notice fires per new post with no schedule (BERTAlerts.kt:53-58)."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "The 14-day closed test needs testers to use every feature, but the app gives them no guided path",
+    "status": "confirmed",
+    "note": "There is no onboarding, checklist or what's-new anywhere in source. Widget pinning is under Create > Personalize (StudioScreen.kt:180-195). The production-access form asks whether testers used all features and how feedback was collected (answer/14151465, fetched)."
+   },
+   {
+    "lens": "product-ux-audit",
+    "title": "The launcher icon is a flat photo with no foreground or monochrome layer, and there are no app shortcuts",
+    "status": "confirmed",
+    "note": "mipmap-anydpi-v26/ic_launcher.xml:3-4 and ic_launcher_round.xml: photo background, transparent foreground, no <monochrome>. The manifest has no shortcuts meta-data (AndroidManifest.xml:36-41). Android 16 QPR2+ auto-themes icons that lack monochrome (icon_design_adaptive doc), so the effect differs by OS version."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Use the existing release key as the Play app-signing key now, before open testing, so sideloaded users can move to Play without losing their data",
+    "status": "confirmed",
+    "note": "LISTING.md:5 says the release key is the upload key. NEXT-SESSION.md:33-34 plans an uninstall/reinstall that wipes holdings and cards. AndroidManifest.xml:15-17 plus backup_rules.xml exclude everything. Play Help answer/9842756 (fetched): the key 'can only be changed before the app is released to Open testing or Production tracks', so internal and closed testing still leave the window open. The current Console state is UNVERIFIED."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "The owner has no way to see crashes or ANRs: there is no telemetry, and Play vitals will show almost nothing during the closed test",
+    "status": "confirmed",
+    "note": "grep finds no UncaughtExceptionHandler, ApplicationExitInfo, StrictMode, Sentry or Crashlytics. BERTApplication.kt:6-11 only syncs the schedule. The vitals doc confirms Play-installed, certified, opted-in only, shown only 'if we have enough to make anonymous reports'. The pre-launch report is auto-generated on upload (answer/9842757)."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Sideloaded users are never told an update exists, and Play users have no in-app update prompt",
+    "status": "confirmed",
+    "note": "No version comparison or getInstallSourceInfo anywhere. The footer is at MainActivity.kt:209. Activity is polled every 5 min (MainActivity.kt:128). BERTActivity.parse reads only updated_at/latest_post/mood/flappy (BERTActivity.kt:18-44; the cited :223-248 does not exist, file is 104 lines)."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "WorkManager 2.11.2 predates fixes for exactly the retry and periodic-reschedule paths the refresh worker relies on",
+    "status": "partly-right",
+    "note": "Right: work-runtime 2.11.2 (build.gradle.kts:108). The outer catch(_: Exception) in doWork also catches CancellationException, then calls suspend updateAllBERTWidgets (BERTRefreshWorker.kt:67-69). The feed is double-fetched: refreshActivityForDailyWidget :33 and checkAlerts :45 both call refresh(), contradicting the comment at :44. Wrong: per the WorkManager release notes (fetched), the 'periodic WorkRequests that fail due to an uncaught exception would not be rescheduled' fix shipped in 2.11.2 itself, so only the retried-work scheduling fix is new in 2.12.0 (stable 23 Sep 2026, minSdk 24). The BOM bump is mostly cosmetic: 2026.06.00 and 2026.09.00 both map material3 to 1.4.0."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Alerts-only users (no widget placed) can have alerts delayed to once a day, and tournament or dispatch alerts are skipped whenever the price fetch fails",
+    "status": "confirmed",
+    "note": "syncSchedule is at BERTRefreshWorker.kt:76-79. If quote refresh at :58 throws (only when both direct and fallback sources fail, BERTQuoteRepository.kt:37), :59-60 are skipped. ensureChannels is called only from post() (BERTNotifier.kt:24,36). The appstandby doc confirms widget apps are exempt only from the restricted bucket, and restricted means 'once per day in a 10-minute batched session'; rare is 'strict' but not once/day. Cited lines AlertsScreen.kt:372 and BERTNotifier.kt:158-170 do not exist (actual :57 and :24-36)."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Widget picker shows one generic placeholder for both price widgets; Glance 1.2.0 adds generated previews",
+    "status": "confirmed",
+    "note": "Compact and Market share bert_widget_loading (xml:9 in both). Glance is 1.1.1 at build.gradle.kts:107 (cited :111). The Glance release page confirms 1.2.0 stable on 26 Aug 2026, minSdk 23, providePreview/setWidgetPreview. No appWidgetBackground() anywhere (grep). SizeMode.Exact at BERTWidget.kt:64 and BERTDailyWidget.kt:49."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Bert's-feed requests send the phone model and OS build string to berthalla.io, where nginx logs them along with the IP, contrary to the privacy page",
+    "status": "confirmed",
+    "note": "BERTActivityRepository.kt:17-24 opens its own HttpURLConnection with no User-Agent, while BERTHttp.kt:20 sets 'BERT-Android'. Read-only count of /var/log/nginx/access.log: 34 of 41 GET /status.json carry 'Dalvik/2.1.0 (Linux; U; Android 16; <model> Build/...)'. Default access_log at nginx.conf:53. The privacy page says 'Requests contain no ... device identifier' and Berthalla sees 'Your IP address'. Agree this is a mismatch with the page, not a clear Data-safety violation (answer/10787469 does not address server logs)."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Lost Trail restarts from the last lantern when the window is resized (split screen, foldables, tablets)",
+    "status": "confirmed",
+    "note": "AndroidManifest.xml:34 has configChanges 'orientation|screenSize|smallestScreenSize|keyboardHidden' with no screenLayout. The runtime-changes doc recommends 'screenSize|smallestScreenSize|orientation|screenLayout' to avoid size-based recreation. Reload at LostTrailActivity.kt:121-122. Android 16 sw600dp behaviour is confirmed but mostly moot, since the activity sets no orientation lock."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "The widget 'DELAYED' and freshness text is 8sp, the smallest text on the widget",
+    "status": "confirmed",
+    "note": "8sp at BERTWidget.kt:143 (compact freshness), :228 (compact status pill), :116 ('24H'), :243, :269, :280 and :285 (eyebrowStyle size=8). CRITIQUE-2026-09-08.md:48 lists 'small widget typography' among lint warnings. The widget-quality page sets no minimum text size, so 10-11sp is a recommendation only."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "The listing says every widget shows when its data is from, but the Bert widget shows no timestamp",
+    "status": "confirmed",
+    "note": "LISTING.md:22 says 'Every widget shows when its data is from, even offline.' DailyContent (BERTDailyWidget.kt:66-141) never renders updatedAtEpochMillis. :122-124 yields '0h LEFT' under an hour. updatePeriodMillis is 1800000 (bert_daily_widget_info.xml:13)."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "The scheduling paths that fail silently in the field have no tests",
+    "status": "partly-right",
+    "note": "Right: nothing tests doWork, syncSchedule or onEnabled/onDisabled, and there is no work-testing dependency (build.gradle.kts:109-114). Overstated: checkAlerts has Robolectric delivery tests (alerts/BERTAlertDeliveryTest.kt:39-57), and the stale-render delay maths is unit-tested (work/BERTWidgetStaleRenderWorkerTest.kt). The enqueue path is untested."
+   },
+   {
+    "lens": "engineering-quality-audit",
+    "title": "Small main-thread disk and binder work at process start and first frame",
+    "status": "confirmed",
+    "note": "BERTApplication.kt:10 calls syncSchedule, which does up to 3 getAppWidgetIds, prefs reads and WorkManager.getInstance (BERTRefreshWorker.kt:76-100). Five synchronous prefs loads at MainActivity.kt:66-71 (bert_quote, price history, bert_market_history, bert_holdings, bert_activity). commit() in BERTAlertStore.save (BERTAlerts.kt:99-110) is called from AlertsScreen.apply (:41-46); the cited :287-297 and :358 do not exist. No StrictMode."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "The 12-tester / 14-day clock has not started: the app is only in internal testing",
+    "status": "confirmed",
+    "note": "NEXT-SESSION.md:10-14 says internal testing, with the opt-in link on the tester form; :26-27 'Expect the 12-tester / 14-day closed test'. answer/14151465 (fetched): a closed test with at least 12 testers opted in continuously for 14 days. Internal testing is described as optional and is not the prerequisite."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Widget picker previews: only a static 'loading' layout, no previewImage or generated preview",
+    "status": "partly-right",
+    "note": "Right: no previewImage, no providePreview, Glance 1.1.1 at build.gradle.kts:107. Tiers WD-1/WD-4/WD-4.3 match the widget-quality page. Wrong: the Bert widget's preview (bert_daily_loading.xml) is not a token placeholder. It renders the real portrait, 'BERT', sample text and a 'MOOD \u00b7 TOURNAMENT' pill in the live layout shape. The generated-previews doc uses both setWidgetPreview and setWidgetPreviews spellings; previewSizeMode and the ~2 calls/hour limit are confirmed."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Widget Tier 2 gaps: no manual refresh, no max size, no system corner radius",
+    "status": "partly-right",
+    "note": "Right: no refresh action (BERTWidget.kt:82, :260 'Open BERT to refresh'), no maxResizeWidth/Height in any *_widget_info.xml, no appWidgetBackground or system radius (grep). WT-2, WL-4.1 and WS-2 IDs are confirmed. Unproven: the 'only adds blank space' premise. Render tests fail on empty bands >25% up to 180x180 compact, 360x200 market and 400x220 Bert (BERTWidgetRenderTest.kt:153,167-179,279), and layouts use defaultWeight fills. Larger sizes are untested. The S25 evidence already shows rounded corners (One UI)."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Widget Tier 1 theming: one fixed dark palette, no GlanceTheme, no light or dynamic variant",
+    "status": "partly-right",
+    "note": "Right: no GlanceTheme or dynamic colour (grep), and the app is dark-only (BERTComponents.kt:64). Wrong: it is not one palette. Widgets follow three Theme Studio packs (BERTThemePack.kt:22-59), which arguably meets WC-1 ('theming based on a device or app context'). WC-2 (light and dark) is unmet, since all three packs are dark. The default widget palette is Woofhub Night #0C0712 (BERTWidget.kt:334-335), not a 'Bert-orange navy pack'."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Developer verification: the sideloaded APK on berthalla.io/app needs to be registered",
+    "status": "partly-right",
+    "note": "Right: 30 Sep 2026 start in BR/ID/SG/TH, global in 2027, Play auto-registers ~99%, Play Console can register off-Play apps, 20-device limited path (developer-verification page). Overstated: the FAQ says 'The September 30, 2026 deadline only applies to the specific participating stores ... if users sideload your app directly, these new verification requirements won't apply to your app yet', so the berthalla.io APK is not blocked today. Its UNVERIFIED point is resolved: 'The Android Developer Console lets you add and verify multiple signing keys for a single package.'"
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Privacy policy gaps: no in-app link, no contact, no logs or retention text; listing contact email still missing",
+    "status": "partly-right",
+    "note": "Right: no 'privacy' string in any .kt file, and the User Data policy (answer/10144311) requires a link 'within the app itself'. LISTING.md:31 contact email is 'owner to supply'. The page has no server-log or retention text, and NEXT-SESSION.md:36-37 confirms access-log analysis. Overstated: the policy accepts 'a privacy point of contact or a mechanism to submit inquiries', and the page links GitHub issues. The page also covers deletion ('Uninstalling ... removes them')."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Financial features declaration: the 'none' answer is probably right but Holdings P/L and the prize pool need an explicit rationale",
+    "status": "confirmed",
+    "note": "LISTING.md:52-54 and :30 match. HomeScreen.kt:141 shows '$X prize pool \u00b7 top 5 paid'. MarketScreen.kt:89 says 'Informational market data only.' answer/13849271 (fetched) lists 'Stock trading and portfolio management' and the 'My app doesn't provide any financial features' option, and says nothing about price trackers. That ambiguity is correctly marked UNVERIFIED."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Large screens: no adaptive layout, and Android 16/17 stop honouring orientation and resizability limits",
+    "status": "confirmed",
+    "note": "grep finds no WindowSizeClass, NavigationRail, NavigationSuite or max-width. NavigationBar is at MainActivity.kt:284. BoxWithConstraints is only at HoldingsScreen.kt:71. The manifest sets no screenOrientation or resizeableActivity. The Android 16 behaviour-changes page confirms restrictions are ignored at sw>=600dp for targetSdk 36, with a temporary opt-out that ends at API 37. The pre-launch device set includes tablets (answer/9842757)."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Themed icon: no monochrome layer, and the icon is a full-bleed photo in the background layer",
+    "status": "confirmed",
+    "note": "ic_launcher.xml:3-4. ic_notification.xml is a reusable monochrome paw. The adaptive-icon doc confirms Android 13+ monochrome, auto-theming from 16 QPR2 and the 66dp safe zone. The launcher background art has the hat top at about 8% from the edge, inside the 18dp mask margin (viewed), so masks may crop it."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Cold-start splash is probably a light flash on a dark app",
+    "status": "confirmed",
+    "note": "Duplicate of the product-ux cold-start item. styles.xml:3-6, no core-splashscreen dependency. The flash is UNVERIFIED on device."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Play listing gaps: no widget screenshot, no tablet screenshots, 85 bundled locales, and contact still open",
+    "status": "partly-right",
+    "note": "Right: six phone screenshots only (LISTING.md:40). NEXT-SESSION.md:25-28 confirms the widget screenshot was offered and not done, the 85 AndroidX locales, and the deferred localeFilters (absent from build.gradle.kts). The tablet guidance is in answer/9866151. UNVERIFIED: that the extra AndroidX locales make the store page claim language support."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Do not chase Android 16 Live Updates or Material 3 Expressive for this app",
+    "status": "partly-right",
+    "note": "Live Updates scope (rideshare, delivery, navigation) is confirmed by the progress-centric-notifications page. The page does not state the promotion-permission claim (UNVERIFIED). The 'still alpha (1.5.0-alpha26)' claim is outdated: material3 1.5.0-beta01 shipped 7 Oct 2026, stable is still 1.4.0, and some expressive APIs are still experimental. The skip advice still holds. The LostTrail back callback is always enabled and async (LostTrailActivity.kt:92-98)."
+   },
+   {
+    "lens": "platform-and-play-bar",
+    "title": "Vitals and pre-launch hygiene during the closed test",
+    "status": "confirmed",
+    "note": "Thresholds of 1.09% crash and 0.47% ANR overall, 8% per phone model, over 28 days, match the vitals doc. The renderer-loss handler is at LostTrailActivity.kt:82-89 (cited :70-77). Minify is at build.gradle.kts:72. The mapping upload is an instruction (LISTING.md:6), not verified done. The '2 GB foreground memory threshold' is UNVERIFIED."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Make Bert's face change with his mood (widget and Home), not just a text pill",
+    "status": "confirmed",
+    "note": "State is right but line cites are wrong. BERTDailyWidget.kt is 173 lines: the portrait, banner and token are at :97, :103 and :107, and the 9sp MoodPill at :144-149 (not :268-320). The Home hero is HomeScreen.kt:36/42. /opt/berthalla/berthalla/mood/state.py:21-30 has exactly six labels plus small_hours. Key caveat: valence is computed from bert_change_pct and btc_change_pct (valence.py:6), so mood-mapped faces would be a visible price signal. The reviewer flagged this but understates it."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "One-tap 'Make this a card' and 'Share Bert' from the dispatch (close the Home to Create to share loop)",
+    "status": "confirmed",
+    "note": "No link from the dispatch to Create (HomeScreen.kt:60-69,82-85). Share intent is at CaptionCard.kt:126-139. Widget tap is BERTDailyWidget.kt:93 (cited :264, which does not exist). Constraint missed: the caption cap is 96 graphemes (CaptionText.kt:6) against an 800-char dispatch bound (BERTActivity.kt:26). Cards carry 'A NOTE FROM BERT' (CaptionCard.kt:89,110) but no app mark."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "A forgiving 'days with Bert' counter instead of a loss-aversion streak",
+    "status": "confirmed",
+    "note": "grep for streak/badge/achievement/sticker finds nothing in main source. Nothing changes between day 1 and day 100 on Home (HomeScreen.kt:30-98)."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Local 'Bert's journal': keep every dispatch and mood the device has seen",
+    "status": "confirmed",
+    "note": "BERTActivityRepository.kt:29 keeps only the last raw response. AlertMemory.lastDispatch is a single string (BERTAlerts.kt:18; cited :121 is markDispatchSeen). Live status.json has no id or published_at. BERTActivity.kt:16 notes updated_at is the source refresh, not publication."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Give the dispatch notification Bert's voice, a cap and quiet hours",
+    "status": "confirmed",
+    "note": "State is right with wrong lines. The 'New from Bert' + take(240) notice is at BERTAlerts.kt:56 (the file has 127 lines, not :160). IMPORTANCE_DEFAULT is at BERTNotifier.kt:27 (the file has 54 lines, not :371). There is no setLargeIcon, cap or quiet hours. PeriodicWorkRequest is 15 min (BERTRefreshWorker.kt:85). A 'Bert is feeling smug' title would push a price-derived mood."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Promote the Bert widget at the right moment (and show 'new' on it)",
+    "status": "confirmed",
+    "note": "Pinning is only at StudioScreen.kt:188-190/207-214. bert_daily_widget_info.xml:9 uses bert_daily_loading (correctly described as a static layout of a typical widget). DailyContent never renders updatedAt. hasPlacedWidgets is at BERTRefreshWorker.kt:95-100."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Make the tournament a story with a start, an ending and a result, plus a seasonal skin",
+    "status": "partly-right",
+    "note": "Right: only one 'ends in' notice (BERTAlerts.kt:39-51, cited :143-155). There is no started or result notice. The widget shows the event only when OPEN (BERTDailyWidget.kt:86, cited :257). The event name is plain text (HomeScreen.kt:138). Overstated: Home already has an ended state with 'TOURNAMENT ENDED', a 'FINAL STANDINGS' label and 'Ended <date>' (BERTActivity.kt:88,97; HomeScreen.kt:143,154), so the results card mostly exists while the feed keeps the ended event."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Surface the Lost Trail on Home and the launcher (resume, lanterns, shortcut)",
+    "status": "confirmed",
+    "note": "Only via Explore (ExploreScreen.kt:23). Home has none (HomeScreen.kt:93-97). No shortcuts in the manifest. Its UNVERIFIED feasibility point resolves positively: saves are in localStorage 'bert-lost-trail-v1' and 'bert-lost-trail-run-v1' on the appassets origin (game index.html), readable via the existing evaluateJavascript path (LostTrailActivity.kt:95) without a JS interface."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "A 'tap Bert' micro-interaction on the widget, with bundled lines",
+    "status": "confirmed",
+    "note": "The whole Bert widget is one clickable that starts MainActivity (BERTDailyWidget.kt:93; cited :264 does not exist). Content changes only when the feed changes."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "'Bert's week' recap card from the local journal",
+    "status": "confirmed",
+    "note": "No recap code exists. Mood is only the current label (HomeScreen.kt:59). It depends on the journal finding."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Name the community pattern gap: no peer visibility, so add a no-account 'pack' touchpoint",
+    "status": "confirmed",
+    "note": "The only peer data is top-5 Telegram names (BERTActivity.kt:51-59). status.json has no pack or count field (live fetch). Competitor claims (Pudgy, Doodles) were not checked and are unverifiable here."
+   },
+   {
+    "lens": "character-companion-benchmark",
+    "title": "Decide how to know any of this works (private, opt-in measurement before the 14-day closed test)",
+    "status": "unverifiable",
+    "note": "No analytics in source (confirmed). Play Console statistics scope for internal and closed tracks was not checked and stays UNVERIFIED. 'Only signal is what testers say' is too strong: the pre-launch report runs on upload (answer/9842757), and the closed-test form itself requires collected feedback (answer/14151465)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Add buy/sell pressure and short-window moves from data the app already downloads",
+    "status": "confirmed",
+    "note": "quoteEnvelope keeps only priceUsd, h24 change, marketCap, h24 volume and liquidity (BERTDirectSources.kt:54-59), discarding txns, priceChange, fdv and pairCreatedAt. Live fetch 2026-10-12: top pool txns h1 64/25, h24 572/321. Nuance: priceChange currently has only h1/h6/h24 (no m5)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Alerts are two one-shot price thresholds; competitors offer recurring, percent-move and volume triggers",
+    "status": "confirmed",
+    "note": "App side: above/below only (BERTAlerts.kt:6-13,60-73). Re-armed only on edit (:106-107). No crossed-level warning: the form shows the current price (AlertsScreen.kt:83) but saves without comparing (:95). Competitor feature claims were not independently checked."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Price alerts can miss spikes: 15-minute polling checks one point-in-time quote",
+    "status": "partly-right",
+    "note": "Right: alerts compare only the stored latest quote and skip when >30 min old (BERTAlerts.kt:60; BERTQuote.kt:24). 15-min period (BERTRefreshWorker.kt:85). Copy is at AlertsScreen.kt:57. The proposed fix does not work as described: stored history keeps only candle close (BERTDirectSources.kt:82-87 uses index 4), so no high/low exists without new parsing. History is also refreshed after checkAlerts (BERTRefreshWorker.kt:60-62)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Widgets have no manual refresh control, and the widget-picker preview is a loading layout",
+    "status": "confirmed",
+    "note": "BERTWidget.kt:82 and :260. All three XMLs use loading layouts as previewLayout (line 9 each). The Bert one is a reasonable static mock, the price ones are placeholders. WT-2, WD-4 and WD-1 wording is confirmed on the widget-quality page. The deep-link point duplicates the product-ux finding."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Widgets cannot show the data points holders glance for: 1H move, buy/sell ratio, P/L, break-even",
+    "status": "confirmed",
+    "note": "Compact is at BERTWidget.kt:93-146 and the market metrics at :177-195. HoldingsCapsule shows only USD value and token count (:236-252). WidgetData loads only the amount (BERTHoldingsStore.load, :362), not cost. WS-4 is Tier 1 (widget-quality page)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "No holder count, top-holder concentration or burn/supply view, which is the first thing a memecoin holder checks",
+    "status": "confirmed",
+    "note": "grep finds nothing for holder/burn/ATH. Server-side design suggestions and third-party claims about Birdeye and Bubblemaps were not verified. getTokenLargestAccounts returning 20 accounts matches standard Solana RPC behaviour."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Market data covers only the single deepest pool; BERT trades across 30 pairs",
+    "status": "confirmed",
+    "note": "Deepest base-token pool selection at BERTDirectSources.kt:30-42, with a base-token filter at :34. Labels are unqualified (MarketScreen.kt:66-67). Live re-fetch 2026-10-12: 30 pairs (raydium/meteora/orca), 13 BERT-base and 17 BERT-quote pairs excluded. Top Raydium/SOL has $1.087M liquidity and $79.7K of $86.1K 24h volume (92.5%)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Optional read-only wallet-address watching could replace manual holdings, but it changes the privacy and Data Safety story",
+    "status": "confirmed",
+    "note": "Manual amount and total cost in prefs (BERTHoldingsStore.kt:8-31; BERTPosition.kt:3). 'no wallet connection' copy is at HoldingsScreen.kt:25. LISTING.md:60-63 claims no data collected. The Data-safety definition of collection is confirmed (answer/10787469). Solana public-RPC limits were not re-fetched."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Holdings model is a single Double with one lump cost; no per-purchase lots, break-even price or SOL/USD toggle",
+    "status": "confirmed",
+    "note": "BERTPosition.kt:3-17 holds one amount and one cost; gain = value - cost. HoldingsScreen.kt:34-40 shows no average entry or break-even. The editor is at :85-123."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Notifications all use default importance and open the generic home, not the relevant tab",
+    "status": "confirmed",
+    "note": "BERTNotifier.kt:27 and :37-39. Price notice text is 'Now $X \u00b7 \u00b1Y% today' with no source or time (BERTAlerts.kt:63,69,78). Duplicates the product-ux alert and deep-link items."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Trust labelling is good on price but incomplete: no 'not financial advice' line near P/L, no alert-latency note in notification text, and the Play financial declaration answer should be re-checked",
+    "status": "confirmed",
+    "note": "MarketScreen.kt:89 is 12sp muted. The Holdings disclaimer is an estimate only (HoldingsScreen.kt:40). grep finds no 'financial advice'. LISTING.md:52-54. The declaration must be completed even for no-feature apps (answer/13849271)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "An on-chain buy feed is the signature single-token community feature; the app has no activity stream",
+    "status": "confirmed",
+    "note": "No trades or activity stream in source; Home is dispatch plus tournament only (HomeScreen.kt). Phase 1 depends on parsing txns (see the buy/sell finding). The buy-bot data path is UNVERIFIED (not inspected)."
+   },
+   {
+    "lens": "crypto-widget-benchmark",
+    "title": "Refresh and fallback behaviour depends on undocumented rate limits and a single user-agent",
+    "status": "wrong",
+    "note": "The core claim is false. The DEX Screener API reference documents the token-pairs endpoint as 'Get the pools of a given token address (rate-limit 300 requests per minute)' (raw docs.dexscreener.com/api/reference HTML). One phone polls about once a minute in the foreground (MainActivity.kt:130) plus every 15 min in the background, far below 300/min per client. Code facts are right: UA 'BERT-Android' (BERTHttp.kt:20), silent fallback (BERTQuoteRepository.kt:37), source name stored in the envelope. No 429 backoff."
+   }
+  ],
+  "missed": [
+   "Bert's mood is computed from price. /opt/berthalla/berthalla/mood/state.py:21-30 maps a valence from BERT and BTC 24h % change (valence.py:6: compute_valence(bert_change_pct, btc_change_pct)) to giddy/smug/content/anxious/melancholy. At least six recommendations drive what users see from mood: mood photos on Home and the widget, mood greetings, a 'Bert is feeling smug' notification, a weekly 'dominant mood' recap, and a seasonal or mood skin. Each would turn the real dog's face into a market indicator, which RESEARCH-2026-09-08.md:54 warned against and which sits badly with the 'informational only, no financial features' position. product-ux's 'keep mood separate from price' cannot be satisfied with the current feed. Decide first: decouple mood from price on the server, or keep mood off imagery and notifications.",
+   "The caption cap blocks the dispatch-to-card loop as written. Captions are limited to 96 graphemes (CaptionText.kt:6, enforced at CreateScreen.kt:59-61), while dispatches are accepted up to 800 chars (BERTActivity.kt:26) and long ones already trigger 'Read full update' (HomeScreen.kt:66). Four findings propose prefilling Create with the dispatch, and none notices that longer posts would open Create in an over-limit error state. The feature needs an excerpt or trim picker, or a raised cap with the card layout re-tested.",
+   "The widget picker shows nothing on Android 8-11, and the first widget frame flashes the wrong colour. minSdk is 26 (build.gradle.kts:12), but the providers set only android:previewLayout (API 31+) and no android:previewImage, so pickers on API 26-30 get no BERT preview at all. Separately, initialLayout bert_widget_loading paints navy #071A2F (bert_widget_loading.xml:5), while the live default palette is Woofhub Night #0C0712 (BERTWidget.kt:334-335; BERTThemePack.kt:42). The picker and first frame do not match the placed widget.",
+   "There is no About or settings surface at all. grep finds no privacy, licence, about or feedback entry. The version appears only as a footer (MainActivity.kt:209). The in-app privacy link and a feedback link were raised by reviewers. Open-source licence notices were not: AndroidX, Compose, Glance and WorkManager are Apache-2.0, and no oss-licenses plugin or notices screen exists. One small About sheet would cover the privacy policy, contact, licences, version and update check together.",
+   "The game 'continue' hook is cheaper than reviewers assumed. Lost Trail already writes progress to localStorage keys 'bert-lost-trail-v1' and 'bert-lost-trail-run-v1' on the appassets origin (android/app/src/main/assets/games/lost-trail/index.html). The activity already talks to the game via evaluateJavascript and window.BertAppGame (LostTrailActivity.kt:95,125). On exit, a single evaluateJavascript(\"localStorage.getItem('bert-lost-trail-v1')\") can be cached natively to drive a 'Continue \u00b7 World N \u00b7 X/18 keepsakes' card and shortcut, with no game rebuild. Its parsing must be version-guarded because the save schema is owned by /opt/bert-platformer."
+  ]
+ }
+}

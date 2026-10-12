@@ -1,14 +1,126 @@
 # Next session — BERT app
 
-## START HERE (memo left 2 October 2026, end of session)
+## START HERE (paused 12 October 2026, owner at 1% weekly usage)
+
+**Live:** 0.9.2 (code 24) on berthalla.io/app. Site `ccafc5a`, APK `21be50e4…`. The Play bundle `bert-0.9.2.aab` is on
+the PC at `C:\Users\Sjpch\BERT-Play\`. Source is branch `v091` in `/opt/bert-widget-direct`.
+
+**0.10, in progress:**
+1. **Art: DONE and gated** (187 tests). Branch `v010-art`, worktree `/opt/bert-widget-art`.
+   - Owner-approved banner B: the garden path to the wall and wicket gate, with ground all the way.
+   - Six F/10 mood stills, snapped to F/10's palette.
+   - Art and its provenance: `/opt/bert-widget-qa/art-0.10/README.md`.
+   - A preview build is on the S25.
+2. **My Bert (NFTs): STOPPED mid-way.** Branch `v010-mybert`, worktree `/opt/bert-widget-mybert`. The WIP commit is
+   `051397d`, made with `--no-verify`.
+   - Its flow tests were passing when it stopped.
+   - It is not fully gated, not reviewed, and its renders were not checked.
+   - Spec and facts: `docs/NFT-RESEARCH-2026-10-12.md`. The agent was briefed to write
+     `docs/PRIVACY-MYBERT-DRAFT.md`; check that it exists.
+
+**Next steps:**
+1. Read the `v010-mybert` diff. Finish anything missing against the spec. Run its tests and look at its host-ui
+   renders.
+2. Merge `v010-art` and `v010-mybert` into one branch. Bump to 0.10.0 (code 25). Run the gate:
+   `flock /opt/bert-widget-qa/gradle.lock tools/check-mobile-game.sh`.
+3. Get one independent review. To save usage, use a single reviewer.
+4. Device check on the S25.
+5. Publish, following the 0.9.2 recipe in `docs/evidence/2026-10-12/release-0.9.2/`.
+   - Add the My Bert paragraph to the privacy page on the website: the wallet address goes to Magic Eden and the
+     Solana RPC; nothing is signed.
+   - Update the Play data-safety notes in `docs/play/LISTING.md`.
+
+**Owed by the owner:**
+- Upload 0.9.2 (or 0.10) to Play.
+- Check App integrity: whether the signing key is Google-generated.
+- Create the Closed testing track, then repoint the tester form.
+- Choose a contact email.
+- Get the BERT team's OK to display NFT art.
+- OK the push to GitHub. `main` is still at 0.8.1.
+
+## Earlier memo (12 October 2026, 0.9.1)
+
+**State:**
+- 0.8.2 is LIVE on berthalla.io/app (site `c5e50fe`).
+- **0.9.1 (code 23)** is LIVE; source is branch `v091` in `/opt/bert-widget-direct`.
+  - It is built from three merged tracks (`v091-home`, `v091-create`, `v091-widgets`) on top of 0.9.0.
+  - rc3 (sha `703c3a51…`) is installed on the owner's S25.
+  - Gate passes: 184 tests. An independent review found 6 issues; 5 were fixed and the 6th (static shortcuts
+    resetting the task) was accepted as platform behaviour.
+- 0.9.0 was never published separately; 0.9.1 supersedes it.
+
+**What 0.9.1 is:** see docs/CRITIQUE-2026-10-12.md, items 1–10.
+- The Home garden banner with the living F/10 pixel Bert (Bertians R2 art, owner-approved;
+  `/opt/bert-widget-qa/art-bertians-r2/PROVENANCE.md`).
+- Pull-to-refresh, Meet Bert, Day N, "N new", and first-seen times.
+- Official chips. The app is a clear split from Berthalla: "From Berthalla" on updates; @bertcoincto and
+  bert.global marked Official.
+- Wordmark, art thumbnails, Share-first, and signed cards.
+- Widget previews, 10sp floor, and mood never cut.
+- BERT Navy is the default for fresh installs only.
+- Launcher shortcuts.
+- Market activity and smarter alerts.
+- UK spelling and curly quotes, enforced by `CopyStyleTest`.
+
+**0.9.1 PUBLISHED 12 Oct** on berthalla.io/app (site `fe866a6`, then the Workshop update at `c5034b7`). The owner
+confirmed all 3 launcher shortcuts work. The Play kit is on the PC (`bert-0.9.1.aab`). Record:
+`docs/evidence/2026-10-12/release-0.9.1/README.md`.
+
+**Owed:**
+- Owner: upload 0.9.1 to Play, check App integrity, create the Closed track, pick a contact email.
+- Me, when the owner OKs it: push `v091` to GitHub `main` (still at 0.8.1).
+
+**0.10 plan:**
+- "My Bert" NFTs: `docs/NFT-RESEARCH-2026-10-12.md`. It needs a privacy-page update and the team's OK on art
+  display.
+- Display typeface for Bert's voice; one palette across the app.
+- PixelLab mood portraits in the F/10 style.
+- Glance 1.2 previews.
+- A native Draw Bert. It needs a server endpoint first: `docs/ART-INVENTORY-2026-10-12.md`.
+- Copy about the real dog stays character-first (Berthalla canon handling rules).
+
+## Earlier memo (12 October 2026, 0.8.2)
+
+**State:** v0.8.2 (code 21), the Play-readiness release, is built, gated, independently reviewed and
+device-checked on the owner's S25, which now runs it. Source is `c11c1f5` on branch `v080` in the worktree
+`/opt/bert-widget-direct` (not pushed, and not fast-forwarded into the `/opt/bert-widget` production checkout). The
+record is in [release 0.8.2](evidence/2026-10-12/release-0.8.2/README.md), and the research behind it is in
+[RESEARCH-2026-10-12](RESEARCH-2026-10-12.md).
+
+**Blocked on the owner:**
+1. **Website go-live.** The auto-mode classifier denied the production deploy, so it needs the owner's approval. The command is
+   `git -C /opt/berthalla merge --ff-only release-0.8.2` (`58ab3fe` → `c5e50fe`: app page, release.json, APK and
+   privacy page). Then run `python3 docs/evidence/2026-10-12/release-0.8.2/check-public.py` and
+   `node docs/evidence/2026-10-12/release-0.8.2/check-page.cjs public`. Rollback: `/opt/bert-widget-qa/release-0.8.2/previous/`.
+2. **Play Console.** Upload `C:\Users\Sjpch\BERT-Play\bert-0.8.2.aab` and its mapping. Check App integrity: is
+   the app-signing key Google-generated? If it is, switch to the existing release key before open testing so
+   sideloaders keep their data. Create the **Closed testing** track, because internal testing doesn't start the
+   12-tester / 14-day clock, then repoint the berthalla tester form. Choose a contact email.
+3. **Push.** GitHub `main` and `v080` stay at 0.8.1 until the owner OKs a push.
+
+**Next build: 0.9.0 "Bert's day"** (research items 1–5, 7 and 8): price strip on Home; Lost Trail "Continue" card
+and shortcut (read `bert-lost-trail-v1` from localStorage via evaluateJavascript); Today with Bert and a local
+journal; dispatch → card → share with an excerpt picker (captions cap at 96 graphemes); real Bert photos rotated
+**by date** (decided 10-12: mood is price-derived in `berthalla/mood/state.py`, so it stays a text label); buy/sell
+counts and 1h/6h moves from `txns`/`priceChange`; better alerts. Then 0.9.x: Glance 1.2.0 generated previews,
+widget refresh button, the polish pass, and an update nudge for sideloaders.
+
+## Earlier memo (2 October 2026)
 
 **State:** v0.8.1 (code 20) is live at https://berthalla.io/app/ and on the owner's S25 (in-place upgrade from 0.8.0).
 GitHub `main` = this release. The Bert widget redesign shipped (owner's "looks empty and weird" fixed and checked on the
 S25 at 4×2 and 2×2), and the price and market widgets no longer leave empty bands. Nothing from the critiques is open
 except retiring the price server.
 
+**Testers (2 October, evening):** the app is in Google Play **internal testing**; its opt-in link
+`https://play.google.com/apps/internaltest/4701060804022183943` is published on berthalla.io's tester form
+(`#testers`, "Form 7-B"). Sign-ups land in the berthalla tester backend and ping the owner on Telegram; export
+them for Play Console with `cd /opt/berthalla && venv/bin/python -m berthalla.testers export --app bertapp --format comma`
+and add them to the internal-test email list. The homepage Workshop shows v0.8.1 with the 1 October Play
+screenshots; update `/opt/berthalla/website/index.html` when a new version ships. See `/opt/berthalla/deploy/TESTERS.md`.
+
 **Waiting on the owner:**
-1. Play Console upload from `C:\Users\Sjpch\BERT-Play\` on the drinkerlabs PC (`bert-0.8.1.aab`, `mapping-0.8.1.txt`,
+1. ~~Play Console upload~~ done: in internal testing as of 2 October (see Testers above). Originally: upload from `C:\Users\Sjpch\BERT-Play\` on the drinkerlabs PC (`bert-0.8.1.aab`, `mapping-0.8.1.txt`,
    graphics, `LISTING.md`; 0.8.0 moved to `superseded-0.8.0\`). Offer to walk through it.
 2. A contact email for the Play listing (not chosen yet; do not use the owner's personal address without asking).
 3. ~~APK vs Play~~ **Decided (owner, 2 October):** berthalla.io/app keeps serving the signed APK until the app is
