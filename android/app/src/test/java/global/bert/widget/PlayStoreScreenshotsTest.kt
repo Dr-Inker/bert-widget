@@ -82,7 +82,7 @@ class PlayStoreScreenshotsTest {
         canvas.drawRect(0f, 0f, width.toFloat(), height.toFloat(), Paint().apply {
             shader = LinearGradient(0f, 0f, 0f, height.toFloat(), NAVY, PANEL_STRONG, Shader.TileMode.CLAMP)
         })
-        val bold = Typeface.create("sans-serif", Typeface.BOLD)
+        val bold = Typeface.createFromFile(File("src/main/res/font/outfit_bold.ttf"))
         canvas.drawRoundRect(RectF(width / 2f - 36f, 92f, width / 2f + 36f, 100f), 4f, 4f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ORANGE })
         val text = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { color = CREAM; typeface = bold; textSize = 76f; letterSpacing = -0.01f }
         val layout = StaticLayout.Builder.obtain(caption, 0, caption.length, text, width - 140).setAlignment(Layout.Alignment.ALIGN_CENTER).setIncludePad(false).build()
@@ -162,10 +162,12 @@ class PlayStoreScreenshotsTest {
     }
 
     private companion object {
-        const val NAVY = 0xFF071A2F.toInt()
-        const val PANEL_STRONG = 0xFF123957.toInt()
-        const val CREAM = 0xFFFFF5DF.toInt()
-        const val ORANGE = 0xFFFF9433.toInt()
+        // The brand kit (0.11): bg-deep to the strong surface, white captions in Outfit Bold, and the kit's display
+        // violet (#992EFF, "for display type and social headlines") as the small rule.
+        const val NAVY = 0xFF100B16.toInt()
+        const val PANEL_STRONG = 0xFF302042.toInt()
+        const val CREAM = 0xFFFFFFFF.toInt()
+        const val ORANGE = 0xFF992EFF.toInt()
         val FICTIONAL_PLAYERS = listOf("PawPrint" to 143, "Hollow_Hopper" to 115, "SirBarksALot" to 114, "MayorFan" to 112, "LanternLad" to 108)
         val CAPTIONS = linkedMapOf(
             "1-today" to "Bert’s day, every day",

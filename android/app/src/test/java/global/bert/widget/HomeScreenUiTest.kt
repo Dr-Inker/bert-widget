@@ -77,7 +77,7 @@ class HomeScreenUiTest {
         compose.onNodeWithText("Meet Bert").assertDoesNotExist()
         assertTrue(BERTHomeVisits(compose.activity).meetBertDismissed)
         // Bert in the Today garden woofs on a tap (a spoken button, at least 48dp) and reopens the card on a long press.
-        val bert = compose.onNode(hasContentDescription("Bert in his red hat, out in the garden"))
+        val bert = compose.onNode(hasContentDescription("Bert in his red hat, by the garden gate"))
         bert.assertHasClickAction().assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
         compose.mainClock.autoAdvance = false
         bert.performClick()

@@ -7,10 +7,12 @@ import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.annotation.DrawableRes
 import androidx.compose.material3.*
@@ -24,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -53,17 +56,32 @@ internal fun ThemeStudio() {
     var selected by remember { mutableStateOf(store.load()) }
     var applying by remember { mutableStateOf(false) }
     var wallpaperMessage by rememberSaveable { mutableStateOf<String?>(null) }
-    var previewId by rememberSaveable { mutableStateOf(selected.id) }
-    val preview = BERTThemePack.fromId(previewId)
+    // "Match my Bert" sits beside the packs only while a Bert is chosen; it colours widgets and has no wallpaper.
+    val chosen = LocalMyBert.current.chosen
+    var matching by remember(chosen) { mutableStateOf(chosen != null && store.matchMyBert) }
+    var previewId by rememberSaveable { mutableStateOf(if (matching) MATCH_MY_BERT else selected.id) }
+    val previewingMatch = previewId == MATCH_MY_BERT && chosen != null
+    val preview = BERTThemePack.fromId(previewId.takeIf { !previewingMatch } ?: selected.id)
 
-    fun choose(theme: BERTThemePack) {
-        selected = theme
-        store.save(theme)
+    fun refreshWidgets() {
         scope.launch {
             try { updateAllBERTWidgets(context) }
             catch (cancelled: CancellationException) { throw cancelled }
             catch (_: Exception) { Toast.makeText(context, "Palette saved. Widgets will update on their next refresh.", Toast.LENGTH_LONG).show() }
         }
+    }
+
+    fun choose(theme: BERTThemePack) {
+        selected = theme
+        matching = false
+        store.save(theme)
+        refreshWidgets()
+    }
+
+    fun matchMyBert() {
+        matching = true
+        store.matchMyBert = true
+        refreshWidgets()
     }
 
     fun applyWallpaper(destination: Int, success: String) {
@@ -105,24 +123,31 @@ internal fun ThemeStudio() {
                 modifier = Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 18.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
+                if (chosen != null) MatchMyBertCard(chosen, selected = previewingMatch, onClick = { if (!applying) previewId = MATCH_MY_BERT })
                 BERTThemePack.entries.forEach { theme ->
-                    ThemePackCard(theme = theme, selected = preview == theme, onClick = { if (!applying) previewId = theme.id })
+                    ThemePackCard(theme = theme, selected = !previewingMatch && preview == theme, onClick = { if (!applying) previewId = theme.id })
                 }
             }
             Column(modifier = Modifier.padding(horizontal = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text("Previewing ${preview.displayName}", color = Cream, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("Previewing ${if (previewingMatch) "Match my Bert" else preview.displayName}", color = Cream, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                val active = if (previewingMatch) matching else !matching && selected == preview
                 OutlinedButton(
-                    onClick = { choose(preview) },
-                    enabled = selected != preview && !applying,
+                    onClick = { if (previewingMatch) matchMyBert() else choose(preview) },
+                    enabled = !active && !applying,
                     modifier = Modifier.fillMaxWidth(),
-                ) { Text(if (selected == preview) "Widget palette active" else "Use palette on widgets", color = Cream) }
-                FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
+                ) { Text(if (active) "Widget palette active" else "Use palette on widgets", color = Cream) }
+                if (previewingMatch && chosen != null) Text(
+                    "Your widgets take their colours from ${chosen.bert.name}’s ${chosen.bert.background?.lowercase() ?: "picture"} background. " +
+                        "Wallpapers come with the packs.",
+                    color = Color(0xFFCAB5D6), fontSize = 13.sp, lineHeight = 18.sp,
+                ) else FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp),
                     maxItemsInEachRow = if (stackActions) 1 else 2, modifier = Modifier.fillMaxWidth()) {
                     Button(
                         onClick = { applyWallpaper(BERTWallpaperInstaller.BOTH, "${preview.displayName} wallpapers applied") },
                         enabled = !applying,
                         modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(preview.accentArgb), contentColor = if (preview == BERTThemePack.WOOFHUB_NIGHT) Color.White else Navy),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color(preview.accentArgb), // White on the violet accents (the kit: never dark text on violet); dark ink on the warm ones.
+                        contentColor = if (preview == BERTThemePack.WOOFHUB_NIGHT || preview == BERTThemePack.BERT_VIOLET) Color.White else Color(0xFF071A2F)),
                     ) { Text(if (applying) "Applying…" else "Apply both", fontWeight = FontWeight.Bold) }
                     OutlinedButton(
                         onClick = { applyWallpaper(BERTWallpaperInstaller.HOME, "Home screen updated") },
@@ -131,7 +156,7 @@ internal fun ThemeStudio() {
                         border = BorderStroke(1.dp, Color.White.copy(alpha = 0.24f)),
                     ) { Text("Home only", color = Color.White, fontWeight = FontWeight.Bold) }
                 }
-                OutlinedButton(
+                if (!previewingMatch) OutlinedButton(
                     onClick = { applyWallpaper(BERTWallpaperInstaller.LOCK, "Lock screen updated") },
                     enabled = !applying,
                     modifier = Modifier.fillMaxWidth(),
@@ -141,7 +166,7 @@ internal fun ThemeStudio() {
                     Text(it, color = Cream, fontSize = 14.sp, lineHeight = 21.sp,
                         modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
                 }
-                Text(
+                if (!previewingMatch) Text(
                     "Android may crop artwork slightly to fit your display. Wallpaper changes stay on your device.",
                     color = Color(0xFF8E7C99),
                     fontSize = 12.sp,
@@ -149,6 +174,42 @@ internal fun ThemeStudio() {
                 )
             }
         }
+    }
+}
+
+private const val MATCH_MY_BERT = "match-my-bert"
+
+/** "Match my Bert" as a pack-sized card: the holder's Bert on the colours the widgets will take. */
+@Composable
+private fun MatchMyBertCard(chosen: global.bert.widget.data.ChosenBert, selected: Boolean, onClick: () -> Unit) {
+    val palette = chosen.palette
+    val picture = rememberMyBertPicture(chosen)
+    Column(
+        modifier = Modifier.width(156.dp).selectable(selected = selected, onClick = onClick, role = Role.RadioButton).testTag("theme-match-my-bert"),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Card(
+            modifier = Modifier.width(156.dp).height(300.dp).then(if (selected) Modifier.shadow(12.dp, RoundedCornerShape(22.dp)) else Modifier),
+            shape = RoundedCornerShape(22.dp),
+            colors = CardDefaults.cardColors(containerColor = Color(palette.backgroundArgb)),
+            border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) Color(palette.accentArgb) else Color.White.copy(alpha = 0.12f)),
+        ) {
+            Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(14.dp)).background(Color(palette.panelArgb))) {
+                    picture?.let { Image(it, "${chosen.bert.name} on its matching colours", Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
+                }
+                Text(chosen.bert.name, color = Color(palette.textArgb), fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text("woofmornin. the mayor is in.", color = Color(palette.mutedArgb), fontSize = 12.sp, lineHeight = 16.sp)
+                Spacer(Modifier.weight(1f))
+                Box(Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)).background(Color(palette.accentArgb)))
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (selected) Text("✓", color = Color(palette.accentArgb), fontWeight = FontWeight.ExtraBold)
+            Text("Match my Bert", color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
+        }
+        Text("${chosen.bert.name.uppercase()} · ${(chosen.bert.background ?: "Picture").uppercase()}", color = Color(0xFF9E8CAA), fontSize = 11.sp,
+            fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp)
     }
 }
 
@@ -171,7 +232,8 @@ private fun ThemePackCard(theme: BERTThemePack, selected: Boolean, onClick: () -
             )
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            if (selected) Text("✓", color = Color(theme.accentArgb), fontWeight = FontWeight.ExtraBold)
+            // The highlight, not the accent: BERT Violet's accent is a border colour, too dark for a tick.
+            if (selected) Text("✓", color = Color(theme.highlightArgb), fontWeight = FontWeight.ExtraBold)
             Text(theme.displayName, color = Color.White, fontSize = 13.sp, fontWeight = FontWeight.Bold)
         }
         Text(theme.subtitle, color = Color(0xFF9E8CAA), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp)
@@ -225,5 +287,56 @@ private fun pinWidget(context: Context, receiver: Class<*>) {
         manager.requestPinAppWidget(ComponentName(context, receiver), null, null)
     } else {
         Toast.makeText(context, "Open your launcher’s widget picker to add BERT", Toast.LENGTH_LONG).show()
+    }
+}
+
+/**
+ * The app's own colours: BERT Violet from the official brand kit (the default), or Berthalla Navy, the app's original
+ * look. Widgets and wallpapers keep their own palette below.
+ */
+@Composable
+internal fun AppColours() {
+    val context = LocalContext.current
+    Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
+        Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            SectionLabel("APP COLOURS")
+            Text("BERT Violet follows the official brand kit. Berthalla Navy is the app’s original look.",
+                color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
+            // Equal heights, whichever name wraps.
+            Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                for (scheme in BERTScheme.entries) {
+                    SchemeTile(scheme, selected = BERTColors.scheme == scheme, modifier = Modifier.weight(1f).fillMaxHeight()) {
+                        BERTThemeStore(context.applicationContext).appSchemeId = scheme.id
+                        BERTColors.scheme = scheme
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SchemeTile(scheme: BERTScheme, selected: Boolean, modifier: Modifier, onClick: () -> Unit) {
+    val shape = RoundedCornerShape(20.dp)
+    Column(modifier.clip(shape).selectable(selected = selected, onClick = onClick, role = Role.RadioButton)
+        .border(if (selected) 2.dp else 1.dp, if (selected) Selected else Color.White.copy(alpha = 0.14f), shape)
+        .background(scheme.background).padding(12.dp).testTag("scheme-${scheme.id}"),
+        verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // A small picture of the scheme: a card, its text, a link and a button, in that scheme's own colours.
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(scheme.panel).padding(10.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.fillMaxWidth(0.8f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(scheme.text))
+            Box(Modifier.fillMaxWidth(0.55f).height(6.dp).clip(RoundedCornerShape(3.dp)).background(scheme.muted))
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Box(Modifier.width(44.dp).height(16.dp).clip(RoundedCornerShape(8.dp)).background(scheme.action))
+                Box(Modifier.width(28.dp).height(6.dp).clip(RoundedCornerShape(3.dp)).background(scheme.accentText))
+            }
+        }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (selected) Text("✓", color = scheme.accentText, fontWeight = FontWeight.ExtraBold)
+            Text(scheme.displayName, color = scheme.text, fontSize = 14.sp, fontWeight = FontWeight.Bold,
+                fontFamily = if (scheme.brandType) Outfit else null)
+        }
+        Text(scheme.subtitle, color = scheme.muted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.4.sp)
     }
 }

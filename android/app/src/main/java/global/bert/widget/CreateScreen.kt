@@ -55,6 +55,8 @@ internal fun CreateScreen(tab: String, seedCaption: String? = null, consumeSeed:
     } else if (tab == "Personalise") {
         Text("A little BERT. Everywhere.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
         Text("Widgets for a quick glance. Wallpapers for the rest of your day.", color = Muted, fontSize = 14.sp)
+        AppColours()
+        MyBertRow()
         WidgetSetup(context)
         ThemeStudio()
     }
@@ -71,7 +73,11 @@ private fun CaptionCardCreator(seedCaption: String?, consumeSeed: () -> Unit, op
     var artIndex by rememberSaveable { mutableIntStateOf(0) }
     var layoutIndex by rememberSaveable { mutableIntStateOf(0) }
     var formatIndex by rememberSaveable { mutableIntStateOf(0) }
-    val style = CardStyle(CardArt.entries[artIndex], CardLayout.entries[layoutIndex], CardFormat.entries[formatIndex])
+    val chosenBert = LocalMyBert.current.chosen
+    // My Bert's art only while a Bert is chosen: going back to classic Bert returns the card to the photo.
+    LaunchedEffect(chosenBert == null) { if (chosenBert == null && artIndex == CardArt.MY_BERT.ordinal) artIndex = CardArt.PHOTO.ordinal }
+    val art = CardArt.entries[artIndex].takeIf { it != CardArt.MY_BERT || chosenBert != null } ?: CardArt.PHOTO
+    val style = CardStyle(art, CardLayout.entries[layoutIndex], CardFormat.entries[formatIndex])
     val library = remember { CaptionLibrary(context.applicationContext) }
     var sharing by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }
@@ -88,7 +94,7 @@ private fun CaptionCardCreator(seedCaption: String?, consumeSeed: () -> Unit, op
     var shown by remember { mutableStateOf<RenderedCaption?>(null) }
     // A progress hint appears only when a render is genuinely slow, never on every keystroke.
     var slow by remember { mutableStateOf(false) }
-    LaunchedEffect(text, palette, style, canRender) {
+    LaunchedEffect(text, palette, style, canRender, chosenBert?.bert?.mint) {
         previewError = false
         // With nothing to render the message replaces the card, and the next card arrives without the typing delay.
         if (!canRender) { shown = null; return@LaunchedEffect }
@@ -141,7 +147,7 @@ private fun CaptionCardCreator(seedCaption: String?, consumeSeed: () -> Unit, op
     ArtPicker(style.art) { artIndex = it.ordinal }
     CardChoices(layoutIndex, formatIndex, palette, { layoutIndex = it }, { formatIndex = it }, { palette = it })
 
-    Button(
+    Button(colors = solidActionButtonColors(), 
         enabled = ready != null && text.isNotEmpty() && !sharing && !saving,
         onClick = {
             val snapshot = ready ?: return@Button
@@ -220,33 +226,38 @@ private fun CaptionPreview(content: Any?, format: CardFormat, current: Boolean, 
                 }
             }
         }
-        if (slow) CircularProgressIndicator(color = Orange, strokeWidth = 2.dp,
+        if (slow) CircularProgressIndicator(color = AccentText, strokeWidth = 2.dp,
             modifier = Modifier.align(Alignment.TopEnd).padding(12.dp).size(18.dp).semantics { contentDescription = "Updating preview" })
     }
 }
 
-/** The five artworks as thumbnails, each showing the crop the card will use. */
+/** The five artworks as thumbnails, each showing the crop the card will use, then the holder's own Bert when chosen. */
 @Composable
 private fun ArtPicker(selected: CardArt, select: (CardArt) -> Unit) {
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val sizePx = with(LocalDensity.current) { 72.dp.roundToPx() }
-    val thumbnails by produceState(CardArt.entries.mapNotNull { art -> thumbnailCache[art to sizePx]?.let { art to it } }.toMap(), sizePx) {
+    val chosen = LocalMyBert.current.chosen
+    val arts = if (chosen != null) CardArt.entries else CardArt.BUILT_IN
+    // My Bert's thumbnail is cached per chosen Bert, so choosing another never shows the last one's face.
+    fun key(art: CardArt) = (if (art == CardArt.MY_BERT) "${art.name}:${chosen?.bert?.mint}" else art.name) to sizePx
+    val thumbnails by produceState(arts.mapNotNull { art -> thumbnailCache[key(art)]?.let { art to it } }.toMap(), sizePx, chosen?.bert?.mint) {
         // Decoded side by side, once per process: returning to Create shows them at once.
-        CardArt.entries.filter { !thumbnailCache.containsKey(it to sizePx) }.map { art ->
+        arts.filter { !thumbnailCache.containsKey(key(it)) }.map { art ->
             async(Dispatchers.IO) { art to runCatching { artThumbnail(context.applicationContext, art, sizePx).asImageBitmap() }.getOrNull() }
         }.forEach { pending ->
             val (art, thumbnail) = pending.await()
-            if (thumbnail != null) { thumbnailCache[art to sizePx] = thumbnail; value = value + (art to thumbnail) }
+            if (thumbnail != null) { thumbnailCache[key(art)] = thumbnail; value = value + (art to thumbnail) }
         }
     }
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        CardArt.entries.forEach { art ->
+        arts.forEach { art ->
             val isSelected = art == selected
+            val spoken = if (art == CardArt.MY_BERT && chosen != null) "My Bert #${chosen.bert.number}" else art.description
             Box(Modifier.size(80.dp).clip(RoundedCornerShape(24.dp))
-                .then(if (isSelected) Modifier.border(3.dp, Orange, RoundedCornerShape(24.dp)) else Modifier)
+                .then(if (isSelected) Modifier.border(3.dp, Selected, RoundedCornerShape(24.dp)) else Modifier)
                 .selectable(isSelected, role = Role.RadioButton) { if (!isSelected) { haptics.performHapticFeedback(HapticFeedbackType.SegmentTick); select(art) } }
-                .semantics { contentDescription = art.description }
+                .semantics { contentDescription = spoken }
                 .testTag("art-${art.name}"),
                 contentAlignment = Alignment.Center) {
                 val image = thumbnails[art]
@@ -258,7 +269,10 @@ private fun ArtPicker(selected: CardArt, select: (CardArt) -> Unit) {
     }
 }
 
-private val thumbnailCache = java.util.concurrent.ConcurrentHashMap<Pair<CardArt, Int>, ImageBitmap>()
+private val thumbnailCache = java.util.concurrent.ConcurrentHashMap<Pair<String, Int>, ImageBitmap>()
+
+/** Drops the holder's Bert from the art strip's cache (classic Bert or Forget), so no NFT picture stays in memory. */
+internal fun clearMyBertArtThumbnails() = thumbnailCache.keys.removeIf { it.first.startsWith("${CardArt.MY_BERT.name}:") }
 
 /** Layout and size side by side, colours below: compact segmented controls instead of rows of loose chips. */
 @Composable
@@ -292,7 +306,7 @@ private fun Segmented(label: String, options: List<String>, selected: Int, modif
                 val isSelected = index == selected
                 Box(segmentModifier.clip(RoundedCornerShape(11.dp))
                     .background(if (isSelected) PanelStrong else Color.Transparent)
-                    .then(if (isSelected) Modifier.border(1.dp, Orange, RoundedCornerShape(11.dp)) else Modifier)
+                    .then(if (isSelected) Modifier.border(1.dp, Selected, RoundedCornerShape(11.dp)) else Modifier)
                     .selectable(isSelected, role = Role.RadioButton) { if (!isSelected) { haptics.performHapticFeedback(HapticFeedbackType.SegmentTick); select(index) } }
                     .heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 10.dp), contentAlignment = Alignment.Center) {
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {

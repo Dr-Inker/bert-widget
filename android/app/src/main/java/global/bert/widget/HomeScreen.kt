@@ -86,7 +86,7 @@ internal fun HomeScreen(modifier: Modifier, state: ActivityState, now: Long, ref
     }
     val pull = rememberPullToRefreshState()
     PullToRefreshBox(pulled, onRefresh = { pulled = true; retry() }, modifier, state = pull, indicator = {
-        PullToRefreshDefaults.Indicator(pull, pulled, Modifier.align(Alignment.TopCenter), containerColor = PanelStrong, color = Orange)
+        PullToRefreshDefaults.Indicator(pull, pulled, Modifier.align(Alignment.TopCenter), containerColor = PanelStrong, color = AccentText)
     }) {
         // Pull-to-refresh has no TalkBack gesture; the same refresh is offered as an action on the screen.
         BERTScreenContent(Modifier.fillMaxSize().semantics { customActions = listOf(CustomAccessibilityAction("Refresh") { retry(); true }) }, scroll) {
@@ -226,8 +226,14 @@ private fun MeetBertCard(dismiss: () -> Unit) {
             Text("This app and its daily updates come from Berthalla, a fan project. Official BERT: @bertcoincto and bert.global.",
                 color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
             // A quiet dismissal: Today's "Make it a card" stays the one filled button on screen.
-            TextButton(onClick = dismiss, contentPadding = PaddingValues(horizontal = 0.dp)) {
-                Text("Nice to meet you", fontWeight = FontWeight.Bold)
+            val myBert = LocalMyBert.current
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(16.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = dismiss, contentPadding = PaddingValues(horizontal = 0.dp)) {
+                    Text("Nice to meet you", fontWeight = FontWeight.Bold)
+                }
+                if (myBert.chosen == null) TextButton(onClick = myBert.open, contentPadding = PaddingValues(horizontal = 0.dp)) {
+                    Text("Hold a Bert NFT? Show yours")
+                }
             }
         }
     }
@@ -240,11 +246,21 @@ private fun TodayCard(state: ActivityState, now: Long, pacing: Boolean, entry: J
     val large = LocalDensity.current.fontScale > 1.3f
     val today = remember(now / 60_000, large) { todayLabel(now, large) }
     val activity = (state as? ActivityState.Available)?.activity
-    Card(colors = CardDefaults.cardColors(containerColor = PanelStrong), shape = Large) {
-        TodayGarden(pacing, onLongPress = meetBert)
+    // The garden Bert stays the app's character; a holder's own Bert joins him as a portrait chip in the header.
+    val chosen = LocalMyBert.current.chosen
+    // "Match my Bert" (switched on in Personalise) tints Today with that Bert's palette; otherwise the app's own navy.
+    val surface = remember(chosen) {
+        chosen?.takeIf { global.bert.widget.theme.BERTThemeStore(context.applicationContext).matchMyBert }?.let { Color(it.palette.panelArgb) }
+    } ?: PanelStrong
+    Card(colors = CardDefaults.cardColors(containerColor = surface), shape = Large) {
+        TodayGarden(pacing, mood = activity?.mood, onLongPress = meetBert)
         Column(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 18.dp, bottom = 22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                SectionLabel(today)
+                if (chosen != null) FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
+                    SectionLabel(today)
+                    MyBertChip(chosen)
+                } else SectionLabel(today)
                 Greeting(now, activity?.mood, visit?.days)
             }
             if (newCount > 0) Surface(onClick = showNew, color = Panel, shape = Small) {
@@ -278,7 +294,7 @@ private fun TodayCard(state: ActivityState, now: Long, pacing: Boolean, entry: J
             FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
                 itemVerticalAlignment = Alignment.CenterVertically) {
                 dispatch?.let { text ->
-                    Button(onClick = { makeCard(captionExcerpt(text)) }, colors = ButtonDefaults.buttonColors(containerColor = Orange, contentColor = Navy)) {
+                    Button(onClick = { makeCard(captionExcerpt(text)) }, colors = solidActionButtonColors()) {
                         Text("Make it a card", fontWeight = FontWeight.Bold)
                     }
                 }
@@ -321,7 +337,7 @@ private fun UpdateText(text: String) {
 
 @Composable
 private fun NewTag() {
-    Text("New", color = Navy, fontSize = 11.sp, fontWeight = FontWeight.Bold,
+    Text("New", color = OnAction, fontSize = 11.sp, fontWeight = FontWeight.Bold,
         modifier = Modifier.clip(Small).background(Orange).padding(horizontal = 7.dp, vertical = 2.dp))
 }
 
@@ -524,10 +540,10 @@ private fun TournamentCard(event: BERTEvent, now: Long, delayed: Boolean, update
             if (phase == EventPhase.UNCONFIRMED) Text("Check the game for the current tournament status.", color = Amber, fontSize = 13.sp)
             val endDate = DateTimeFormatter.ofPattern("d MMM yyyy · HH:mm 'UTC'").withZone(ZoneId.of("UTC")).format(Instant.ofEpochMilli(event.endsAtEpochMillis))
             Text("${if (ended) "Ended" else "Scheduled end"} $endDate", color = Muted, fontSize = 12.sp)
-            if (!ended) Button(onClick = { openBERTLink(context, BERTLink.FLAPPY) }) {
+            if (!ended) Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = { openBERTLink(context, BERTLink.FLAPPY) }) {
                 Text("Play in Telegram")
                 Spacer(Modifier.width(8.dp))
-                BERTIcon(BERTSymbol.ARROW, Navy, Modifier.size(16.dp))
+                BERTIcon(BERTSymbol.ARROW, OnAction, Modifier.size(16.dp))
             }
         }
     }

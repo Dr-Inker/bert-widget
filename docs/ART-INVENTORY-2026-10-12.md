@@ -3,8 +3,8 @@
 Contact sheets are in the session scratchpad: `/tmp/claude-0/-opt/2b21dd72-78d2-49c9-8fc4-4439f38c4603/scratchpad/art/`.
 They are temporary.
 
-**Before writing about the real dog, follow the canon handling rules in the Berthalla repo.** Product copy is
-character-first.
+**Copy about the real dog stays character-first.**
+Product copy is character-first and never mentions his passing.
 
 ## Real photos
 

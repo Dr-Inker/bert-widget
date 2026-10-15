@@ -71,7 +71,7 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
                         .aspectRatio(ready.bitmap.width.toFloat() / ready.bitmap.height).clip(RoundedCornerShape(20.dp)))
             }
             Text(ready.caption, color = Cream, fontSize = 17.sp, lineHeight = 24.sp)
-            Button(onClick = {
+            Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = {
                 busy = true; error = null
                 scope.launch {
                     try {
@@ -96,7 +96,7 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
                         BERTIcon(BERTSymbol.CREATE)
                         Text("Your first card belongs here.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                         Text("Make a little something. Save it here. Come back whenever you need a smile.", color = Muted, lineHeight = 23.sp)
-                        Button(onClick = makeCard) { Text("Make a card") }
+                        Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = makeCard) { Text("Make a card") }
                     }
                 }
             }

@@ -23,7 +23,7 @@ class CaptionCardV2Test {
 
     @Test fun everyArtLayoutAndSizeRendersAtItsExactSize() {
         val cards = mutableListOf<Bitmap>()
-        for (format in CardFormat.entries) for (layout in CardLayout.entries) for (art in CardArt.entries) {
+        for (format in CardFormat.entries) for (layout in CardLayout.entries) for (art in CardArt.BUILT_IN) {
             val card = renderCaption(context, caption, 0, CardStyle(art, layout, format))
             assertEquals(format.width, card.bitmap.width); assertEquals(format.height, card.bitmap.height)
             // Not blank: the art drew something other than the background colour.

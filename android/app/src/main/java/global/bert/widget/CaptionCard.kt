@@ -33,6 +33,13 @@ internal enum class CardArt(val label: String, val description: String, val draw
     PACK("Pack", "Bert and the pack", null, R.raw.wallpaper_woofhub_night_lock, .50f, .58f, .85f),
     MOON("Moonlight", "Bert by moonlight", null, R.raw.wallpaper_berthalla_nights_lock, .50f, .50f, .75f),
     TRAIL("Trail", "Pixel Bert on the Lost Trail", R.drawable.lost_trail, null, .47f, .62f, .36f, pixelArt = true),
+    /** The holder's own Bert NFT (My Bert), read from the picture kept on the phone; offered only while one is chosen. */
+    MY_BERT("My Bert", "My Bert", null, null, .50f, .36f, 1.00f);
+
+    companion object {
+        /** The artworks that ship with the app. */
+        val BUILT_IN = entries.filter { it != MY_BERT }
+    }
 }
 
 internal enum class CardLayout(val label: String) { NOTE("Note"), POSTER("Poster") }
@@ -43,9 +50,11 @@ internal data class CardStyle(val art: CardArt = CardArt.PHOTO, val layout: Card
 
 internal data class RenderedCaption(val caption: String, val palette: Int, val bitmap: Bitmap, val style: CardStyle = CardStyle())
 
-private fun decodeArt(context: Context, art: CardArt, options: BitmapFactory.Options): Bitmap? =
-    if (art.raw != null) context.resources.openRawResource(art.raw).use { BitmapFactory.decodeStream(it, null, options) }
-    else BitmapFactory.decodeResource(context.resources, requireNotNull(art.drawable), options)
+private fun decodeArt(context: Context, art: CardArt, options: BitmapFactory.Options): Bitmap? = when {
+    art == CardArt.MY_BERT -> global.bert.widget.data.MyBertStore(context).imageFile.takeIf { it.isFile }?.let { BitmapFactory.decodeFile(it.path, options) }
+    art.raw != null -> context.resources.openRawResource(art.raw).use { BitmapFactory.decodeStream(it, null, options) }
+    else -> BitmapFactory.decodeResource(context.resources, requireNotNull(art.drawable), options)
+}
 
 private fun loadArt(context: Context, art: CardArt): Bitmap =
     requireNotNull(decodeArt(context, art, BitmapFactory.Options().apply { inScaled = false; if (art.raw != null) inSampleSize = 2 })) { "Card art unavailable" }

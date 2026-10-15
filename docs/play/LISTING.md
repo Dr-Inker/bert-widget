@@ -64,6 +64,18 @@ Today, Create, Market, Explore and Alerts. Captions: "Bert’s day, every day", 
 - The app makes requests to DEX Screener, GeckoTerminal and berthalla.io for public data; these services see the
   device's IP address as any web request does, and no identifiers, holdings or account data are sent. Holdings, cards,
   alert settings and game progress stay in private app storage; Android backup is disabled.
+- **My Bert (0.10, optional, off until used):** a person can paste a public Solana wallet address to show the Bert NFT
+  they hold. On their tap, the app sends that address to Magic Eden
+  (`api-mainnet.magiceden.dev`, held and listed Berts) and to the public Solana RPC (`api.mainnet-beta.solana.com`,
+  staked Berts), and downloads the matching pictures from the collection's Pinata gateway
+  (`green-advanced-mule-774.mypinata.cloud`). The address is never sent to berthalla.io or to the developer. It is kept
+  only in private app storage (excluded from backup, like everything else), with the short list of Berts and the chosen
+  picture; "Forget this address" deletes all three. Nothing is signed and no keys are asked for or stored; the app
+  cannot move or spend anything. **Declare it (decided 15 Oct 2026):** Play counts any data
+  "transmitted off the device" as collected, even when it goes straight to a third party, so declare *Financial info →
+  Other financial info* (wallet address): collected, not shared, optional, processed ephemerally, purpose App
+  functionality. The privacy page says so. The empty state carries no marketplace link (Play's blockchain-content
+  rules); there are no prices, values or rewards anywhere in My Bert.
 - **Encryption in transit:** yes (HTTPS only; cleartext is disabled in release builds).
 - **Deletion:** uninstalling or clearing app data deletes everything; there is no server-side data to delete.
 

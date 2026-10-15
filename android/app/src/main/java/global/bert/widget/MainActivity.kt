@@ -187,65 +187,77 @@ internal fun BERTApp(
         consumeEntry()
     }
     val savedScreens = rememberSaveableStateHolder()
+    // My Bert: the holder's chosen NFT, shared with Home, Create and Personalise; its screen opens over the current one.
+    val myBertStore = remember { MyBertStore(context.applicationContext) }
+    var chosenBert by remember { mutableStateOf(myBertStore.chosen()) }
+    var myBertOpen by rememberSaveable { mutableStateOf(false) }
+    val myBert = MyBertHandle(chosenBert, open = { myBertOpen = true }, update = { chosenBert = it })
 
     BackHandler(destination != BERTDestination.HOME) { destination = BERTDestination.HOME }
+    BackHandler(myBertOpen) { myBertOpen = false }
 
-    Scaffold(
-        containerColor = Navy,
-        contentWindowInsets = WindowInsets.safeDrawing,
-        bottomBar = { BERTNavigation(destination) { destination = it } },
-    ) { padding ->
-        // A short crossfade between destinations, and again between sections, so nothing hard-cuts.
-        Crossfade(destination, Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(),
-            animationSpec = tween(180), label = "destination") { shown ->
-            val hasSections = shown == BERTDestination.CREATE || shown == BERTDestination.TOOLS
-            val largeText = LocalDensity.current.fontScale > 1.3f
-            Column(Modifier.fillMaxSize()) {
-                if (hasSections) {
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        // The selected bottom destination already names the section. At larger
-                        // text sizes, prioritize its content over a repeated pinned heading.
-                        if (!largeText) AppHeader(shown)
-                        val tabPadding = if (largeText) 12.dp else 16.dp
-                        if (shown == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalise"), createTab, tabPadding, singleRow = true) { createTab = it }
-                        else SectionTabs(listOf("Market", "Holdings", "Alerts"), toolsTab, tabPadding, singleRow = true) { toolsTab = it }
-                    }
-                }
-                val screenKey = when (shown) {
-                    BERTDestination.TOOLS -> "TOOLS-$toolsTab"
-                    BERTDestination.CREATE -> "CREATE-$createTab"
-                    else -> shown.name
-                }
-                Crossfade(screenKey, Modifier.weight(1f).fillMaxWidth(), animationSpec = tween(150), label = "section") { key ->
-                  savedScreens.SaveableStateProvider(key) {
-                    val body = Modifier.fillMaxSize()
-                    if (shown == BERTDestination.CREATE && key == "CREATE-Saved") {
-                        SavedCardsScreen(body) { createTab = "Art" }
-                    } else if (shown == BERTDestination.HOME) {
-                        HomeScreen(body, activityState, now, activityRefreshing || refreshing,
-                            retry = { refreshActivity(); refresh() },
-                            quote = state, position = position,
-                            openMarket = { destination = BERTDestination.TOOLS; toolsTab = "Market" },
-                            makeCard = { caption -> cardSeed = caption; createTab = "Art"; destination = BERTDestination.CREATE },
-                        ) { step ->
-                            when (step) {
-                                GettingStartedStep.WIDGET -> { destination = BERTDestination.CREATE; createTab = "Personalise" }
-                                GettingStartedStep.GAME -> openLostTrail(context)
-                                GettingStartedStep.CARD -> { destination = BERTDestination.CREATE; createTab = "Art" }
-                                GettingStartedStep.ALERT -> { destination = BERTDestination.TOOLS; toolsTab = "Alerts" }
+    CompositionLocalProvider(LocalMyBert provides myBert) {
+        Scaffold(
+            containerColor = Navy,
+            contentWindowInsets = WindowInsets.safeDrawing,
+            bottomBar = { BERTNavigation(destination) { myBertOpen = false; destination = it } },
+        ) { padding ->
+            if (myBertOpen) {
+                MyBertScreen(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), close = { myBertOpen = false })
+            } else {
+                // A short crossfade between destinations, and again between sections, so nothing hard-cuts.
+                Crossfade(destination, Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(),
+                    animationSpec = tween(180), label = "destination") { shown ->
+                    val hasSections = shown == BERTDestination.CREATE || shown == BERTDestination.TOOLS
+                    val largeText = LocalDensity.current.fontScale > 1.3f
+                    Column(Modifier.fillMaxSize()) {
+                        if (hasSections) {
+                            Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                // The selected bottom destination already names the section. At larger
+                                // text sizes, prioritize its content over a repeated pinned heading.
+                                if (!largeText) AppHeader(shown)
+                                val tabPadding = if (largeText) 12.dp else 16.dp
+                                if (shown == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalise"), createTab, tabPadding, singleRow = true) { createTab = it }
+                                else SectionTabs(listOf("Market", "Holdings", "Alerts"), toolsTab, tabPadding, singleRow = true) { toolsTab = it }
                             }
                         }
-                    } else BERTScreenContent(body) {
-                        if (!hasSections) AppHeader(shown)
-                        when (shown) {
-                            BERTDestination.EXPLORE -> ExploreScreen()
-                            BERTDestination.CREATE -> CreateScreen(key.removePrefix("CREATE-"), seedCaption = cardSeed, consumeSeed = { cardSeed = null }) { createTab = it }
-                            BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, key.removePrefix("TOOLS-"),
-                                refresh = refresh, savePosition = savePosition)
-                            BERTDestination.HOME -> Unit
+                        val screenKey = when (shown) {
+                            BERTDestination.TOOLS -> "TOOLS-$toolsTab"
+                            BERTDestination.CREATE -> "CREATE-$createTab"
+                            else -> shown.name
+                        }
+                        Crossfade(screenKey, Modifier.weight(1f).fillMaxWidth(), animationSpec = tween(150), label = "section") { key ->
+                          savedScreens.SaveableStateProvider(key) {
+                            val body = Modifier.fillMaxSize()
+                            if (shown == BERTDestination.CREATE && key == "CREATE-Saved") {
+                                SavedCardsScreen(body) { createTab = "Art" }
+                            } else if (shown == BERTDestination.HOME) {
+                                HomeScreen(body, activityState, now, activityRefreshing || refreshing,
+                                    retry = { refreshActivity(); refresh() },
+                                    quote = state, position = position,
+                                    openMarket = { destination = BERTDestination.TOOLS; toolsTab = "Market" },
+                                    makeCard = { caption -> cardSeed = caption; createTab = "Art"; destination = BERTDestination.CREATE },
+                                ) { step ->
+                                    when (step) {
+                                        GettingStartedStep.WIDGET -> { destination = BERTDestination.CREATE; createTab = "Personalise" }
+                                        GettingStartedStep.GAME -> openLostTrail(context)
+                                        GettingStartedStep.CARD -> { destination = BERTDestination.CREATE; createTab = "Art" }
+                                        GettingStartedStep.ALERT -> { destination = BERTDestination.TOOLS; toolsTab = "Alerts" }
+                                    }
+                                }
+                            } else BERTScreenContent(body) {
+                                if (!hasSections) AppHeader(shown)
+                                when (shown) {
+                                    BERTDestination.EXPLORE -> ExploreScreen()
+                                    BERTDestination.CREATE -> CreateScreen(key.removePrefix("CREATE-"), seedCaption = cardSeed, consumeSeed = { cardSeed = null }) { createTab = it }
+                                    BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, key.removePrefix("TOOLS-"),
+                                        refresh = refresh, savePosition = savePosition)
+                                    BERTDestination.HOME -> Unit
+                                }
+                            }
+                          }
                         }
                     }
-                  }
                 }
             }
         }
@@ -317,10 +329,14 @@ internal fun AppHeader(destination: BERTDestination) {
     }
 }
 
-/** The official BERT wordmark (white artwork, tinted to the text colour). */
+/**
+ * The official BERT wordmark. BERT Violet uses the brand kit's vector with its white-to-lilac gradient (only ever on
+ * dark); Berthalla Navy keeps the white artwork tinted to the text colour.
+ */
 @Composable
 internal fun BERTWordmark(modifier: Modifier = Modifier, color: androidx.compose.ui.graphics.Color = Cream) {
-    Image(painterResource(R.drawable.bert_wordmark), "BERT", modifier.aspectRatio(640f / 186f),
+    if (BERTColors.scheme.brandType) Image(painterResource(R.drawable.bert_wordmark_brand), "BERT", modifier.aspectRatio(467f / 135f))
+    else Image(painterResource(R.drawable.bert_wordmark), "BERT", modifier.aspectRatio(640f / 186f),
         colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(color))
 }
 

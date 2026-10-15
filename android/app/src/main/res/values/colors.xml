@@ -2,4 +2,6 @@
 <resources>
     <!-- Matches Navy in BERTComponents.kt. -->
     <color name="bert_navy">#071A2F</color>
+    <!-- BERT Violet's background (brand kit), the default scheme: window, splash and system bars. -->
+    <color name="bert_violet">#100B16</color>
 </resources>

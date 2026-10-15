@@ -67,7 +67,7 @@ class CaptionCardExportTest {
     }
 
     @Test fun thumbnailsAreSquareCropsOfEveryArtwork() {
-        for (art in CardArt.entries) {
+        for (art in CardArt.BUILT_IN) {
             val thumbnail = artThumbnail(context, art, 216)
             assertEquals(216, thumbnail.width); assertEquals(216, thumbnail.height)
             val distinct = (0 until 216 step 12).flatMap { x -> (0 until 216 step 12).map { y -> thumbnail.getPixel(x, y) } }.toSet()

@@ -3,10 +3,10 @@
     <!-- Dark from the first frame: the window shows navy before Compose draws, so a cold start never flashes light. -->
     <style name="Theme.BERT" parent="android:style/Theme.Material.NoActionBar">
         <item name="android:fontFamily">sans</item>
-        <item name="android:windowBackground">@color/bert_navy</item>
-        <item name="android:colorBackground">@color/bert_navy</item>
+        <item name="android:windowBackground">@color/bert_violet</item>
+        <item name="android:colorBackground">@color/bert_violet</item>
         <item name="android:windowLightStatusBar">false</item>
-        <item name="android:statusBarColor">@color/bert_navy</item>
-        <item name="android:navigationBarColor">@color/bert_navy</item>
+        <item name="android:statusBarColor">@color/bert_violet</item>
+        <item name="android:navigationBarColor">@color/bert_violet</item>
     </style>
 </resources>

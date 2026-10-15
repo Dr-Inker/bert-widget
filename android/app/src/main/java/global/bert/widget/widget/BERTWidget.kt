@@ -60,6 +60,7 @@ import global.bert.widget.formatPercent
 import global.bert.widget.formatPrice
 import global.bert.widget.formatTokenAmount
 import global.bert.widget.theme.BERTThemePack
+import global.bert.widget.theme.BERTPalette
 import global.bert.widget.theme.BERTThemeStore
 import global.bert.widget.work.BERTRefreshWorker
 import global.bert.widget.work.BERTWidgetStaleRenderWorker
@@ -326,7 +327,7 @@ private data class WidgetPalette(
     val accent: Color,
 ) {
     companion object {
-        fun from(theme: BERTThemePack) = WidgetPalette(
+        fun from(theme: BERTPalette) = WidgetPalette(
             background = Color(theme.backgroundArgb),
             panel = Color(theme.panelArgb),
             text = Color(theme.textArgb),
@@ -337,7 +338,7 @@ private data class WidgetPalette(
 }
 
 private val LocalWidgetPalette = compositionLocalOf {
-    WidgetPalette.from(BERTThemePack.DEFAULT)
+    WidgetPalette.from(BERTThemePack.DEFAULT.palette)
 }
 
 private val Green = Color(0xFF45E09A)
@@ -364,7 +365,7 @@ private class WidgetData(val quote: BERTQuote?, val holdings: Double?, val spark
             val history = BERTPriceHistory.combine(BERTMarketHistoryRepository(context).load(), BERTPriceHistory(context).load())
             // The chart takes its colour from the same 24h change the widget prints next to it.
             val sparkline = BERTSparkline.render(history, rising = quote?.change24hPct?.let { it >= 0 })
-            return WidgetData(quote, BERTHoldingsStore(context).load(), sparkline, WidgetPalette.from(BERTThemeStore(context).load()))
+            return WidgetData(quote, BERTHoldingsStore(context).load(), sparkline, WidgetPalette.from(BERTThemeStore(context).loadPalette()))
         }
     }
 }

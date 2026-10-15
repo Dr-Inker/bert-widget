@@ -321,6 +321,44 @@ class BERTWidgetRenderTest {
         }
     }
 
+    /**
+     * My Bert: the holder's NFT replaces the photo as the portrait (whole, square), the banner and the avatar, at every
+     * size, with the same fit, fill and art-share rules as the photo; and with "Match my Bert" its palette.
+     */
+    @Test fun bertWidgetShowsTheHoldersBertAtEverySize() {
+        val picture = android.graphics.BitmapFactory.decodeStream(javaClass.getResourceAsStream("/mybert/bert-2206.png"))
+        global.bert.widget.data.MyBertStore(context).saveChosen(global.bert.widget.data.MyBert("Eemxg9w6qCiAR5V9Hbqhms9p6i1snBcaTs46WGQSL6Gc", 2206, "Forest", staked = true), picture)
+        try {
+            val failures = mutableMapOf<String, List<String>>()
+            // The same posts and tournament states as bertFillReport, with and without "Match my Bert".
+            for (match in listOf(false, true)) for ((kind, post) in mapOf("short" to SHORT_POST, "long" to LONG_POST)) for (tournament in listOf(true, false)) {
+                global.bert.widget.theme.BERTThemeStore(context).matchMyBert = match
+                seedActivity(post, tournament)
+                for ((w, h) in BERT_SIZES) {
+                    val tag = "${if (match) "match-" else ""}$kind${if (tournament) "-event" else ""}-${w}x$h"
+                    val r = render(BERTDailyWidget(), w, h, "bert-mybert-$tag")
+                    var art = 0; var photo = 0
+                    fun walk(v: View) {
+                        if (v is android.widget.ImageView && v.visibility == View.VISIBLE) {
+                            if (v.contentDescription == "Your Bert #2206") art = maxOf(art, v.width * v.height)
+                            if (v.contentDescription == "Bert") photo++
+                        }
+                        if (v is ViewGroup) for (i in 0 until v.childCount) walk(v.getChildAt(i))
+                    }
+                    walk(r.root)
+                    val share = art.toFloat() / (r.root.width * r.root.height)
+                    failures[tag] = problems(r, multiline = setOf(post)) + voids(r) + listOfNotNull(
+                        "no holder's Bert".takeIf { art == 0 }, "stock photo still shown".takeIf { photo > 0 },
+                        "Bert art only ${(share * 100).toInt()}%".takeIf { (w >= 200 || h >= 150) && share < 0.18f })
+                }
+            }
+            println("WIDGET REPORT my bert: $failures")
+            assertTrue(failures.filterValues { it.isNotEmpty() }.toString(), failures.values.all { it.isEmpty() })
+        } finally {
+            global.bert.widget.data.MyBertStore(context).forget()
+        }
+    }
+
     private fun seedActivity(post: String, tournament: Boolean, mood: String = "giddy") {
         val now = System.currentTimeMillis()
         val status = JSONObject().put("updated_at", now / 1000 - 60).put("mood", mood).put("latest_post", post)

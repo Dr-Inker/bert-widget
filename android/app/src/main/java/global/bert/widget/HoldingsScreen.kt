@@ -42,7 +42,7 @@ internal fun HoldingsScreen(position: BERTPosition, state: QuoteState, now: Long
             }
         }
         if (!editing) {
-            Button(onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("Edit holdings") }
+            Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("Edit holdings") }
             TextButton(onClick = { removing = true }) { Text("Remove holdings", color = Muted) }
         }
     }
@@ -112,7 +112,7 @@ private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), isError = costError,
                 supportingText = { Text(if (costError) "Enter a valid USD amount or leave blank." else "Total paid for this amount, not price per token.") },
             )
-            Button(onClick = {
+            Button(colors = solidActionButtonColors(), onClick = {
                 attempted = true
                 if (parsedAmount != null && (cost.isBlank() || parsedCost != null)) save(BERTPosition(parsedAmount, parsedCost))
             }, modifier = Modifier.fillMaxWidth()) { Text("Save holdings") }

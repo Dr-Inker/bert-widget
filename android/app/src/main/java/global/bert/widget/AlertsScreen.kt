@@ -105,7 +105,7 @@ internal fun AlertsScreen(quote: QuoteState, store: BERTAlertStore? = null) {
                 })
             val valid = (above.isBlank() || aboveValue != null) && (below.isBlank() || belowValue != null)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
-                Button(enabled = valid, onClick = {
+                Button(colors = solidActionButtonColors(), enabled = valid, onClick = {
                     val next = settings.copy(priceAbove = aboveValue, priceBelow = belowValue)
                     enable(next)
                     // After save, so a level changed just now counts as re-armed while an unchanged, already-announced one does not.

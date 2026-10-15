@@ -53,16 +53,16 @@ import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 // Art: Bertians R2 F/10 (PixelLab), owner-approved for the app 2026-10-12: bert_f10 (84px, facing east), its 8-frame
-// east walk (bert_walk), and today_garden: the R2 phone styleframe re-rendered in its own Godot scene with the scene's
-// Bert hidden (pixel-identical elsewhere), cropped to x 0-600, y 254-390. That is the kennel hillock and the pup pack
-// on continuous ground; the app's Bert stands in the scene's own spot (x 256, feet on y 352). The earlier crop put him
-// over the pond, floating at fence height in front of a wall with no ground under it.
+// east walk (bert_walk), six mood stills (bert_mood_*: 0.10 art lane, PixelLab Pro + inpaint from F/10, snapped to
+// F/10's 33-colour palette; owner-approved 2026-10-12) and today_garden: banner B of the 0.10 art lane, the R2 scene's
+// gate end re-rendered in Godot with the pond filled, so the grass runs unbroken to the wall and wicket gate (grass
+// line row 104 in every column). Provenance: /opt/bert-widget-qa/art-0.10/README.md.
 // Everything is drawn nearest-neighbour at a whole-number scale.
 internal const val FRAME = 84
 internal const val GARDEN_W = 600
 internal const val GARDEN_H = 136
-internal const val FEET_TOP = 15 // frame top so his feet land on the hillock grass (scene y 352 = row 98)
-internal const val REST = 214 // frame left: his place in the pack, between the pups behind and the pups ahead
+internal const val FEET_TOP = 20 // frame top so his feet land on the grass line (row 104)
+internal const val REST = 382 // frame left: on the path, just short of the wall and the wicket gate
 private const val STEP = 4 // garden pixels per walk frame
 private val HOP = intArrayOf(2, 5, 7, 8, 7, 5, 2, 0)
 
@@ -87,11 +87,12 @@ private suspend fun forever(block: suspend () -> Unit) {
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun TodayGarden(pacing: Boolean, modifier: Modifier = Modifier, onLongPress: (() -> Unit)? = null) {
+internal fun TodayGarden(pacing: Boolean, modifier: Modifier = Modifier, mood: String? = null, onLongPress: (() -> Unit)? = null) {
     val haptics = LocalHapticFeedback.current
     val still = rememberReducedMotion()
     val garden = ImageBitmap.imageResource(R.drawable.today_garden)
-    val bert = ImageBitmap.imageResource(R.drawable.bert_f10)
+    // Standing still he wears the feed's mood (a character note; Home never puts it next to the price).
+    val bert = ImageBitmap.imageResource(moodStill(mood))
     val walk = ImageBitmap.imageResource(R.drawable.bert_walk)
     var pose by remember { mutableStateOf(BertPose()) }
     var taps by remember { mutableIntStateOf(0) }
@@ -121,7 +122,7 @@ internal fun TodayGarden(pacing: Boolean, modifier: Modifier = Modifier, onLongP
             var bob = 0
             while (true) when {
                 taps != heard -> { heard = taps; HOP.forEach { pose = BertPose(lift = it); delay(45) } }
-                pace -> { walkTo(REST, REST + 20); walkTo(REST + 20, REST) } // ahead and back, never into the pup behind
+                pace -> { walkTo(REST, REST - 24); walkTo(REST - 24, REST) } // back down the path and up again, never into the wall
                 else -> {
                     bob = 1 - bob
                     pose = BertPose(lift = bob)
@@ -137,10 +138,10 @@ internal fun TodayGarden(pacing: Boolean, modifier: Modifier = Modifier, onLongP
         // A whole number of device pixels per art pixel; wide cards scale up rather than run out of garden.
         val k = maxOf(density.density.roundToInt(), ceil(widthPx / GARDEN_W).toInt(), 1)
         val shown = ceil(widthPx / k).toInt().coerceAtMost(GARDEN_W)
-        // Bert sits about a third in, with the pack ahead of him; wider cards reveal the kennel behind.
+        // Bert sits about a third in; the clamp keeps the wall and gate in view on phones, wider cards show more path.
         val x0 = (REST - (shown * 0.30f).toInt()).coerceIn(0, GARDEN_W - shown)
         Canvas(Modifier.fillMaxWidth().height(with(density) { (GARDEN_H * k).toDp() })
-            .semantics { contentDescription = "Bert in his red hat, out in the garden" }
+            .semantics { contentDescription = "Bert in his red hat, by the garden gate" }
             .combinedClickable(interactionSource = null, indication = null, role = Role.Button,
                 onClickLabel = "Say hello", onLongClickLabel = onLongPress?.let { "Meet Bert" }, onLongClick = onLongPress,
                 onClick = { haptics.performHapticFeedback(HapticFeedbackType.Confirm); taps++ })) {
@@ -180,4 +181,15 @@ internal fun pixelBertSize(target: Dp): Dp {
 internal fun PixelBertPortrait(size: Dp, modifier: Modifier = Modifier) {
     Image(ImageBitmap.imageResource(R.drawable.bert_f10), "Pixel Bert, drawn from Bertram",
         modifier.size(size), filterQuality = FilterQuality.None)
+}
+
+/** The still for a feed mood; anything unknown is plain F/10. */
+internal fun moodStill(mood: String?): Int = when (mood?.trim()?.lowercase()) {
+    "content" -> R.drawable.bert_mood_content
+    "giddy" -> R.drawable.bert_mood_giddy
+    "smug" -> R.drawable.bert_mood_smug
+    "anxious" -> R.drawable.bert_mood_anxious
+    "melancholy" -> R.drawable.bert_mood_melancholy
+    "restless" -> R.drawable.bert_mood_restless
+    else -> R.drawable.bert_f10
 }

@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#071A2F"
+    android:background="#100B16"
     android:gravity="center_vertical"
     android:orientation="vertical"
     android:padding="16dp"
@@ -29,7 +29,7 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="2dp"
         android:text="LIVE TOKEN PRICE"
-        android:textColor="#9CB0C5"
+        android:textColor="#CECECE"
         android:textSize="10sp"
         android:textStyle="bold" />
 </LinearLayout>

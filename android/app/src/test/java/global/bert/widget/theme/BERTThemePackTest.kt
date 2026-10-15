@@ -12,11 +12,13 @@ class BERTThemePackTest {
     }
 
     @Test
-    fun unknownOrMissingThemeUsesTheAppsOwnNavyAndOrange() {
-        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.fromId(null))
-        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.fromId("future-theme"))
-        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.DEFAULT)
-        assertEquals(0xFF071A2FL, BERTThemePack.DEFAULT.backgroundArgb)
-        assertEquals(0xFFFF9433L, BERTThemePack.DEFAULT.accentArgb)
+    fun unknownOrMissingThemeUsesTheBrandKitsViolet() {
+        assertEquals(BERTThemePack.BERT_VIOLET, BERTThemePack.fromId(null))
+        assertEquals(BERTThemePack.BERT_VIOLET, BERTThemePack.fromId("future-theme"))
+        assertEquals(BERTThemePack.BERT_VIOLET, BERTThemePack.DEFAULT)
+        assertEquals(0xFF100B16L, BERTThemePack.DEFAULT.backgroundArgb)
+        assertEquals(0xFF8531D5L, BERTThemePack.DEFAULT.accentArgb)
+        // Someone who chose the old navy keeps it.
+        assertEquals(BERTThemePack.BERT_NAVY, BERTThemePack.fromId("bert-navy"))
     }
 }

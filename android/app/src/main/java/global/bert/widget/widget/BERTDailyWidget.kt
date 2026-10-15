@@ -1,8 +1,11 @@
 package global.bert.widget.widget
 
 import android.content.Context
+import android.graphics.Bitmap
 import android.text.format.DateFormat
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -45,6 +48,8 @@ import global.bert.widget.R
 import global.bert.widget.formatObservedAt
 import global.bert.widget.data.BERTActivity
 import global.bert.widget.data.BERTActivityRepository
+import global.bert.widget.data.MyBertRepository
+import global.bert.widget.data.MyBertStore
 import global.bert.widget.data.EventPhase
 import global.bert.widget.theme.BERTThemeStore
 
@@ -56,15 +61,18 @@ class BERTDailyWidget : GlanceAppWidget() {
         provideContent {
             val revision = currentState(REVISION) ?: 0
             val activity = remember(revision) { BERTActivityRepository(context).load() }
-            val theme = remember(revision) { BERTThemeStore(context).load() }
-            DailyContent(activity, Color(theme.backgroundArgb), Color(theme.panelArgb), Color(theme.textArgb), Color(theme.mutedArgb),
-                System.currentTimeMillis())
+            val theme = remember(revision) { BERTThemeStore(context).loadPalette() }
+            val myBert = remember(revision) { WidgetBert.load(context) }
+            CompositionLocalProvider(LocalMoodPill provides (Color(theme.highlightArgb) to Color(theme.onHighlightArgb))) {
+                DailyContent(activity, Color(theme.backgroundArgb), Color(theme.panelArgb), Color(theme.textArgb), Color(theme.mutedArgb),
+                    System.currentTimeMillis(), myBert)
+            }
         }
     }
 }
 
-private val Orange = Color(0xFFFF9433)
-private val OnOrange = Color(0xFF1F0E02)
+/** The mood pill's fill and text: the palette's highlight pair (orange on ink by default, lilac on ink for BERT Violet). */
+internal val LocalMoodPill = compositionLocalOf { Color(0xFFFF9433) to Color(0xFF1F0E02) }
 private val Gold = Color(0xFFFFC857)
 
 /** Smallest text on any widget: freshness, status, mood and event lines never go below 10sp. */
@@ -73,8 +81,37 @@ internal const val FRESHNESS_SP = 10f
 /** Width of the mood pill for [mood] (already upper-case): bold caps at 10sp run about 0.7em a glyph, plus 7dp padding a side. */
 internal fun moodPillWidth(mood: String, fontScale: Float) = mood.length * FRESHNESS_SP * 0.7f * fontScale + 14f
 
+/**
+ * The holder's own Bert (My Bert) in place of the photo: the picture kept on the phone, at most [MAX_PX] a side,
+ * so it works offline and stays well inside the launcher's bitmap budget.
+ */
+internal class WidgetBert(val number: Int, val picture: Bitmap) {
+    val description get() = "Your Bert #$number"
+
+    /** A strip at [aspect] (width / height) around his face, which sits a little above the middle of the art. */
+    fun banner(aspect: Float): Bitmap {
+        var w = picture.width.toFloat(); var h = w / aspect
+        if (h > picture.height) { h = picture.height.toFloat(); w = h * aspect }
+        val x = ((picture.width - w) / 2f).toInt()
+        val y = (picture.height * 0.42f - h / 2f).coerceIn(0f, picture.height - h).toInt()
+        return Bitmap.createBitmap(picture, x, y, w.toInt().coerceAtLeast(1), h.toInt().coerceAtLeast(1))
+    }
+
+    companion object {
+        private const val MAX_PX = 384
+
+        fun load(context: Context): WidgetBert? {
+            val chosen = MyBertStore(context).chosen() ?: return null
+            val file = MyBertStore(context).imageFile
+            val bytes = runCatching { file.readBytes() }.getOrNull() ?: return null
+            val picture = MyBertRepository.decodeBounded(bytes, MAX_PX) ?: return null
+            return WidgetBert(chosen.bert.number, picture)
+        }
+    }
+}
+
 @Composable
-private fun DailyContent(activity: BERTActivity?, background: Color, panel: Color, text: Color, muted: Color, now: Long) {
+private fun DailyContent(activity: BERTActivity?, background: Color, panel: Color, text: Color, muted: Color, now: Long, myBert: WidgetBert? = null) {
     val size = LocalSize.current
     val w = size.width.value; val h = size.height.value
     val fontScale = LocalContext.current.resources.configuration.fontScale
@@ -85,8 +122,9 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
     val banner = !wide && h >= 150f
     // A shorter banner on the 150dp-tall sizes leaves room for Bert's words, the as-of time and the tournament line together.
     val bannerH = if (banner) minOf((h - pad * 2) * (if (h < 170f) 0.30f else 0.38f), (w - pad * 2) / 2f) else 0f
-    val portraitW = if (wide) minOf((h - pad * 2) * 0.78f, w * 0.34f) else 0f
-    val portraitH = if (wide) minOf(h - pad * 2, portraitW / 0.6f) else 0f
+    // The photo is a tall crop; a holder's Bert is square art, shown whole rather than cut down to a strip.
+    val portraitW = if (!wide) 0f else if (myBert != null) minOf(h - pad * 2, w * 0.36f) else minOf((h - pad * 2) * 0.78f, w * 0.34f)
+    val portraitH = if (!wide) 0f else if (myBert != null) portraitW else minOf(h - pad * 2, portraitW / 0.6f)
     val gap = if (wide) 12f else 0f
     val columnW = w - pad * 2 - portraitW - gap
     val avatar = if (h < 130f) 22f else 28f
@@ -126,17 +164,20 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
         Image(ImageProvider(R.drawable.bert_widget_glow), null, GlanceModifier.fillMaxSize(), contentScale = ContentScale.FillBounds)
         Row(GlanceModifier.fillMaxSize().padding(pad.dp), verticalAlignment = Alignment.CenterVertically) {
             if (wide) {
-                Image(ImageProvider(R.drawable.bert_widget_portrait), "Bert",
+                Image(myBert?.let { ImageProvider(it.picture) } ?: ImageProvider(R.drawable.bert_widget_portrait), myBert?.description ?: "Bert",
                     GlanceModifier.width(portraitW.dp).height(portraitH.dp).cornerRadius(14.dp), contentScale = ContentScale.Crop)
                 Spacer(GlanceModifier.width(gap.dp))
             }
             Column(GlanceModifier.defaultWeight().fillMaxHeight()) {
                 if (banner) Box(GlanceModifier.fillMaxWidth().height(bannerH.dp), contentAlignment = Alignment.TopEnd) {
-                    Image(ImageProvider(R.drawable.bert_widget_banner), "Bert", GlanceModifier.fillMaxSize().cornerRadius(12.dp), contentScale = ContentScale.Crop)
+                    val strip = remember(myBert, w, bannerH) { myBert?.banner((w - pad * 2) / bannerH) }
+                    Image(strip?.let { ImageProvider(it) } ?: ImageProvider(R.drawable.bert_widget_banner), myBert?.description ?: "Bert",
+                        GlanceModifier.fillMaxSize().cornerRadius(12.dp), contentScale = ContentScale.Crop)
                     if (showPill && mood != null) MoodPill(mood, GlanceModifier.padding(6.dp))
                 } else Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (!wide) {
-                        Image(ImageProvider(R.drawable.bert_token), "Bert", GlanceModifier.size(avatar.dp).cornerRadius((avatar / 2).dp), contentScale = ContentScale.Crop)
+                        Image(myBert?.let { ImageProvider(it.picture) } ?: ImageProvider(R.drawable.bert_token), myBert?.description ?: "Bert",
+                            GlanceModifier.size(avatar.dp).cornerRadius((avatar / 2).dp), contentScale = ContentScale.Crop)
                     }
                     if (showName) {
                         if (!wide) Spacer(GlanceModifier.width(8.dp))
@@ -182,8 +223,9 @@ private fun DailyContent(activity: BERTActivity?, background: Color, panel: Colo
 @Composable
 private fun MoodPill(mood: String, outer: GlanceModifier = GlanceModifier) {
     Box(outer) {
-        Text(mood, maxLines = 1, style = TextStyle(color = ColorProvider(OnOrange), fontSize = FRESHNESS_SP.sp, fontWeight = FontWeight.Bold),
-            modifier = GlanceModifier.background(ColorProvider(Orange)).cornerRadius(9.dp).padding(horizontal = 7.dp, vertical = 2.dp))
+        val (fill, ink) = LocalMoodPill.current
+        Text(mood, maxLines = 1, style = TextStyle(color = ColorProvider(ink), fontSize = FRESHNESS_SP.sp, fontWeight = FontWeight.Bold),
+            modifier = GlanceModifier.background(ColorProvider(fill)).cornerRadius(9.dp).padding(horizontal = 7.dp, vertical = 2.dp))
     }
 }
 

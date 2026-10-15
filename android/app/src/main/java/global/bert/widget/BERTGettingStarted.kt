@@ -192,7 +192,7 @@ internal fun ExitReportCard(report: ExitReport, done: () -> Unit) {
                     } catch (_: ActivityNotFoundException) {
                         Toast.makeText(context, "Install a browser to send the report.", Toast.LENGTH_LONG).show()
                     }
-                }, colors = ButtonDefaults.buttonColors(containerColor = Orange)) { Text("Review report") }
+                }, colors = solidActionButtonColors()) { Text("Review report") }
                 TextButton(onClick = { BERTExitReports.markSeen(context, report); done() }) { Text("Not now", color = Muted) }
             }
         }

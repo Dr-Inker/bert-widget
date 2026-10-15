@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -75,7 +76,7 @@ class CreateScreenTest {
     @Test fun artThumbnailsAreLabelledTargetsAndChooseTheCardArt() {
         openCreate()
         waitForPreview()
-        for (art in CardArt.entries) {
+        for (art in CardArt.BUILT_IN) {
             compose.onNode(hasContentDescription(art.description) and hasClickAction())
                 .assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
         }
@@ -89,7 +90,7 @@ class CreateScreenTest {
         compose.onNodeWithText("Note").assertIsNotSelected()
         // The chosen thumbnail is the art the saved card carries.
         waitForPreview()
-        compose.waitUntil(15_000) { compose.onAllNodesWithTag("art-thumbnail", useUnmergedTree = true).fetchSemanticsNodes().size == CardArt.entries.size }
+        compose.waitUntil(15_000) { compose.onAllNodesWithTag("art-thumbnail", useUnmergedTree = true).fetchSemanticsNodes().size == CardArt.BUILT_IN.size }
         compose.onNodeWithText("Lilac").performScrollTo()
         capture("create-art-picker")
         compose.onNodeWithText("Save card").performScrollTo().performClick()
@@ -105,13 +106,13 @@ class CreateScreenTest {
         val saveBounds = compose.onNodeWithTag("create-save").getUnclippedBoundsInRoot()
         assertTrue("Share comes before Save", shareBounds.bottom <= saveBounds.top)
         assertTrue("Share is the larger button", shareBounds.bottom - shareBounds.top > saveBounds.bottom - saveBounds.top)
-        // Filled in the accent orange; Save is the quieter tonal button.
+        // Filled in the scheme's action colour (BERT Violet by default); Save is the quieter tonal button.
         val screen = capture("create-actions")
         val density = compose.activity.resources.displayMetrics.density
         fun colourAt(bounds: androidx.compose.ui.unit.DpRect) = screen.getPixel(((bounds.left.value + 14) * density).toInt(), ((bounds.top.value + bounds.bottom.value) / 2 * density).toInt())
         fun near(actual: Int, expected: Long) = listOf(16, 8, 0).all { shift -> abs((actual shr shift and 0xFF) - (expected.toInt() shr shift and 0xFF)) <= 6 }
-        assertTrue("Share is filled orange", near(colourAt(shareBounds), 0xFFFF9433))
-        assertTrue("Save is tonal navy", near(colourAt(saveBounds), 0xFF123957))
+        assertTrue("Share is filled with the action colour", near(colourAt(shareBounds), Orange.toArgb().toLong() and 0xFFFFFFFFL))
+        assertTrue("Save is tonal", near(colourAt(saveBounds), PanelStrong.toArgb().toLong() and 0xFFFFFFFFL))
 
         compose.onNodeWithText("Share caption card").performClick()
         compose.waitUntil(15_000) { HapticFeedbackType.Confirm in haptics }

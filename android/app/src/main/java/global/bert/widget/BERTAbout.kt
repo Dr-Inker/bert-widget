@@ -33,8 +33,9 @@ internal fun AboutSheet(close: () -> Unit) {
             verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text("About BERT", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, modifier = Modifier.semantics { heading() })
             Text("A fan app for Bert, a real Pomeranian, and the pack around him, made by Berthalla. Its daily updates come from " +
-                "Berthalla, not from Bert’s official account. It never holds keys, connects a wallet or trades, " +
-                "and your holdings, cards and alerts stay on this phone.", color = Muted, fontSize = 15.sp, lineHeight = 22.sp)
+                "Berthalla, not from Bert’s official account. It never holds keys, connects a wallet, signs anything or trades, " +
+                "and your holdings, cards and alerts stay on this phone. If you add a wallet address in My Bert, it stays on this " +
+                "phone too, and is sent only to Magic Eden and the Solana network to find your Berts, never to Berthalla.", color = Muted, fontSize = 15.sp, lineHeight = 22.sp)
             Text("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", color = Muted, fontSize = 13.sp)
 
             AboutRow("Privacy policy", "What stays on your phone and what the app fetches.") { openBERTLink(context, BERTLink.PRIVACY) }
@@ -50,6 +51,11 @@ internal fun AboutSheet(close: () -> Unit) {
                 color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
             TextButton(onClick = { openBERTLink(context, BERTLink.APACHE_LICENSE) }, contentPadding = PaddingValues(0.dp)) {
                 Text("Read the Apache License 2.0 ↗", color = AccentText)
+            }
+            Text("Text is set in Outfit, © The Outfit Project Authors, used under the SIL Open Font License 1.1.",
+                color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
+            TextButton(onClick = { openBERTLink(context, BERTLink.OFL_LICENSE) }, contentPadding = PaddingValues(0.dp)) {
+                Text("Read the Open Font License ↗", color = AccentText)
             }
             Text("BERT market figures are informational only and are not financial advice.", color = Muted, fontSize = 13.sp, lineHeight = 19.sp)
         }

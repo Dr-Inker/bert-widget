@@ -15,18 +15,21 @@ import org.robolectric.annotation.Config
 class BERTThemeDefaultTest {
     private val context get() = RuntimeEnvironment.getApplication()
 
-    @Test fun aNewInstallGetsTheAppsOwnNavyAndOrange() {
+    @Test fun aNewInstallGetsTheBrandKitsViolet() {
         val theme = BERTThemeStore(context).load()
-        assertEquals(BERTThemePack.BERT_NAVY, theme)
-        // The widget palette is the app's own: same navy, panel, cream, muted grey and orange as the Compose theme.
-        assertEquals(Navy, androidx.compose.ui.graphics.Color(theme.backgroundArgb))
-        assertEquals(Panel, androidx.compose.ui.graphics.Color(theme.panelArgb))
-        assertEquals(Cream, androidx.compose.ui.graphics.Color(theme.textArgb))
-        assertEquals(Muted, androidx.compose.ui.graphics.Color(theme.mutedArgb))
-        assertEquals(Orange, androidx.compose.ui.graphics.Color(theme.accentArgb))
-        assertEquals(0xFF071A2FL, theme.backgroundArgb)
-        assertEquals(0xFF0D2942L, theme.panelArgb)
-        assertEquals(0xFFFF9433L, theme.accentArgb)
+        assertEquals(BERTThemePack.BERT_VIOLET, theme)
+        // The default widget palette matches the app's default scheme: the brand kit's surfaces, text and muted text,
+        // with the kit's violet as the accent stripe.
+        val violet = BERTScheme.BERT_VIOLET
+        assertEquals(violet.background, androidx.compose.ui.graphics.Color(theme.backgroundArgb))
+        assertEquals(violet.panel, androidx.compose.ui.graphics.Color(theme.panelArgb))
+        assertEquals(violet.text, androidx.compose.ui.graphics.Color(theme.textArgb))
+        assertEquals(violet.muted, androidx.compose.ui.graphics.Color(theme.mutedArgb))
+        assertEquals(violet.action, androidx.compose.ui.graphics.Color(theme.accentArgb))
+        // Berthalla Navy's pack still matches the original app colours.
+        val navy = BERTScheme.BERTHALLA_NAVY
+        assertEquals(navy.background, androidx.compose.ui.graphics.Color(BERTThemePack.BERT_NAVY.backgroundArgb))
+        assertEquals(navy.action, androidx.compose.ui.graphics.Color(BERTThemePack.BERT_NAVY.accentArgb))
     }
 
     @Test fun anExistingUsersSavedChoiceIsKept() {

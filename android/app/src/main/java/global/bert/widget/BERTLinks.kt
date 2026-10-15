@@ -19,6 +19,7 @@ internal enum class BERTLink(val url: String, val launchLabel: String) {
     STORY("https://www.bert.global/", "Open in browser"),
     BERTHALLA("https://berthalla.io/", "Open in browser"),
     PRIVACY("https://berthalla.io/app/privacy/", "Open in browser"),
+    OFL_LICENSE("https://openfontlicense.org/open-font-license-official-text/", "Open in browser"),
     FEEDBACK("https://github.com/Dr-Inker/bert-widget/issues", "Open in browser"),
     SOURCE("https://github.com/Dr-Inker/bert-widget", "Open in browser"),
     APACHE_LICENSE("https://www.apache.org/licenses/LICENSE-2.0", "Open in browser"),

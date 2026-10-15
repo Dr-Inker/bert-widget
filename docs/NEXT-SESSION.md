@@ -1,44 +1,76 @@
 # Next session — BERT app
 
-## START HERE (paused 12 October 2026, owner at 1% weekly usage)
+## START HERE (memo 15 October 2026, afternoon)
 
-**Live:** 0.9.2 (code 24) on berthalla.io/app. Site `ccafc5a`, APK `21be50e4…`. The Play bundle `bert-0.9.2.aab` is on
-the PC at `C:\Users\Sjpch\BERT-Play\`. Source is branch `v091` in `/opt/bert-widget-direct`.
+**0.11.0 IS LIVE (15 Oct, public checks pass). It includes 0.10. Published with**
+`git -C /opt/berthalla merge --ff-only release-0.11` (website `ec45301`). **Record:**
+`docs/evidence/2026-10-15/release-0.11.0/README.md`. **Then** run `node
+docs/evidence/2026-10-15/release-0.11.0/check-page.cjs public` and check both APK URLs against `23750b9c…`. The Play
+kit is on the PC (`bert-0.11.0.aab` and mapping). After that: push to GitHub using the squash recipe in memory (scrub
+first), and upload to Play (the owner).
 
-**0.10, in progress:**
-1. **Art: DONE and gated** (187 tests). Branch `v010-art`, worktree `/opt/bert-widget-art`.
-   - Owner-approved banner B: the garden path to the wall and wicket gate, with ground all the way.
-   - Six F/10 mood stills, snapped to F/10's palette.
-   - Art and its provenance: `/opt/bert-widget-qa/art-0.10/README.md`.
-   - A preview build is on the S25.
-2. **My Bert (NFTs): STOPPED mid-way.** Branch `v010-mybert`, worktree `/opt/bert-widget-mybert`. The WIP commit is
-   `051397d`, made with `--no-verify`.
-   - Its flow tests were passing when it stopped.
-   - It is not fully gated, not reviewed, and its renders were not checked.
-   - Spec and facts: `docs/NFT-RESEARCH-2026-10-12.md`. The agent was briefed to write
-     `docs/PRIVACY-MYBERT-DRAFT.md`; check that it exists.
+~~0.10.0 is STAGED to publish but not live.~~ The website branch `release-0.10` (`ad34b77`) is in
+`/opt/bert-widget-site-release`. The owner runs `git -C /opt/berthalla merge --ff-only release-0.10`, because the
+classifier blocks it as a production deploy. Then run `node docs/evidence/2026-10-15/release-0.10.0/check-page.cjs
+public` (from the `v010` worktree) and check both APK URLs against `c056882f…`. The record is in
+`docs/evidence/2026-10-15/release-0.10.0/README.md` on branch `v010`. Play: `bert-0.10.0.aab` and the mapping are on
+the PC; moving the 0.9.2 files to `superseded-0.9.2\` was blocked by the classifier.
 
-**Next steps:**
-1. Read the `v010-mybert` diff. Finish anything missing against the spec. Run its tests and look at its host-ui
-   renders.
-2. Merge `v010-art` and `v010-mybert` into one branch. Bump to 0.10.0 (code 25). Run the gate:
-   `flock /opt/bert-widget-qa/gradle.lock tools/check-mobile-game.sh`.
-3. Get one independent review. To save usage, use a single reviewer.
-4. Device check on the S25.
-5. Publish, following the 0.9.2 recipe in `docs/evidence/2026-10-12/release-0.9.2/`.
-   - Add the My Bert paragraph to the privacy page on the website: the wallet address goes to Magic Eden and the
-     Solana RPC; nothing is signed.
-   - Update the Play data-safety notes in `docs/play/LISTING.md`.
+**0.11.0 (26) "BERT Violet"** is on branch `v011-brand` in the worktree `/opt/bert-widget-brand`, at `eec097c`.
+- Gate: PASS, 228 tests.
+- The preview build is installed on the S25 as "BERT Preview".
+- What it does, from the owner's request on 15 October:
+  - The official BERT brand kit is the app default: kit surfaces, Outfit (static weights), the gradient wordmark,
+    glass buttons, and solid violet only for each screen's main action.
+  - The old navy and orange is "Berthalla Navy" in Create → Personalise → App colours.
+  - A new "BERT Violet" widget and wallpaper pack is the widget default for new installs.
+- An independent review (no blockers) was fixed in `eec097c`.
+- Details, kit rules and the bert.global comparison: `docs/BRAND-KIT.md`.
+- Next:
+  1. Owner look on the phone.
+  2. Merge `v011-brand` after `v010` is published (it is built on `v010`).
+  3. Regenerate the Play screenshots in violet: `PlayStoreScreenshotsTest` still frames them in navy.
+  4. Regenerate the widget picker previews (`widget_preview_*.png`, still navy).
+  5. Release recipe.
+- Candidates not adopted: kit radii (20/24/32), 1px card borders, and cartoon Bertram art.
 
-**Owed by the owner:**
-- Upload 0.9.2 (or 0.10) to Play.
-- Check App integrity: whether the signing key is Google-generated.
-- Create the Closed testing track, then repoint the tester form.
-- Choose a contact email.
-- Get the BERT team's OK to display NFT art.
-- OK the push to GitHub. `main` is still at 0.8.1.
+## Earlier memo (15 October 2026, morning)
 
-## Earlier memo (12 October 2026, 0.9.1)
+**State:** 0.9.2 is LIVE. **0.10.0 (code 25) rc1 is built and staged, not installed or published.**
+- Source: branch `v010` in the worktree `/opt/bert-widget-v010`, at `6bfc76f`. That is `v010-mybert` (My Bert,
+  finished) merged with `v010-art` (the garden-gate banner and mood stills), plus the version bump, review fixes and
+  a lint fix.
+- Gate `tools/check-mobile-game.sh` PASS at `6bfc76f`: 227 unit tests, lint, debug build and the Lost Trail browser
+  check. One earlier run failed the Lost Trail `vx<.1` check right after a heavy Gradle run; it passed 3 of 3 on its
+  own, so it was a load flake.
+- `lintRelease`, `assembleRelease` and `bundleRelease` all pass.
+- Staged in `/opt/bert-widget-qa/release-0.10/candidate/`: `bert-0.10.0-rc1.apk` (sha `c056882f…`, 5.9 MB, pinned
+  cert `f911463d…`), `bert-0.10.0-rc1.aab` (`3cf55e4c…`) and the mapping.
+- **Live services checked 15 Oct** with real holder and staker wallets: Magic Eden wallet tokens, the RPC
+  `getProgramAccounts` staking positions, DAS `getAssetBatch` on the public RPC (works without a key) and the Pinata
+  original and WebP thumbnail. All match the parsers' field assumptions, and name and image numbers agree.
+- **Independent review (Opus):** no blockers. Five should-fix items were all fixed in `39912dc`:
+  - Forget, classic or Cancel now win over a lookup, choice or thumbnail in flight. Store epochs under one lock do
+    this, and a race test was mutation-checked.
+  - The widget refresh runs in an app scope.
+  - The empty state has no marketplace link.
+- Decided: Play Data safety declares the wallet address (Financial info → Other, optional, ephemeral). A chosen Bert
+  is not re-checked against later lookups.
+- Privacy page with the My Bert section: staged on website branch `release-0.10` in `/opt/bert-widget-site-release`.
+  It is not committed yet; commit it with the app page stamp at release.
+
+**Next:**
+1. Device check rc1 on the S25 (ask the owner to put the phone down first). Upgrade from 0.9.2 in place. Then:
+   - My Bert with a real holder address: find, use a Bert, then Home, widget and card.
+   - Forget.
+   - The garden-gate banner.
+   - Widgets at 2×2 and 4×2.
+2. Release recipe (DEPLOYMENT.md): `verify:release`, stamp the site (app page, `release.json`, APK, privacy page,
+   Workshop version), public checks. **The live ff of `/opt/berthalla` needs the owner's OK.**
+3. Play: upload the AAB and mapping to the PC BERT-Play folder; Data safety per `docs/play/LISTING.md`.
+4. GitHub: squash onto origin/main (see memory: never push local history as-is).
+
+## Earlier memo (12 October 2026, late)
 
 **State:**
 - 0.8.2 is LIVE on berthalla.io/app (site `c5e50fe`).
@@ -77,7 +109,7 @@ confirmed all 3 launcher shortcuts work. The Play kit is on the PC (`bert-0.9.1.
 - PixelLab mood portraits in the F/10 style.
 - Glance 1.2 previews.
 - A native Draw Bert. It needs a server endpoint first: `docs/ART-INVENTORY-2026-10-12.md`.
-- Copy about the real dog stays character-first (Berthalla canon handling rules).
+- Copy about the real dog stays character-first.
 
 ## Earlier memo (12 October 2026, 0.8.2)
 

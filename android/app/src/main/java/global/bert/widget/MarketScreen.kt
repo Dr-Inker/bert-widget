@@ -73,7 +73,7 @@ internal fun MarketScreen(state: QuoteState, history: List<BERTPriceSample>, now
                     MarketMetric("Main pool liquidity", quote.liquidityUsd)
                 }
             }
-            Button(onClick = refresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth()) {
+            Button(colors = actionButtonColors(), border = actionButtonBorder(!refreshing), onClick = refresh, enabled = !refreshing, modifier = Modifier.fillMaxWidth()) {
                 Text(if (refreshing) "Refreshing…" else "Refresh quote")
             }
             OutlinedButton(onClick = {

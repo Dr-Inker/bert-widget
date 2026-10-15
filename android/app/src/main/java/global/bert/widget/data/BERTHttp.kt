@@ -27,7 +27,11 @@ fun interface BERTHttp {
             }
         }
 
-        fun readUtf8WithLimit(input: InputStream, maxBytes: Int): String {
+        fun readUtf8WithLimit(input: InputStream, maxBytes: Int): String =
+            readBytesWithLimit(input, maxBytes).toString(Charsets.UTF_8)
+
+        /** Reads the whole stream, failing as soon as it passes [maxBytes] (a declared length can lie). */
+        fun readBytesWithLimit(input: InputStream, maxBytes: Int): ByteArray {
             require(maxBytes > 0) { "Response limit must be positive" }
             val output = ByteArrayOutputStream(minOf(maxBytes, 8 * 1_024))
             val buffer = ByteArray(8 * 1_024)
@@ -39,7 +43,7 @@ fun interface BERTHttp {
                 require(total <= maxBytes) { "Response is too large" }
                 output.write(buffer, 0, count)
             }
-            return output.toString(Charsets.UTF_8.name())
+            return output.toByteArray()
         }
     }
 }
