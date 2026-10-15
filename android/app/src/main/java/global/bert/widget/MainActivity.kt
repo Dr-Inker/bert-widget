@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.res.painterResource
@@ -206,11 +207,17 @@ internal fun BERTApp(
                 MyBertScreen(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), close = { myBertOpen = false })
             } else {
                 // A short crossfade between destinations, and again between sections, so nothing hard-cuts.
-                Crossfade(destination, Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(),
+                // Home's scene runs under the status bar (it is the top of the screen); every other screen keeps the inset.
+                val dir = LocalLayoutDirection.current
+                // The top inset goes on each crossfading child (by the screen it shows), so the outgoing screen never
+                // jumps by the status bar's height mid-fade.
+                val body = PaddingValues(start = padding.calculateStartPadding(dir), end = padding.calculateEndPadding(dir),
+                    bottom = padding.calculateBottomPadding())
+                Crossfade(destination, Modifier.fillMaxSize().padding(body).consumeWindowInsets(padding).imePadding(),
                     animationSpec = tween(180), label = "destination") { shown ->
                     val hasSections = shown == BERTDestination.CREATE || shown == BERTDestination.TOOLS
                     val largeText = LocalDensity.current.fontScale > 1.3f
-                    Column(Modifier.fillMaxSize()) {
+                    Column(Modifier.fillMaxSize().padding(top = if (shown == BERTDestination.HOME) 0.dp else padding.calculateTopPadding())) {
                         if (hasSections) {
                             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                                 // The selected bottom destination already names the section. At larger

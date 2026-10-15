@@ -1,12 +1,62 @@
 # Next session — BERT app
 
+## START HERE (memo 15 October 2026, night)
+
+**0.12.0 "Bert's day" IS LIVE (15 Oct, public checks pass; berthalla `b317269`).** Record:
+`docs/evidence/2026-10-15/release-0.12.0/README.md`. Rollback: `git -C /opt/berthalla reset --hard ec45301`. The signed 0.12.0 is
+installed on the S25 (checked). The owner uploaded 0.12.0 to Google Play (15 Oct). GitHub main
+has 0.12 as one squashed commit on `ba0e0ec` (15 Oct).
+
+## START HERE (memo 15 October 2026, evening)
+
+**Live:** 0.11.0 (BERT Violet). GitHub `main` = `ba0e0ec` (squashed). The owner owes the Play upload of
+`bert-0.11.0.aab`.
+
+**0.12.0 (27) "Bert's day"** is on branch `v012-place` in `/opt/bert-widget-brand`; the gate passes at `3571a2c`.
+The concept, both critique rounds and the decisions are in `docs/CONCEPT-0.12-BERTS-PLACE.md`.
+
+Home opens onto Bert's garden at the phone's time of day:
+- **Scene and routine:** six relit Godot renders. Bert keeps a routine (gate, rounds, sun-nap, gate duty, evening,
+  asleep indoors), and his pose follows the mood.
+- **Interactions:**
+  - A pat slips his hat.
+  - At night, knocking on the window turns it off.
+  - The chalkboard shows the price in cents.
+  - The noticeboard opens a sheet with the update and the earlier ones.
+  - Paw prints mark visits.
+- **Widget:** a new "Bert's garden" widget.
+- **Lines:** in Gochi Hand.
+
+Art pipeline (in `/opt/bert-widget-qa/art-0.12/`):
+- `place/bake2.py` builds `res/drawable-nodpi/place_*.png`. Its inputs are the Godot renders in the scratchpad r6 and
+  PixelLab parts (gate b0, chalkboard c3, noticeboard c12, asleep pose c5 remapped to F/10, and the hat-slip pose made
+  from content).
+- Godot `main.gd`, `run_tod.sh` and the r6 renders are saved in `/opt/bert-widget-qa/art-0.12/godot/`.
+- Godot scene copy on Shadow: `D:\dev\bert-app-0.12-tod-2026-10-15` (`--tod`, `--nogate`; shared slot). The scratchpad
+  was temporary; everything bake2.py needs is now under art-0.12.
+
+Next:
+1. Fable round 2: applied in `ec3e030`.
+2. Device check on the S25 (15 Oct, 16:42-17:11, golden/POST slot): scene, pat, chalkboard -> Market, noticeboard
+   sheet, gate post -> The Lost Trail all checked. It found three bugs, fixed in `5222127` (237 tests, lint clean):
+   the afternoon pat opened The Lost Trail (Bert's target was under the gate's), the board sheet's notes ran under
+   the nav bar (now opens fully), and scrolled Home left dark status icons over the page (now a page-colour scrim
+   and light icons). All three were checked on the phone. The scrim's first version drew nothing on device:
+   the Scaffold consumes the status-bar inset, so `windowInsetsTopHeight(statusBars)` is 0 inside Home; it is now
+   sized from the raw inset (host tests can't see this; Robolectric has no status bar). Dusk (18:03) also eyeballed.
+   Installed on the S25: `place-preview-fix4-qa.apk`.
+   Preview signing: the S25's "BERT Preview" is signed with `/opt/bert-widget-qa/android-home/debug.keystore`
+   (alias androiddebugkey, pass android). `assemblePreview` here signs with ~/.android's key, so re-sign with
+   apksigner before `adb install -r` or the install is refused (INSTALL_FAILED_UPDATE_INCOMPATIBLE).
+3. Owner look.
+4. Release 0.12 (website: theme section copy, Workshop print; Play screenshots).
 ## START HERE (memo 15 October 2026, afternoon)
 
 **0.11.0 IS LIVE (15 Oct, public checks pass). It includes 0.10. Published with**
 `git -C /opt/berthalla merge --ff-only release-0.11` (website `ec45301`). **Record:**
 `docs/evidence/2026-10-15/release-0.11.0/README.md`. **Then** run `node
 docs/evidence/2026-10-15/release-0.11.0/check-page.cjs public` and check both APK URLs against `23750b9c…`. The Play
-kit is on the PC (`bert-0.11.0.aab` and mapping). After that: push to GitHub using the squash recipe in memory (scrub
+kit is on the PC (`bert-0.11.0.aab` and mapping). GitHub main = ba0e0ec (squashed, scrubbed, 15 Oct). Still owed: the owner uploads to Play. (Old note: squash recipe; scrub
 first), and upload to Play (the owner).
 
 ~~0.10.0 is STAGED to publish but not live.~~ The website branch `release-0.10` (`ad34b77`) is in
@@ -68,7 +118,7 @@ the PC; moving the 0.9.2 files to `superseded-0.9.2\` was blocked by the classif
 2. Release recipe (DEPLOYMENT.md): `verify:release`, stamp the site (app page, `release.json`, APK, privacy page,
    Workshop version), public checks. **The live ff of `/opt/berthalla` needs the owner's OK.**
 3. Play: upload the AAB and mapping to the PC BERT-Play folder; Data safety per `docs/play/LISTING.md`.
-4. GitHub: squash onto origin/main (see memory: never push local history as-is).
+4. GitHub: DONE 15 Oct, main = ba0e0ec (squashed, scrubbed).
 
 ## Earlier memo (12 October 2026, late)
 
@@ -174,8 +224,7 @@ to English (`androidResources.localeFilters`) in a later release.
   `/var/log/nginx/access.log`; propose retiring `bert-widget.service` if untagged (pre-0.7) traffic has faded.
 - After Play review: fix anything Play flags; keep `docs/play/LISTING.md` in step.
 - iOS fractional-date fix is uncompiled; needs Xcode.
-- The BERT Preview on the S25 is now signed with this host's `~/.android/debug.keystore`; the earlier preview's signer
-  was unknown, so it was reinstalled (its test data is gone).
+- The BERT Preview on the S25 is signed with `/opt/bert-widget-qa/android-home/debug.keystore` (see 0.12 Next, item 2).
 
 **Working setup:**
 - Repo `/opt/bert-widget` is the production checkout (the quote/history service runs from it). Develop in the

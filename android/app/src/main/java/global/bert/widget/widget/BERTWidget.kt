@@ -390,7 +390,7 @@ suspend fun updateAllBERTWidgets(context: Context, scheduleStaleRender: Boolean 
     // Scheduled first so a failed render cannot leave an earlier quote's timer in place.
     if (scheduleStaleRender) BERTWidgetStaleRenderWorker.schedule(context, BERTQuoteRepository(context).load())
     val manager = GlanceAppWidgetManager(context)
-    for (widget in listOf(BERTWidget(), BERTMarketWidget(), BERTDailyWidget())) {
+    for (widget in listOf(BERTWidget(), BERTMarketWidget(), BERTDailyWidget(), BERTPlaceWidget())) {
         for (id in manager.getGlanceIds(widget.javaClass)) {
             // Bumping the revision makes a live session reload its data rather than recompose stale values.
             updateAppWidgetState(context, id) { it[REVISION] = (it[REVISION] ?: 0) + 1 }

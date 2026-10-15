@@ -52,7 +52,8 @@ internal fun AboutSheet(close: () -> Unit) {
             TextButton(onClick = { openBERTLink(context, BERTLink.APACHE_LICENSE) }, contentPadding = PaddingValues(0.dp)) {
                 Text("Read the Apache License 2.0 ↗", color = AccentText)
             }
-            Text("Text is set in Outfit, © The Outfit Project Authors, used under the SIL Open Font License 1.1.",
+            Text("Text is set in Outfit, © The Outfit Project Authors, and Bert’s lines in Gochi Hand, © 2011 Juan Pablo del Peral; " +
+                "both are used under the SIL Open Font License 1.1.",
                 color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
             TextButton(onClick = { openBERTLink(context, BERTLink.OFL_LICENSE) }, contentPadding = PaddingValues(0.dp)) {
                 Text("Read the Open Font License ↗", color = AccentText)

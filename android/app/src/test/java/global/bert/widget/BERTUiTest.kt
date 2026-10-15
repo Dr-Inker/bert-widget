@@ -256,11 +256,11 @@ class BERTUiTest {
             quote = QuoteState.Available(BERTQuote(0.0154, -7.92, null, null, null, "fresh", now - 30_000, "dexscreener", "raydium",
                 "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY")),
             initialPosition = BERTPosition(1_000_000.0))
-        compose.onNodeWithText("$0.0154").assertIsDisplayed()
-        compose.onNodeWithText("-7.92% · 24h").assertIsDisplayed()
-        compose.onNodeWithText("YOUR BAG").assertIsDisplayed()
+        // 0.12: the price is chalked on the sign by the gate (the percent and the bag live in Tools).
+        compose.onNodeWithTag("place-tag").assertContentDescriptionEquals("Chalkboard: BERT \$0.0154")
         compose.onNodeWithText("Play The Lost Trail").performScrollTo().assertIsDisplayed()
         capture("home-today")
+        compose.onNodeWithTag("place-board").performScrollTo().performClick()
         compose.onNodeWithText("Make it a card").performScrollTo().performClick()
         // A dispatch longer than a caption arrives as its first sentence, never as an over-limit error.
         compose.onNodeWithText("woofmornin.", useUnmergedTree = true).assertExists()
@@ -308,8 +308,11 @@ class BERTUiTest {
     @Test fun activityAndCaptionCreationRender() {
         app(ActivityState.Available(BERTActivity(1_789_000_000_000,
             "The town is quiet. My hat is not. A very good day to make something.", "curious", null)))
-        compose.onNodeWithText("The town is quiet. My hat is not. A very good day to make something.").assertIsDisplayed()
         capture("home-activity")
+        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithText("The town is quiet. My hat is not. A very good day to make something.").assertIsDisplayed()
+        capture("home-board-activity")
+        compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         waitForPreview()
         val preview = compose.onNode(hasContentDescription("Caption card preview:", substring = true)).getUnclippedBoundsInRoot()
@@ -381,8 +384,11 @@ class BERTUiTest {
 
     @Test fun coldOfflineHomeKeepsAllDestinationsUsable() {
         app()
-        compose.onNodeWithText("Today’s update couldn’t load.").assertIsDisplayed()
+        compose.onNodeWithTag("berts-place").assertIsDisplayed()
         capture("home-offline")
+        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithText("no post today. the postman’s on strike.").assertIsDisplayed()
+        compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
         compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
         compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
         capture("explore")
@@ -644,12 +650,14 @@ class BERTUiTest {
     @Test fun longDispatchCanBeReadWithoutLosingNavigation() {
         val dispatch = "A long dispatch for the pack. ".repeat(20)
         app(ActivityState.Available(BERTActivity(1_789_000_000_000, dispatch, null, null)))
+        compose.onNodeWithTag("place-board").performClick()
         compose.onNodeWithText("Read full update").performScrollTo().performClick()
         val layout = mutableListOf<TextLayoutResult>()
         compose.onNodeWithText(dispatch).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }
         assertFalse("Expanded update must expose its full content", layout.single().hasVisualOverflow)
         assertTrue(layout.single().lineCount > 4)
         compose.onNodeWithText("Read less").performScrollTo().performClick()
+        compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
         compose.onNodeWithText("Tools", useUnmergedTree = true).assertIsDisplayed()
     }
 

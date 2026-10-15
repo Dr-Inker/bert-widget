@@ -76,7 +76,7 @@ internal fun rememberReducedMotion(): Boolean {
 }
 
 /** Runs an endless loop only where endless animation is allowed; Compose tests forbid it, so they stay idle-able. */
-private suspend fun forever(block: suspend () -> Unit) {
+internal suspend fun forever(block: suspend () -> Unit) {
     val policy = coroutineContext[InfiniteAnimationPolicy]
     if (policy == null) block() else policy.onInfiniteOperation(block)
 }

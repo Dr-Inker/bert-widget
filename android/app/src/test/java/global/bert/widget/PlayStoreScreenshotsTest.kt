@@ -72,6 +72,8 @@ class PlayStoreScreenshotsTest {
         val framed = framed(screen, caption)
         check(framed.width * 16 == framed.height * 9 && framed.width == 1080) { "Play screenshots must be 1080x1920" }
         File(output, "$name.png").apply { parentFile?.mkdirs() }.outputStream().use { framed.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        // The bare screen as well, for the website's Workshop prints (berthalla.io).
+        File(output, "screen/$name.png").apply { parentFile?.mkdirs() }.outputStream().use { screen.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     /** The caption band sits above the app screen, which is scaled down (never cropped) to make room for it. */
@@ -108,6 +110,37 @@ class PlayStoreScreenshotsTest {
         val margin = 16f * compose.activity.resources.displayMetrics.density
         scroller.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, target - viewport - margin) }
         compose.waitForIdle()
+    }
+
+    /** berthalla.io/app/'s four tab pictures (720x1600, the size the page lays out), at the same Monday morning. */
+    @Test @Config(qualifiers = "w360dp-h800dp-xhdpi") fun websiteScreens() {
+        runCatching { androidx.work.WorkManager.initialize(compose.activity.applicationContext, androidx.work.Configuration.Builder().build()) }
+        BERTOnboarding.hide(compose.activity.applicationContext)
+        global.bert.widget.data.BERTHomeVisits(compose.activity.applicationContext).meetBertDismissed = true
+        val fixture = org.json.JSONObject(requireNotNull(javaClass.classLoader).getResource("history-sample.json").readText()).getJSONArray("minutesBeforeNow")
+        val history = (0 until fixture.length()).map { BERTPriceSample(now - fixture.getJSONArray(it).getLong(0) * 60_000, fixture.getJSONArray(it).getDouble(1)) }
+        val quote = QuoteState.Available(BERTQuote(history.last().priceUsd, 1.63, 15_067_640.0, 136_801.0, 1_178_452.0, "fresh", now - 30_000,
+            "dexscreener", "raydium", "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY",
+            change1hPct = 0.42, change6hPct = -0.87, buys1h = 46, sells1h = 31, buys24h = 1_112, sells24h = 968))
+        val activity = ActivityState.Available(BERTActivity(now - 60_000, "woofmornin. the ladybug holds the screen door like the wind can wait its turn.", "content", null))
+        compose.setContent { BERTTheme { BERTApp(quote, activity, history, BERTPosition(), now, false, false, {}, {}, {}) } }
+        fun save(name: String) {
+            compose.waitForIdle()
+            val view = compose.activity.window.decorView
+            val screen = Bitmap.createBitmap(view.width, view.height, Bitmap.Config.ARGB_8888)
+            compose.runOnIdle { view.draw(Canvas(screen)) }
+            check(screen.width == 720 && screen.height == 1600) { "Website screens are 720x1600, got ${screen.width}x${screen.height}" }
+            File(output, "screen/web-$name.png").apply { parentFile?.mkdirs() }.outputStream().use { screen.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        }
+        save("home")
+        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        scrollToTop(compose.onNode(hasContentDescription("Lost Trail", substring = true)))
+        save("explore")
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.waitUntil(15_000) { compose.onAllNodes(hasContentDescription("Caption card preview:", substring = true)).fetchSemanticsNodes().isNotEmpty() }
+        save("create")
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        save("tools")
     }
 
     @Test fun phoneScreenshots() {

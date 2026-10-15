@@ -46,7 +46,9 @@ internal suspend fun refreshActivityIfNeeded(
 
 private fun hasPlacedDailyWidget(context: Context): Boolean {
     val manager = AppWidgetManager.getInstance(context) ?: return false
-    return manager.getAppWidgetIds(ComponentName(context, BERTDailyWidgetReceiver::class.java)).isNotEmpty()
+    // Both Bert widgets need his feed: the day widget for the update, the garden widget for his mood.
+    return listOf(BERTDailyWidgetReceiver::class.java, global.bert.widget.widget.BERTPlaceWidgetReceiver::class.java)
+        .any { manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty() }
 }
 
 /** Evaluates switched-on alerts against the stored quote and the given (or stored) copy of Bert's feed. */
@@ -111,7 +113,8 @@ class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
 
         fun hasPlacedWidgets(context: Context): Boolean {
             val manager = AppWidgetManager.getInstance(context) ?: return false
-            return listOf(BERTWidgetReceiver::class.java, BERTMarketWidgetReceiver::class.java, BERTDailyWidgetReceiver::class.java).any {
+            return listOf(BERTWidgetReceiver::class.java, BERTMarketWidgetReceiver::class.java, BERTDailyWidgetReceiver::class.java,
+                global.bert.widget.widget.BERTPlaceWidgetReceiver::class.java).any {
                 manager.getAppWidgetIds(ComponentName(context, it)).isNotEmpty()
             }
         }

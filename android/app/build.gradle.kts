@@ -11,8 +11,8 @@ android {
         applicationId = "global.bert.widget"
         minSdk = 26
         targetSdk = 36
-        versionCode = 26
-        versionName = "0.11.0"
+        versionCode = 27
+        versionName = "0.12.0"
         // res/xml/shortcuts.xml cannot see the variant's applicationId; the preview build adds a suffix (see below).
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")

@@ -131,7 +131,7 @@ class MyBertFlowTest {
         // Home: the garden Bert stays; the holder's Bert sits in Today's header.
         compose.onNodeWithText("Home", useUnmergedTree = true).performClick()
         compose.waitUntil(5_000) { compose.onAllNodesWithContentDescription("Your Bert, Bert #2206. Opens My Bert.").fetchSemanticsNodes().isNotEmpty() }
-        compose.onNodeWithContentDescription("Bert in his red hat, by the garden gate").assertExists()
+        compose.onNodeWithTag("berts-place").assertExists()
         capture("mybert-home")
 
         // The chip opens My Bert; forgetting removes everything and brings classic Bert back.

@@ -22,13 +22,14 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** Home's 0.9.1 layout and return rewards, host-rendered. Review fixtures only. */
+/** Home's 0.12 layout (Bert’s place, the noticeboard) and return rewards, host-rendered. Review fixtures only. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "w360dp-h800dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class HomeScreenUiTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
-    private val now = 1_789_000_000_000
+    // 12:13 in the host zone on 9 September 2026: Bert’s sun-nap, so he is in the garden.
+    private val now = java.time.ZonedDateTime.of(2026, 9, 9, 12, 13, 0, 0, java.time.ZoneId.systemDefault()).toInstant().toEpochMilli()
     private val hour = 3_600_000L
 
     private fun home(activity: ActivityState, fontScale: Float = 1f, quote: QuoteState = QuoteState.Unavailable("No connection")) {
@@ -44,7 +45,18 @@ class HomeScreenUiTest {
 
     private fun top(text: String) = compose.onNodeWithText(text, substring = true).getUnclippedBoundsInRoot().top
 
-    @Test fun homeRunsTodayPriceTrailTournamentChecklistThenEarlier() {
+    @Test fun scrollingPastTheSceneCoversTheStatusBar() {
+        BERTHomeVisits(compose.activity).meetBertDismissed = true
+        home(dispatch())
+        // At the top the sky is behind the status bar; scrolled down, the page's colour is.
+        compose.onNodeWithTag("status-scrim").assertDoesNotExist()
+        compose.onNodeWithText("About, privacy & feedback", substring = true).performScrollTo()
+        compose.waitForIdle()
+        compose.onNodeWithTag("status-scrim").assertExists()
+        capture("home-scrolled")
+    }
+
+    @Test fun homeRunsThePlaceChipsTrailTournamentChecklistAndTheBoardHoldsEarlier() {
         val journal = BERTJournal(compose.activity)
         journal.record(BERTActivity(now - 30 * hour, "an older dispatch from the town hall.", "content", null), now = now - 30 * hour)
         BERTHomeVisits(compose.activity).meetBertDismissed = true
@@ -52,46 +64,42 @@ class HomeScreenUiTest {
         home(dispatch(event = event), quote = QuoteState.Available(BERTQuote(0.0154, 2.1, null, null, null, "fresh", now - 30_000, "dexscreener", "raydium",
             "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY")))
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Four things worth a try").fetchSemanticsNodes().isNotEmpty() }
-        val order = listOf("@bertcoincto", "WOOFmornin|Afternoon|Evening|Up late", "\$BERT", "Play The Lost Trail", "The Autumn Arc",
-            "Four things worth a try", "EARLIER FROM BERT")
-        val tops = order.map { label ->
-            if ('|' in label) label.split('|').firstNotNullOf { runCatching { top(it) }.getOrNull() } else top(label)
-        }
-        assertEquals("Home sections out of order: ${order.zip(tops)}", tops.sorted(), tops)
-        // Official BERT is two chips under the wordmark, not a card; the full card lives on Explore.
+        // The place comes first (no header, no Today card), then the chips, then the rest of Home.
+        val tops = listOf(compose.onNodeWithTag("berts-place").getUnclippedBoundsInRoot().top, top("@bertcoincto"), top("Play The Lost Trail"),
+            top("The Autumn Arc"), top("Four things worth a try"))
+        assertEquals("Home sections out of order: $tops", tops.sorted(), tops)
         compose.onAllNodesWithText("OFFICIAL BERT").assertCountEquals(0)
-        compose.onNodeWithText("Refresh").assertDoesNotExist()
-        compose.onNodeWithText("melancholy", substring = true).assertExists()
         compose.onAllNodesWithText("MOOD", substring = true).assertCountEquals(0)
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
-        compose.onAllNodesWithText("OFFICIAL BERT").assertCountEquals(1)
+        // The price is chalked on the sign by the gate; tapping it opens Market.
+        compose.onNodeWithTag("place-tag").assertContentDescriptionEquals("Chalkboard: BERT \$0.0154")
+        // The update and the earlier ones are on the noticeboard.
+        compose.onAllNodesWithText("EARLIER FROM BERT").assertCountEquals(0)
+        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithTag("noticeboard").assertExists()
+        compose.onNodeWithText("EARLIER FROM BERT").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("an older dispatch from the town hall.").assertExists()
+        capture("home-board")
     }
-
-    @Test fun meetBertShowsOnceAndReturnsOnALongPressOfPixelBert() {
+    @Test fun meetBertShowsOnceAndReturnsOnALongPressOfBert() {
         home(dispatch())
-        compose.onNodeWithText("Meet Bert").assertIsDisplayed()
+        compose.onNodeWithText("Meet Bert").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("drawn from Bertram", substring = true).assertExists()
         compose.onNodeWithText("Berthalla, a fan project", substring = true).assertExists()
         capture("home-meet-bert")
-        compose.onNodeWithText("Nice to meet you").performClick()
+        compose.onNodeWithText("Nice to meet you").performScrollTo().performClick()
         compose.onNodeWithText("Meet Bert").assertDoesNotExist()
         assertTrue(BERTHomeVisits(compose.activity).meetBertDismissed)
-        // Bert in the Today garden woofs on a tap (a spoken button, at least 48dp) and reopens the card on a long press.
-        val bert = compose.onNode(hasContentDescription("Bert in his red hat, by the garden gate"))
+        // Bert in his garden is a spoken button at least 48dp, pats on a tap and reopens the card on a long press.
+        val bert = compose.onNodeWithTag("place-bert")
+        compose.onNodeWithTag("berts-place").performScrollTo()
         bert.assertHasClickAction().assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
-        compose.mainClock.autoAdvance = false
         bert.performClick()
-        compose.mainClock.advanceTimeBy(300)
-        compose.onNodeWithTag("woof", useUnmergedTree = true).assertExists()
-        capture("home-woof")
-        compose.mainClock.advanceTimeBy(1_000)
-        compose.mainClock.autoAdvance = true
-        compose.onNodeWithTag("woof", useUnmergedTree = true).assertDoesNotExist()
+        compose.onNodeWithTag("place-line").assertTextEquals(BertLines.NAPPING)
+        capture("home-pat")
         bert.performTouchInput { longClick() }
-        compose.onNodeWithText("Meet Bert").assertIsDisplayed()
+        compose.onNodeWithText("Meet Bert").assertExists()
     }
-
-    @Test fun returningShowsDayNTheNewMarkerAndANewFromBertChipThatScrollsToEarlier() {
+    @Test fun returningShowsNewNotesOnTheBoard() {
         val visits = BERTHomeVisits(compose.activity)
         visits.meetBertDismissed = true
         val day = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
@@ -101,39 +109,41 @@ class HomeScreenUiTest {
         journal.record(BERTActivity(now, "the bakery opened early for the pups.", "giddy", null), now = now - 3 * hour)
         journal.record(BERTActivity(now, "a quiet lap of the duck pond.", "content", null), now = now - 2 * hour)
         home(dispatch())
-        compose.onNodeWithText("Day 3 with Bert").assertIsDisplayed()
-        compose.onAllNodesWithText("New").onFirst().assertIsDisplayed()
-        compose.onNodeWithText("From Berthalla, first seen", substring = true).assertIsDisplayed()
         capture("home-returning")
-        compose.onNodeWithText("2 new from Bert").assertIsDisplayed().performClick()
-        compose.onNodeWithText("EARLIER FROM BERT").assertIsDisplayed()
-        compose.onNodeWithText("the bakery opened early for the pups.").assertIsDisplayed()
+        compose.onNodeWithText("2 new notes on the board").assertIsDisplayed().performClick()
+        compose.onAllNodesWithText("New").onFirst().assertExists()
+        compose.onNodeWithText("From Berthalla, first seen", substring = true).assertExists()
+        compose.onNodeWithText("EARLIER FROM BERT").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("the bakery opened early for the pups.").assertExists()
         capture("home-returning-earlier")
     }
-
     @Test fun aStaleUpdateIsAmberAndNeverNew() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(ActivityState.Available(BERTActivity(now - 60_000, "an update saved earlier.", "smug", null), updateDelayed = true))
-        compose.onNodeWithText("Saved update from Berthalla, first seen", substring = true).assertIsDisplayed()
+        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithText("Saved note from Berthalla, first seen", substring = true).assertIsDisplayed()
         compose.onNodeWithText("New").assertDoesNotExist()
-        compose.onNodeWithText("a little smug").assertIsDisplayed()
     }
-
-    @Test fun largeTextHomeShortensTheDateAndKeepsTheTrailCard() {
+    @Test fun largeTextHomeKeepsTheLineAndTheTrailCard() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         LostTrailProgress.store(compose.activity, org.json.JSONObject.quote(org.json.JSONObject()
             .put("p", """{"version":1,"worlds":[{"time":91000,"bones":3},{"time":120000,"bones":2}]}""")
             .put("r", """{"version":1,"world":2,"checkpoint":1}""").toString()))
         home(dispatch(), fontScale = 2f)
-        val date = todayLabel(now, large = true)
-        assertFalse(date, date.contains(' ') && date.split(' ').size > 3)
-        compose.onNodeWithText(date).assertIsDisplayed()
+        compose.onNodeWithTag("place-line").assertIsDisplayed()
         capture("home-large-today")
         compose.waitUntil(5_000) { compose.onAllNodesWithText("Continue · Galepeak Gardens").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Continue · Galepeak Gardens").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("2 of 6 worlds cleared").assertExists()
         compose.onNodeWithText("5 of 18 keepsakes").assertExists()
         capture("home-large-trail")
+    }
+    @Test fun theGardenGateLeadsToTheLostTrail() {
+        BERTHomeVisits(compose.activity).meetBertDismissed = true
+        home(dispatch())
+        compose.onNodeWithTag("place-gate").assertContentDescriptionEquals("The garden gate: through it, The Lost Trail").performClick()
+        val game = org.robolectric.Shadows.shadowOf(compose.activity).nextStartedActivity
+        assertEquals(LostTrailActivity::class.java.name, game.component?.className)
     }
 
     @Test fun trailCardShowsProgressAndOpensTheGame() {

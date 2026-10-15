@@ -246,6 +246,7 @@ internal class WidgetChoice(
 )
 
 internal val WidgetChoices = listOf(
+    WidgetChoice("Bert\u2019s garden", "2×2 · A window onto his garden at your time of day. No words, no numbers.", R.drawable.widget_preview_place, global.bert.widget.widget.BERTPlaceWidgetReceiver::class.java),
     WidgetChoice("Bert’s day", "2×2 or 4×2 · Bert’s mood and Berthalla’s latest update.", R.drawable.widget_preview_bert, BERTDailyWidgetReceiver::class.java),
     WidgetChoice("BERT price", "2×2 · The price and its 24-hour move.", R.drawable.widget_preview_compact, BERTWidgetReceiver::class.java),
     WidgetChoice("BERT market desk", "4×2 · Price, your position, market cap, volume and liquidity.", R.drawable.widget_preview_market, BERTMarketWidgetReceiver::class.java),

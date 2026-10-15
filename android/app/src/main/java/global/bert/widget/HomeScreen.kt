@@ -1,5 +1,12 @@
 package global.bert.widget
 
+import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.FilterQuality
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.platform.testTag
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
@@ -28,7 +35,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.CustomAccessibilityAction
@@ -86,22 +95,35 @@ internal fun HomeScreen(modifier: Modifier, state: ActivityState, now: Long, ref
     }
     val pull = rememberPullToRefreshState()
     PullToRefreshBox(pulled, onRefresh = { pulled = true; retry() }, modifier, state = pull, indicator = {
-        PullToRefreshDefaults.Indicator(pull, pulled, Modifier.align(Alignment.TopCenter), containerColor = PanelStrong, color = AccentText)
+        // Padded by the raw inset: the Scaffold has consumed the status-bar inset, so statusBarsPadding() is zero here.
+        val statusDp = with(LocalDensity.current) { WindowInsets.statusBars.getTop(this).toDp() }
+        PullToRefreshDefaults.Indicator(pull, pulled, Modifier.align(Alignment.TopCenter).padding(top = statusDp), containerColor = PanelStrong, color = AccentText)
     }) {
         // Pull-to-refresh has no TalkBack gesture; the same refresh is offered as an action on the screen.
-        BERTScreenContent(Modifier.fillMaxSize().semantics { customActions = listOf(CustomAccessibilityAction("Refresh") { retry(); true }) }, scroll) {
-            AppHeader(BERTDestination.HOME)
-            OfficialChips()
-            HomeContent(state, now, pulled, quote, position, openMarket, makeCard, openStep,
-                toTop = { scope.launch { scroll.animateScrollTo(0) } }, toY = { y -> scope.launch { scroll.animateScrollTo(y) } })
+        // Home has no header: the scene runs from the top of the screen (under the status bar) and is the brand.
+        var widthPx by remember { mutableIntStateOf(0) }
+        val statusPx = WindowInsets.statusBars.getTop(LocalDensity.current)
+        val screenPx = (LocalConfiguration.current.screenHeightDp * LocalDensity.current.density).toInt()
+        // Once the scene has scrolled up past the status bar, the bar is over the page, not the sky. Derived, so Home
+        // recomposes when that flips, not on every scroll frame.
+        val covered by remember(widthPx, statusPx, screenPx) {
+            derivedStateOf { widthPx > 0 && scroll.value > placeHeightPx(widthPx, screenPx) - statusPx }
         }
+        Column(Modifier.fillMaxSize().onSizeChanged { widthPx = it.width }.verticalScroll(scroll)
+            .semantics { customActions = listOf(CustomAccessibilityAction("Refresh") { retry(); true }) }) {
+            HomeContent(state, now, quote, openMarket, makeCard, openStep, covered)
+        }
+        // The page's own colour behind the status bar, so the clock never sits on top of a card.
+        // Sized from the raw inset: the app's Scaffold has already consumed the status-bar inset, so
+        // windowInsetsTopHeight(statusBars) would be zero here.
+        if (covered) Box(Modifier.fillMaxWidth().height(with(LocalDensity.current) { statusPx.toDp() }).background(Navy).testTag("status-scrim"))
     }
 }
 
 @Composable
-private fun ColumnScope.HomeContent(state: ActivityState, now: Long, pacing: Boolean, quote: QuoteState, position: BERTPosition,
+private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: QuoteState,
                                     openMarket: () -> Unit, makeCard: (String) -> Unit, openStep: (GettingStartedStep) -> Unit,
-                                    toTop: () -> Unit, toY: (Int) -> Unit) {
+                                    skyCovered: Boolean = false) {
     val context = LocalContext.current
     val visits = remember { BERTHomeVisits(context.applicationContext) }
     val journalStore = remember { BERTJournal(context.applicationContext) }
@@ -111,6 +133,10 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, pacing: Boo
     // A sitting is 30+ minutes apart, so a 5-minute check is plenty (not a prefs rewrite on every 15 s tick).
     LaunchedEffect(now / 300_000) { visit = withContext(Dispatchers.IO) { visits.visit(now, day(now)) } }
     var meetBert by remember { mutableStateOf(!visits.meetBertDismissed) }
+    // A long-press on Bert brings Meet Bert back and scrolls it into view (it sits below the scene).
+    var askedToMeet by remember { mutableStateOf(false) }
+    val meetRequester = remember { androidx.compose.foundation.relocation.BringIntoViewRequester() }
+    LaunchedEffect(askedToMeet) { if (askedToMeet) { delay(60); meetRequester.bringIntoView(); askedToMeet = false } }
     val activity = (state as? ActivityState.Available)?.activity
     val current = activity?.dispatch
     // First frame: one small synchronous read (and record) so "first seen" and "New" never pop in after it.
@@ -123,41 +149,103 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, pacing: Boo
         }
     }
     val fresh = BERTHomeVisits.newSince(journal, visit, current)
-    var earlierY by remember { mutableIntStateOf(0) }
 
-    var exitReport by rememberExitReport()
-    exitReport?.let { report -> ExitReportCard(report) { exitReport = null } }
-    if (meetBert) MeetBertCard { visits.meetBertDismissed = true; meetBert = false }
-    TodayCard(state, now, pacing, journal.firstOrNull { it.text == current }, visit, fresh.size.coerceAtMost(6), makeCard,
-        showNew = { toY(earlierY) }, meetBert = { meetBert = true; toTop() })
-    PriceStrip(quote, position, now, openMarket)
-    val trail by produceState<LostTrailProgress?>(null, now) {
-        value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
-        // Leaving the game copies its save asynchronously; look once more so the card is current on return.
-        delay(1_500)
-        value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
+    var board by rememberSaveable { mutableStateOf(false) }
+    val price = (quote as? QuoteState.Available)?.quote?.priceUsd
+    BertsPlace(now, activity?.mood, price, fresh.size, openBoard = { board = true }, openMarket = openMarket, meetBert = { meetBert = true; askedToMeet = true },
+        openTrail = { openLostTrail(context) }, skyCovered = skyCovered)
+    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        val chosen = LocalMyBert.current.chosen
+        if (chosen != null || fresh.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+            itemVerticalAlignment = Alignment.CenterVertically) {
+            chosen?.let { MyBertChip(it) }
+            if (fresh.isNotEmpty()) TextButton(onClick = { board = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
+                Text(if (fresh.size == 1) "1 new note on the board" else "${fresh.size.coerceAtMost(6)} new notes on the board",
+                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+            }
+        }
+        OfficialChips()
+        var exitReport by rememberExitReport()
+        exitReport?.let { report -> ExitReportCard(report) { exitReport = null } }
+        if (meetBert) Box(Modifier.bringIntoViewRequester(meetRequester)) { MeetBertCard { visits.meetBertDismissed = true; meetBert = false } }
+        val trail by produceState<LostTrailProgress?>(null, now) {
+            value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
+            // Leaving the game copies its save asynchronously; look once more so the card is current on return.
+            delay(1_500)
+            value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
+        }
+        LostTrailContinueCard(trail) { openLostTrail(context) }
+
+        if (state is ActivityState.Available) state.activity.event?.let { event ->
+            TournamentCard(event, now, delayed = state.updateDelayed || state.activity.isStaleAt(now), updatedAt = state.activity.updatedAtEpochMillis)
+        }
+
+        // Re-read with the clock tick, so steps finished elsewhere (a placed widget, a saved card) tick off on return.
+        var hidden by remember { mutableStateOf(false) }
+        val progress by produceState<GettingStarted?>(null, now) {
+            if (value?.visible == false) return@produceState // hidden or finished: no more checks this session
+            value = withContext(Dispatchers.IO) { BERTOnboarding.progress(context.applicationContext) }
+        }
+        progress?.takeIf { !hidden && it.visible }?.let { GettingStartedCard(it, openStep) {
+            BERTOnboarding.hide(context.applicationContext)
+            hidden = true
+        } }
+        AboutFooter()
     }
-    LostTrailContinueCard(trail) { openLostTrail(context) }
-
-    if (state is ActivityState.Available) state.activity.event?.let { event ->
-        TournamentCard(event, now, delayed = state.updateDelayed || state.activity.isStaleAt(now), updatedAt = state.activity.updatedAtEpochMillis)
-    }
-
-    // Re-read with the clock tick, so steps finished elsewhere (a placed widget, a saved card) tick off on return.
-    var hidden by remember { mutableStateOf(false) }
-    val progress by produceState<GettingStarted?>(null, now) {
-        if (value?.visible == false) return@produceState // hidden or finished: no more checks this session
-        value = withContext(Dispatchers.IO) { BERTOnboarding.progress(context.applicationContext) }
-    }
-    progress?.takeIf { !hidden && it.visible }?.let { GettingStartedCard(it, openStep) {
-        BERTOnboarding.hide(context.applicationContext)
-        hidden = true
-    } }
-
-    val earlier = journal.filter { it.text != current }
-    EarlierFromBert(earlier.take(maxOf(3, fresh.size).coerceAtMost(6)), fresh.map { it.firstSeenEpochMillis }.toSet(), makeCard,
-        Modifier.onGloballyPositioned { earlierY = it.positionInParent().y.toInt() })
+    if (board) NoticeboardSheet(state, now, journal.firstOrNull { it.text == current }, visit, journal.filter { it.text != current },
+        fresh.map { it.firstSeenEpochMillis }.toSet(), makeCard = { board = false; makeCard(it) }) { board = false }
 }
+
+/** The noticeboard on the garden wall: today's note from Berthalla pinned over the earlier ones. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntry?, visit: HomeVisit?, earlier: List<JournalEntry>,
+                             fresh: Set<Long>, makeCard: (String) -> Unit, close: () -> Unit) {
+    val context = LocalContext.current
+    // Opened all the way, so the scrolling notes stop above the navigation bar instead of running under it.
+    ModalBottomSheet(onDismissRequest = close, containerColor = Panel, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 28.dp)
+            .testTag("noticeboard"), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+            Text("on the board", fontFamily = BertHand, fontSize = 26.sp, color = Cream, modifier = Modifier.semantics { heading() })
+            var dispatch: String? = null
+            when (state) {
+                ActivityState.Loading -> Text("checking the board…", color = Muted)
+                // The feed can be quiet for days; the board says so in his voice rather than passing an old note off as new.
+                ActivityState.Unavailable -> Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
+                is ActivityState.Available -> {
+                    dispatch = state.activity.dispatch
+                    state.activity.dispatch?.let { UpdateText(it) } ?: Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
+                    val delayed = state.updateDelayed || state.activity.isStaleAt(now)
+                    val seen = entry?.let {
+                        formatObservedAt(it.firstSeenEpochMillis, now, use24Hour = android.text.format.DateFormat.is24HourFormat(context)).removePrefix("As of ")
+                    }
+                    val source = if (delayed) "Saved note from Berthalla" else "From Berthalla"
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (!delayed && BERTHomeVisits.isNew(entry, visit, now)) NewTag()
+                        Text(seen?.let { "$source, first seen $it" } ?: source, color = if (delayed) Amber else Muted, fontSize = 13.sp)
+                    }
+                }
+            }
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
+                itemVerticalAlignment = Alignment.CenterVertically) {
+                dispatch?.let { text ->
+                    Button(onClick = { makeCard(captionExcerpt(text)) }, colors = solidActionButtonColors()) {
+                        Text("Make it a card", fontWeight = FontWeight.Bold)
+                    }
+                }
+                TextButton(onClick = { openBERTLink(context, BERTLink.DISPATCHES) }, contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    Text("Berthalla on X")
+                    Spacer(Modifier.width(6.dp))
+                    BERTIcon(BERTSymbol.ARROW, AccentText, Modifier.size(14.dp))
+                }
+            }
+            EarlierFromBert(earlier.take(maxOf(3, fresh.size).coerceAtMost(6)), fresh, makeCard)
+            TextButton(onClick = close, modifier = Modifier.testTag("noticeboard-close")) { Text("Close") }
+        }
+    }
+}
+
+private const val NO_POST = "no post today. the postman’s on strike."
 
 /** "WOOFmornin" is Bert's own good-morning; the rest follow the phone's clock. */
 internal fun greetingAt(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): String =
@@ -192,7 +280,7 @@ internal fun moodPhrase(label: String): String = when (val mood = label.trim().l
 private fun OfficialChips() {
     val context = LocalContext.current
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-        Text("Official", color = Muted, fontSize = 12.sp)
+        Text("official:", color = Muted, fontSize = 13.sp)
         OfficialChip("@bertcoincto", "Official BERT on X, @bertcoincto") { openBERTLink(context, BERTLink.OFFICIAL_X) }
         OfficialChip("bert.global", "Official BERT website, bert.global") { openBERTLink(context, BERTLink.STORY) }
     }
@@ -200,12 +288,11 @@ private fun OfficialChips() {
 
 @Composable
 private fun OfficialChip(label: String, spoken: String, onClick: () -> Unit) {
-    Surface(onClick = onClick, color = Panel, shape = Small) {
-        Row(Modifier.padding(start = 12.dp, end = 10.dp, top = 7.dp, bottom = 7.dp), verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(label, color = Cream, fontSize = 13.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { contentDescription = spoken })
-            BERTIcon(BERTSymbol.ARROW, AccentText, Modifier.size(14.dp))
-        }
+    // A plain link, not a pill; still a full-size touch target.
+    Row(Modifier.heightIn(min = 48.dp).clickable(onClick = onClick, role = Role.Button).padding(horizontal = 4.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        Text(label, color = AccentText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.semantics { contentDescription = spoken })
+        BERTIcon(BERTSymbol.ARROW, AccentText, Modifier.size(13.dp))
     }
 }
 
@@ -239,82 +326,6 @@ private fun MeetBertCard(dismiss: () -> Unit) {
     }
 }
 
-@Composable
-private fun TodayCard(state: ActivityState, now: Long, pacing: Boolean, entry: JournalEntry?, visit: HomeVisit?, newCount: Int,
-                      makeCard: (String) -> Unit, showNew: () -> Unit, meetBert: () -> Unit) {
-    val context = LocalContext.current
-    val large = LocalDensity.current.fontScale > 1.3f
-    val today = remember(now / 60_000, large) { todayLabel(now, large) }
-    val activity = (state as? ActivityState.Available)?.activity
-    // The garden Bert stays the app's character; a holder's own Bert joins him as a portrait chip in the header.
-    val chosen = LocalMyBert.current.chosen
-    // "Match my Bert" (switched on in Personalise) tints Today with that Bert's palette; otherwise the app's own navy.
-    val surface = remember(chosen) {
-        chosen?.takeIf { global.bert.widget.theme.BERTThemeStore(context.applicationContext).matchMyBert }?.let { Color(it.palette.panelArgb) }
-    } ?: PanelStrong
-    Card(colors = CardDefaults.cardColors(containerColor = surface), shape = Large) {
-        TodayGarden(pacing, mood = activity?.mood, onLongPress = meetBert)
-        Column(Modifier.fillMaxWidth().padding(start = 22.dp, end = 22.dp, top = 18.dp, bottom = 22.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                if (chosen != null) FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalArrangement = Arrangement.spacedBy(6.dp), itemVerticalAlignment = Alignment.CenterVertically) {
-                    SectionLabel(today)
-                    MyBertChip(chosen)
-                } else SectionLabel(today)
-                Greeting(now, activity?.mood, visit?.days)
-            }
-            if (newCount > 0) Surface(onClick = showNew, color = Panel, shape = Small) {
-                Text("$newCount new from Bert", color = AccentText, fontSize = 14.sp, fontWeight = FontWeight.SemiBold,
-                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp))
-            }
-            var dispatch: String? = null
-            when (state) {
-                ActivityState.Loading -> {
-                    Text("Checking in with Bert…", color = Cream)
-                    LinearProgressIndicator(Modifier.fillMaxWidth(), color = AccentText, trackColor = Panel)
-                }
-                ActivityState.Unavailable -> {
-                    Text("Today’s update couldn’t load.", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-                    Text("Pull down to try again. There’s still plenty to play, make and explore.", color = Muted, lineHeight = 21.sp)
-                }
-                is ActivityState.Available -> {
-                    dispatch = state.activity.dispatch
-                    state.activity.dispatch?.let { UpdateText(it) }
-                    val delayed = state.updateDelayed || state.activity.isStaleAt(now)
-                    val seen = entry?.let {
-                        formatObservedAt(it.firstSeenEpochMillis, now, use24Hour = android.text.format.DateFormat.is24HourFormat(context)).removePrefix("As of ")
-                    }
-                    val source = if (delayed) "Saved update from Berthalla" else "From Berthalla"
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (!delayed && BERTHomeVisits.isNew(entry, visit, now)) NewTag()
-                        Text(seen?.let { "$source, first seen $it" } ?: source, color = if (delayed) Amber else Muted, fontSize = 13.sp)
-                    }
-                }
-            }
-            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(4.dp),
-                itemVerticalAlignment = Alignment.CenterVertically) {
-                dispatch?.let { text ->
-                    Button(onClick = { makeCard(captionExcerpt(text)) }, colors = solidActionButtonColors()) {
-                        Text("Make it a card", fontWeight = FontWeight.Bold)
-                    }
-                }
-                TextButton(onClick = { openBERTLink(context, BERTLink.DISPATCHES) }, contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    Text("Berthalla on X")
-                    Spacer(Modifier.width(6.dp))
-                    BERTIcon(BERTSymbol.ARROW, AccentText, Modifier.size(14.dp))
-                }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Greeting(now: Long, mood: String?, days: Int?) {
-    Text(greetingAt(now), color = Cream, fontSize = 26.sp, fontWeight = FontWeight.ExtraBold, lineHeight = 30.sp)
-    mood?.let { Text(moodPhrase(it), color = Muted, fontSize = 15.sp, fontStyle = FontStyle.Italic) }
-    days?.takeIf { it > 0 }?.let { Text("Day $it with Bert", color = Muted, fontSize = 12.sp) }
-}
-
 /** A changed update rises 8dp into place as it fades in; the cached one never just snaps to the fresh one. */
 @Composable
 private fun UpdateText(text: String) {
@@ -346,47 +357,6 @@ private fun NewTag() {
 internal fun HomeTag(text: String, color: Color) {
     Text(text, color = color, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 0.5.sp,
         modifier = Modifier.clip(Small).background(color.copy(alpha = 0.14f)).padding(horizontal = 9.dp, vertical = 5.dp))
-}
-
-/** The price at a glance, one tap from Market. Holders see their bag; nobody else is asked about one. */
-@Composable
-private fun PriceStrip(quote: QuoteState, position: BERTPosition, now: Long, openMarket: () -> Unit) {
-    Card(onClick = openMarket, colors = CardDefaults.cardColors(containerColor = Panel), shape = Medium) {
-        Row(Modifier.fillMaxWidth().heightIn(min = 64.dp).padding(horizontal = 18.dp, vertical = 14.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                SectionLabel("\$BERT")
-                when (quote) {
-                    QuoteState.Loading -> Text("Fetching the price…", color = Muted, fontSize = 15.sp)
-                    is QuoteState.Unavailable -> Text("Price unavailable right now", color = Muted, fontSize = 15.sp)
-                    is QuoteState.Available -> FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.Bottom) {
-                        RollingPrice(quote.quote.priceUsd)
-                        val change = quote.quote.change24hPct
-                        Text("${formatPercent(change)} · 24h", color = when { change == null -> Muted; change >= 0 -> Green; else -> Red },
-                            fontSize = 15.sp, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(bottom = 3.dp))
-                        if (quote.updateDelayed || quote.quote.isStaleAt(now)) Text("delayed", color = Amber, fontSize = 13.sp, modifier = Modifier.padding(bottom = 4.dp))
-                    }
-                }
-            }
-            val bag = (quote as? QuoteState.Available)?.let { position.valueUsd(it.quote.priceUsd) }
-            if (bag != null) Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Text("YOUR BAG", color = Muted, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-                Text(formatHoldingsUsd(bag), color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
-            } else Text("Market ›", color = AccentText, fontWeight = FontWeight.SemiBold)
-        }
-    }
-}
-
-/** A new price rolls in from below on a rise and from above on a fall; an unchanged display never moves. */
-@Composable
-private fun RollingPrice(price: Double) {
-    AnimatedContent(price, contentKey = { formatPrice(it) }, transitionSpec = {
-        val up = targetState > initialState
-        (slideInVertically(tween(240)) { if (up) it else -it } + fadeIn(tween(240))) togetherWith
-            (slideOutVertically(tween(240)) { if (up) -it else it } + fadeOut(tween(160)))
-    }, label = "price") { shown ->
-        Text(formatPrice(shown), color = Cream, fontSize = 22.sp, fontWeight = FontWeight.ExtraBold)
-    }
 }
 
 /** Bert's own channels, kept apart from Berthalla's so nobody mistakes the fan project for the official voice. */
@@ -426,10 +396,13 @@ private fun LostTrailContinueCard(progress: LostTrailProgress?, open: () -> Unit
         progress.bones >= LostTrailProgress.TOTAL_BONES -> "Every world, every keepsake"
         else -> "All six worlds cleared"
     }
-    Card(onClick = open, colors = CardDefaults.cardColors(containerColor = Panel), shape = Medium) {
-        Image(painterResource(R.drawable.lost_trail), null, contentScale = ContentScale.Crop,
+    // Not a card: the game's own picture, hard-edged like the garden, and the words on the page. It is what lies
+    // through Bert's gate (the gate in the garden opens it too).
+    Column(Modifier.fillMaxWidth().clickable(onClick = open, role = Role.Button), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text("through the gate", fontFamily = BertHand, fontSize = 20.sp, color = Muted)
+        Image(ImageBitmap.imageResource(R.drawable.lost_trail), null, contentScale = ContentScale.Crop, filterQuality = FilterQuality.None,
             modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f))
-        Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 18.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     if (started) Text("The Lost Trail", color = Muted, fontSize = 13.sp)
