@@ -3,6 +3,10 @@
 Owner, 15 October 2026: "think more like a human and find that creative spark that pulls away from generic AI
 results." This note picks one idea and the rules that keep it honest. Prototype and critique come before the build.
 
+**Status: shipped.** 0.12.0 went live on berthalla.io and to Google Play on 15 October 2026, after both critique
+rounds, a device check on the S25 and an independent review (`docs/evidence/2026-10-15/release-0.12.0/README.md`).
+Still open from round 2: Bert is outlined while the painted scene isn't, and one view shows three boundary materials.
+
 ## What makes 0.11 look generic (my own critique)
 
 1. **One skeleton for every screen.** Each is a stack of rounded dark cards, and each card has the same anatomy: a

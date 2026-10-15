@@ -2,10 +2,26 @@
 
 ## START HERE (memo 15 October 2026, night)
 
-**0.12.0 "Bert's day" IS LIVE (15 Oct, public checks pass; berthalla `b317269`).** Record:
-`docs/evidence/2026-10-15/release-0.12.0/README.md`. Rollback: `git -C /opt/berthalla reset --hard ec45301`. The signed 0.12.0 is
-installed on the S25 (checked). The owner uploaded 0.12.0 to Google Play (15 Oct). GitHub main
-has 0.12 as one squashed commit on `ba0e0ec` (15 Oct).
+**0.12.0 "Bert's day" IS LIVE (15 Oct, public checks pass).** berthalla is at `a54d1de` (`b317269` the release,
+then a new garden link-preview card for `/` and `/app/`, made by `/opt/bert-widget-qa/release-0.12/social-card.py`).
+Record: `docs/evidence/2026-10-15/release-0.12.0/README.md`. Rollback of the release:
+`git -C /opt/berthalla reset --hard ec45301`. The signed 0.12.0 is installed on the S25 (checked). The owner uploaded
+0.12.0 to Google Play (15 Oct); the listing text in `docs/play/LISTING.md` was updated for 0.12 afterwards and needs
+pasting into the console. GitHub main = `4ce1488` (0.12 squashed onto `ba0e0ec`); the docs commits after it on
+`v012-place` are not pushed.
+
+**Next ideas (none started):** round 2's two open art notes (Bert outlined in an unoutlined scene; three boundary
+materials in one view); the Play closed-testing clock (12+ testers for 14 days, check the console); the homepage card
+says "the Android app" while the homepage is all of Berthalla (offered a homepage-specific card).
+
+**How a release goes (0.12, from scratch to live):** gate (`tools/check-mobile-game.sh`), independent review agent,
+`lintRelease assembleRelease bundleRelease`, `check-apk.py` from the release's evidence folder (copy the last one,
+add the release's checks), stage into `/opt/bert-widget-qa/release-0.N/staged/`, website branch `release-0.N` in
+`/opt/bert-widget-site-release` (APK rename + copy, release.json, versions in `/` and `/app/`, Workshop prints from
+`android/app/build/outputs/play/screen/`, `/app/` tab images from `PlayStoreScreenshotsTest.websiteScreens`),
+`verify-release.mjs`, `check-page.cjs staged`, the website pytest, then the owner says "run it" for
+`git -C /opt/berthalla merge --ff-only release-0.N` and `check-page.cjs public`. GitHub: `git commit-tree HEAD^{tree} -p
+origin/main` after a scrub scan of the added lines, then push that commit to main.
 
 ## START HERE (memo 15 October 2026, evening)
 
@@ -48,8 +64,8 @@ Next:
    Preview signing: the S25's "BERT Preview" is signed with `/opt/bert-widget-qa/android-home/debug.keystore`
    (alias androiddebugkey, pass android). `assemblePreview` here signs with ~/.android's key, so re-sign with
    apksigner before `adb install -r` or the install is refused (INSTALL_FAILED_UPDATE_INCOMPATIBLE).
-3. Owner look.
-4. Release 0.12 (website: theme section copy, Workshop print; Play screenshots).
+3. Owner look: done ("preview feels good").
+4. Release 0.12: done (see the night memo above).
 ## START HERE (memo 15 October 2026, afternoon)
 
 **0.11.0 IS LIVE (15 Oct, public checks pass). It includes 0.10. Published with**

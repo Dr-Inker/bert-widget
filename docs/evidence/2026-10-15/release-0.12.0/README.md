@@ -15,6 +15,10 @@ App source `e5d4eb4` (branch `v012-place`); website branch `release-0.12` at `b3
 - **Rollback:** berthalla was at `ec45301` before this release
   (`/opt/bert-widget-qa/release-0.12/previous-berthalla-head.txt`); `git -C /opt/berthalla reset --hard ec45301`.
 
+- **Social preview (same evening):** /app/ now shares `bert-app-social-012-1200x630.png` (Bert's garden, made by
+  `/opt/bert-widget-qa/release-0.12/social-card.py`); berthalla `fa5a772`, live and checked. The homepage
+  switched to the same card at the owner's request (`a54d1de`, live, bytes match).
+
 ## Change
 
 Home opens onto Bert's garden at the phone's time of day (concept, critiques and decisions in

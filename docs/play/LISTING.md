@@ -1,29 +1,30 @@
 # Google Play listing — BERT
 
-Everything to paste into the Play Console. Graphics are in this folder. Upload artifact: the v0.9.2 app bundle
-(`/opt/bert-widget-qa/release-0.9.2/staged/bert-0.9.2.aab`, also copied to the drinkerlabs PC at
-`C:\\Users\\Sjpch\\BERT-Play\\`), signed with the existing release key, which Play App Signing uses as the upload key.
-Upload `mapping-0.9.2.txt` alongside it so crash reports are readable.
+Everything to paste into the Play Console. Graphics are in this folder. Current upload: the v0.12.0 app bundle
+(`/opt/bert-widget-qa/release-0.12/staged/bert-0.12.0.aab`, also on the drinkerlabs PC at
+`C:\\Users\\Sjpch\\BERT-Play\\`), signed with the existing release key, which Play App Signing uses as the upload key,
+with `mapping-0.12.0.txt` so crash reports are readable. **The owner uploaded it on 15 October 2026.** The listing
+text below was updated for 0.12 after that upload: paste the short and full descriptions into the console again.
 
 ## Store listing
 
 - **App name (≤30):** `BERT: Bert's World`
-- **Short description (≤80):** `Daily Bert updates, a pixel adventure, caption cards, alerts and home widgets.`
+- **Short description (≤80):** `Bert's garden keeps your clock. A pixel adventure, caption cards and widgets.`
 - **Full description:**
 
 > Bertram the Pomeranian — Bert to his friends — now lives on your phone.
 >
-> **Home** — Bert's latest update and mood, plus the live Flappy Bert tournament: countdown, prize pool and the top five.
+> **Home** — Bert's garden, at your time of day. He's out at the gate at dawn, does his rounds, naps after lunch, waits on the post and walks home at dusk; at night the lamp is on. Give him a pat. The price is chalked on the board, Berthalla's updates are pinned to the noticeboard, and the live Flappy Bert tournament is just below.
 >
 > **Super Bert World: The Lost Trail** — a hand-made pixel platformer, playable offline. Six worlds, eighteen keepsakes, touch controls and saved lantern checkpoints.
 >
 > **Create** — make caption cards with Bert in five artworks, as a note or a poster, square or story-sized. Save them on your phone and share them anywhere.
 >
-> **Widgets** — Bert himself (his photo, mood, latest update and tournament countdown, filling any size), or the BERT price at a glance with a 24-hour chart. Every widget shows when its data is from, even offline.
+> **Widgets** — Bert's garden (a small window onto Home, wherever his day has got to), Bert's day (his photo, mood, latest update and tournament countdown), or the BERT price at a glance with a 24-hour chart. Every widget shows when its data is from, even offline.
 >
 > **Tools** — the BERT market price and 24-hour chart, an optional private holdings record, and opt-in alerts for tournaments, Berthalla's daily updates, price levels and big moves.
 >
-> **Themes** — three matching Home and Lock screen wallpaper packs.
+> **Themes** — four matching Home and Lock screen wallpaper packs, and the app in BERT Violet or the original Berthalla Navy.
 >
 > No account. No ads. No tracking. No wallet connection — BERT never holds keys or trades. Market data is informational.
 

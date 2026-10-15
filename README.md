@@ -1,12 +1,12 @@
 # BERT
 
-A native BERT app with an offline platform game, ecosystem discovery, market tools, personal holdings, phone themes, and home-screen widgets.
+A native BERT app: Bert's garden on Home, an offline platform game, caption cards, market tools, personal holdings, phone themes and home-screen widgets.
 
-Home / Explore / Create / Tools brings together Bert's latest dispatch and tournament status, ecosystem links, a local caption-card creator and private saved collection. Explore now opens **Super Bert World: The Lost Trail** inside the app: six worlds, touch controls, pause and saved lantern checkpoints, playable offline. See [the mobile integration](docs/MOBILE-GAME-2026-09-09.md) and [session state](docs/NEXT-SESSION.md).
+Home opens onto **Bert's garden** at the phone's time of day (since 0.12): Bert keeps a routine by the clock, a pat slips his hat, the price is chalked on a board, Berthalla's notes are pinned to a noticeboard and the gate leads to the game. See [the concept](docs/CONCEPT-0.12-BERTS-PLACE.md). Home / Explore / Create / Tools also bring the Flappy Bert tournament, ecosystem links, a local caption-card creator and private saved collection. Explore now opens **Super Bert World: The Lost Trail** inside the app: six worlds, touch controls, pause and saved lantern checkpoints, playable offline. See [the mobile integration](docs/MOBILE-GAME-2026-09-09.md) and [session state](docs/NEXT-SESSION.md).
 
 A separately installable **BERT Preview** can be built with `tools/check-android-preview.sh`. See [the visual review](docs/evidence/2026-09-08/review.html) and [device acceptance journeys](docs/DEVICE-REVIEW.md). This preview is local and debug-signed.
 
-The signed Android v0.8.0 release is live at [berthalla.io/app](https://berthalla.io/app/). This repository contains the Android app, widget, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-10-01/release-0.8.0/README.md), including in-place upgrades from 0.6.0, 0.7.0 and 0.7.1 verified on a Samsung S25 Ultra (Android 16).
+The signed Android v0.12.0 release is live at [berthalla.io/app](https://berthalla.io/app/) and uploaded to Google Play. This repository contains the Android app, widgets, production quote service, deployment templates, release-security controls, and an unshipped iOS WidgetKit codebase. See [release evidence](docs/evidence/2026-10-15/release-0.12.0/README.md); earlier releases have their own records under `docs/evidence/`.
 
 The token identity is pinned by mint rather than ticker:
 
@@ -41,16 +41,19 @@ Configuration is available through `PORT`, `UPSTREAM_TIMEOUT_MS`, `FRESH_TTL_MS`
 
 The Android companion app and Jetpack Glance widget provide:
 
-- BERT logo and current USD price
-- Prominent 24-hour percentage change
-- Market cap, 24-hour volume, and liquidity
-- Prominent live, delayed, and last-updated status
+- Bert's garden on Home: six times of day, his routine, the pat, the chalked price and the noticeboard (0.12)
+- The BERT brand kit as the app's look (BERT Violet, Outfit, the gradient wordmark), with the original Berthalla
+  Navy as an alternative (0.11); Bert's lines in Gochi Hand
+- My Bert: show the Bert NFT you hold from a pasted public address, never a wallet connection (0.10)
+- Super Bert World: The Lost Trail, playable offline
+- Current USD price, 24-hour change, 1H/6H activity, market cap, volume and liquidity, with live, delayed and
+  last-updated status; opt-in alerts
 - Optional, locally stored BERT holdings in a dedicated position panel
-- Compact 2×2 and Market 4×2 home-screen widgets
-- A Theme Studio with three full phone-wallpaper packs and matching widget palettes
-- Tap-through to the native market desk and widget setup
+- Four home-screen widgets: Bert's garden, Bert's day, BERT price (Compact 2×2) and BERT market desk (4×2)
+- A Theme Studio with four phone-wallpaper packs and matching widget palettes (BERT Violet, Mayor Purple, Woofhub
+  Night, Berthalla Nights)
 
-The v0.4.0 app adds Theme Studio with Mayor Purple, Woofhub Night, and Berthalla Nights phone-theme systems. Each pack includes distinct Home and Lock Screen artwork plus a matching widget palette. The Compact widget still fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed APK supports Android 8.0 and newer.
+Each theme pack includes distinct Home and Lock Screen artwork plus a matching widget palette. The Compact widget still fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed APK supports Android 8.0 and newer.
 
 Market data comes straight from the public DEX Screener (quote) and GeckoTerminal (24-hour history) APIs, so those services see the phone's IP address when it refreshes. The Berthalla quote service is used only when a direct request fails or no longer validates; those requests carry `?via=fallback`. No holdings, history or identifiers are sent anywhere.
 
@@ -71,7 +74,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
 - Android package: `global.bert.widget`
-- Current Android version: `0.8.0` (`versionCode` 19)
+- Current Android version: `0.12.0` (`versionCode` 27)
 - Minimum Android: 8.0 / API 26
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.

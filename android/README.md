@@ -2,6 +2,22 @@
 
 Native Android BERT app and Jetpack Glance home-screen widgets.
 
+## Current: v0.12.0 (27), "Bert's day"
+
+Home has no header: it opens onto Bert's garden (`BertsPlace.kt`), drawn under the status bar at whole device pixels
+per art pixel from the `place_wide_*` bake (`placeFrame()` keeps at least 360 art px across; in landscape the scale is
+capped by the screen's height and the scene is centred). `PlaceTime` relights it for dawn, day, golden, dusk and
+night; `BertSlot` puts Bert where his routine has him by the local hour (gate 06–09, rounds 09–12, sun-nap 12–15,
+waiting on the post 15–18, the walk home 18–21, indoors 21–06), in his mood's pose. Tap targets: Bert (pat; a
+long-press brings back Meet Bert), the chalkboard (Market, price in cents in `ChalkFont`), the noticeboard (a sheet
+with Berthalla's note and the earlier ones), the gate (The Lost Trail) and, at night, the window. The status-bar icons
+follow the sky; once Home scrolls past the scene, a page-colour scrim sits behind them (sized from the raw inset,
+because the Scaffold consumes it). Bert's lines are in Gochi Hand. The "Bert's garden" widget (`BERTPlaceWidget`,
+`PlaceStamp`) crops the same scene around Bert at a whole-number scale. Art pipeline: `/opt/bert-widget-qa/art-0.12/`.
+
+0.11 made the BERT brand kit the default look (BERT Violet; Berthalla Navy under Create → Personalise → App colours)
+and 0.10 added My Bert. Release records: `docs/evidence/2026-10-15/`.
+
 ## Published v0.6.0
 
 Explore now opens **Super Bert World: The Lost Trail** in a private native game Activity.
@@ -18,7 +34,7 @@ file and content requests are blocked; no JavaScript-to-native object bridge or 
 device permissions are added. Rotation resizes the existing game. Actual OS process
 recreation, system bars and performance still require physical-device verification.
 
-The app opens at a BERT home with Bert's latest dispatch, mood and Flappy tournament status. Home / Explore / Create / Tools have persistent navigation; Android Back returns to Home. Explore links directly to games, music and community experiences. Create separates Art, Saved and Personalize; Tools groups Market and Holdings. Each section preserves its draft and scroll state when switching destinations. At large text sizes, navigation adapts to two rows so its labels remain readable. Long dispatches can be expanded in Home.
+(Superseded by 0.12's Home, above.) The app opened at a BERT home with Bert's latest dispatch, mood and Flappy tournament status. Home / Explore / Create / Tools have persistent navigation; Android Back returns to Home. Explore links directly to games, music and community experiences. Create separates Art, Saved and Personalize; Tools groups Market and Holdings. Each section preserves its draft and scroll state when switching destinations. At large text sizes, navigation adapts to two rows so its labels remain readable. Long dispatches can be expanded in Home.
 
 The activity adapter reads the public Berthalla status document independently of market quotes. It validates and bounds responses, caches the last valid document, refreshes on foreground entry and every five minutes while visible, and marks source data stale after 30 minutes. Its timestamp is labelled as a source refresh, not the dispatch publication date. Expired events never remain open; failed/stale updates leave future tournament status unconfirmed. Remote activity URLs and financial fields are not used.
 
@@ -36,7 +52,7 @@ The development `local.properties` points at `/opt/android-sdk` on this server (
 
 Debug builds use `http://10.0.2.2:8787/v1/bert/quote` and `http://10.0.2.2:8787/v1/bert/activity`. The native QA script supplies labelled fixtures for both paths; the regular Node service currently serves only the quote route, so activity is unavailable when using that service alone. Release builds use `https://berthalla.io/widget/api/quote` and `https://berthalla.io/status.json` respectively. The public activity document has no native API stability guarantee; parsing failure preserves the saved update.
 
-The widget schedules connected-network refresh work every 15 minutes, validates the Solana mint before caching, and continues showing the last valid quote when updates fail. The app exposes Compact 2×2 and Market 4×2 widgets. The v0.4.0 Compact layout retains the real rolling 24-hour sparkline introduced in v0.3.9, recording validated quote observations locally after two distinct samples are available. The history is capped at 192 samples and never leaves private app storage. Users can optionally enter a BERT amount that remains in private app storage and is used locally to display its live USD value in the Market widget.
+The widget schedules connected-network refresh work every 15 minutes, validates the Solana mint before caching, and continues showing the last valid quote when updates fail. The app exposes four widgets: Bert's garden, Bert's day, Compact 2×2 and Market 4×2. The v0.4.0 Compact layout retains the real rolling 24-hour sparkline introduced in v0.3.9, recording validated quote observations locally after two distinct samples are available. The history is capped at 192 samples and never leaves private app storage. Users can optionally enter a BERT amount that remains in private app storage and is used locally to display its live USD value in the Market widget.
 
 ## Theme Studio
 
