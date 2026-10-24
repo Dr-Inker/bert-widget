@@ -1,5 +1,16 @@
 # Next session — BERT app
 
+## 0.13.1 IS LIVE (24 October 2026): website `253c2c0`; Play upload of `bert-0.13.1.aab` owed by the owner
+
+(Staging memo kept for the record:)
+
+0.13.1 (30) from `54cb48f` (branch `v0131-wallpapers`, worktree `/opt/bert-widget-wallpapers`) is staged: record
+`docs/evidence/2026-10-24/release-0.13.1/README.md`; files in `/opt/bert-widget-qa/release-0.13.1/staged/`; website
+`release-0.13.1` at `253c2c0` (on live `dd49f44`). AAB and mapping already on the PC in `BERT-Play\`, and the Play
+listing/screenshots there were refreshed to 0.13. Owed by the owner: "run it" for the live ff; the Play upload of
+`bert-0.13.1.aab`. After going live: GitHub via the squash recipe (`commit-tree HEAD^{tree} -p origin/main` after a
+scrub scan; main is `5d94274`).
+
 ## START HERE (memo 24 October 2026): new Navy and Violet wallpapers, ready for the release after 0.13.0
 
 Antigravity redrew BERT Navy and BERT Violet (home, lock, picker previews): big Bert on a sunburst behind a ledge.
@@ -22,7 +33,9 @@ Owner: "they look great", then "take the lead on sorting everything". Branch `wa
 - Accepted by the owner, don't re-raise: Violet resembles Mayor Purple; no pack is plain any more.
 - Review page: https://claude.ai/artifact/A6DLpVsGegxtpNgYeLkEHk
 
-## START HERE (memo 23 October 2026, later): 0.13.0 STAGED, awaiting "run it"
+## 0.13.0 IS LIVE (24 October 2026): website `dd49f44`, GitHub main `5d94274`, the S25 has it from Play
+
+(Memo of 23 October 2026, later, kept for the record:)
 
 0.13.0 (29) from `b6e2f8f` (Play + Around the pack sheet + Tools › Style, and 0.12.1's Lost Trail fixes) is staged:
 record `docs/evidence/2026-10-23/release-0.13.0/README.md`; files in `/opt/bert-widget-qa/release-0.13/staged/`;

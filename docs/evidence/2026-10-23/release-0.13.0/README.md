@@ -1,6 +1,6 @@
 # BERT v0.13.0: Play, and Tools › Style
 
-**STAGED, not live (23 October 2026); website staged at `dd49f44`.** App source `b6e2f8f` (branch `v013-nav`, on `v0121-trail`, so it carries
+**LIVE 24 October 2026** (owner: "run it"): `git -C /opt/berthalla merge --ff-only release-0.13` took the site from `6ce943d` to `dd49f44`; `check-page.cjs public` passes (1440/768/390/320, no overflow, 6 downloads, 0.13.0), and the live `bert-widget.apk` is `a07cb4f6…`. Rollback: `git -C /opt/berthalla reset --hard 6ce943d`. GitHub `main` = `5d94274` (squashed onto `76f21e5`, scrub scan clean). Play: the S25 already runs 0.13.0 (29) from Play. Staged 23 October 2026. App source `b6e2f8f` (branch `v013-nav`, on `v0121-trail`, so it carries
 0.12.1's Lost Trail fair jumps and auto-run controls).
 
 - **APK 0.13.0 (29):** 6,950,778 bytes (the same length as 0.12.1 by alignment padding; contents differ),

@@ -10,6 +10,10 @@ Production artwork for the Theme Studio. Every pack has a clock-safe Lock master
 
 The older Mayor and Berthalla SVG compositions are retained as revision history, but are not production inputs. The V2 raster masters remove the landscape-source boundaries that were visible in V1.
 
+- BERT Navy and BERT Violet (`wallpaper_bert_{navy,violet}_*`, redrawn 24 Oct 2026): HTML masters, assets and render
+  steps live outside the repo in `/opt/bert-widget-qa/wallpaper-sources-navy-violet/` (one asset is from the private
+  brand kit). Home masters carry no wordmark: on phones the dock covers that band.
+
 ## Source provenance
 
 - `sources/bert-mayor-official.png` was served publicly by `bert.global` at `framerusercontent.com/images/3aLB5eoA6lFqSfok88rL6hS2cQ.png`.
