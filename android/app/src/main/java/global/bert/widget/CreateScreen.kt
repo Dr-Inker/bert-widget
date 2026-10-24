@@ -47,19 +47,23 @@ import kotlinx.coroutines.withContext
 
 @Composable
 internal fun CreateScreen(tab: String, seedCaption: String? = null, consumeSeed: () -> Unit = {}, selectTab: (String) -> Unit) {
-    val context = LocalContext.current
     if (tab == "Art") {
         CaptionCardCreator(seedCaption, consumeSeed) { selectTab("Saved") }
         SectionLabel("KEEP CREATING")
         ExperienceLink("Draw Bert", "Describe a scene in Bert’s web Studio.", BERTSymbol.CREATE, BERTLink.DRAW)
-    } else if (tab == "Personalise") {
-        Text("A little BERT. Everywhere.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
-        Text("Widgets for a quick glance. Wallpapers for the rest of your day.", color = Muted, fontSize = 14.sp)
-        AppColours()
-        MyBertRow()
-        WidgetSetup(context)
-        ThemeStudio()
     }
+}
+
+/** Tools → Style: how BERT looks in the app, on the home screen and behind it. */
+@Composable
+internal fun PersonaliseScreen() {
+    val context = LocalContext.current
+    Text("A little BERT. Everywhere.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+    Text("Widgets for a quick glance. Wallpapers for the rest of your day.", color = Muted, fontSize = 14.sp)
+    AppColours()
+    MyBertRow()
+    WidgetSetup(context)
+    ThemeStudio()
 }
 
 @Composable

@@ -55,7 +55,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import android.graphics.BitmapFactory
 
-/** The chosen Bert, shared as state so Home, Create and Personalise change together; [open] shows the My Bert screen. */
+/** The chosen Bert, shared as state so Home, Create and Tools › Style change together; [open] shows the My Bert screen. */
 internal class MyBertHandle(val chosen: ChosenBert?, val open: () -> Unit, val update: (ChosenBert?) -> Unit)
 
 internal val LocalMyBert = compositionLocalOf { MyBertHandle(null, {}, {}) }
@@ -382,7 +382,7 @@ private fun Preview(bert: MyBert, inUse: Boolean, applying: Boolean, repository:
     }
 }
 
-/** Personalise's way in: the chosen Bert's picture, or a quiet invitation when there is none. */
+/** Tools › Style's way in: the chosen Bert's picture, or a quiet invitation when there is none. */
 @Composable
 internal fun MyBertRow() {
     val handle = LocalMyBert.current

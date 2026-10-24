@@ -16,7 +16,7 @@ text below was updated for 0.12 after that upload: paste the short and full desc
 >
 > **Home** — Bert's garden, at your time of day. He's out at the gate at dawn, does his rounds, naps after lunch, waits on the post and walks home at dusk; at night the lamp is on. Give him a pat. The price is chalked on the board, Berthalla's updates are pinned to the noticeboard, and the live Flappy Bert tournament is just below.
 >
-> **Super Bert World: The Lost Trail** — a hand-made pixel platformer, playable offline. Six worlds, eighteen keepsakes, touch controls and saved lantern checkpoints.
+> **Play** — Super Bert World: The Lost Trail, a hand-made pixel platformer, playable offline. Six worlds, eighteen keepsakes, touch controls and saved lantern checkpoints. Flappy Bert's arcade and tournaments and Bert Music are on the same tab.
 >
 > **Create** — make caption cards with Bert in five artworks, as a note or a poster, square or story-sized. Save them on your phone and share them anywhere.
 >
@@ -24,7 +24,7 @@ text below was updated for 0.12 after that upload: paste the short and full desc
 >
 > **Tools** — the BERT market price and 24-hour chart, an optional private holdings record, and opt-in alerts for tournaments, Berthalla's daily updates, price levels and big moves.
 >
-> **Themes** — four matching Home and Lock screen wallpaper packs, and the app in BERT Violet or the original Berthalla Navy.
+> **Themes** — four matching Home and Lock screen wallpaper packs, and the app in BERT Violet or the original Berthalla Navy, all under Tools › Style.
 >
 > No account. No ads. No tracking. No wallet connection — BERT never holds keys or trades. Market data is informational.
 
@@ -42,7 +42,7 @@ text below was updated for 0.12 after that upload: paste the short and full desc
 
 Screenshots use review fixtures: no live quotes, no real holdings, fictional player names, and a Monday 09:10 clock.
 Upload order: gameplay and a home-screen widget first (both captured on a real device; not generated here), then
-Today, Create, Market, Explore and Alerts. Captions: "Bert’s day, every day", "Make it a card", "Know the market",
+Today, Create, Market, Play and Alerts. Captions: "Bert’s day, every day", "Make it a card", "Know the market",
 "Play the Lost Trail", "Alerts that don’t nag".
 
 ## App content answers

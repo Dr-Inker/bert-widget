@@ -13,7 +13,7 @@ access. Nothing secret is copied here.
     background); the kit calls it "an accent and a border".
   - Green, red and amber stay as functional status colours. The kit allows green at status size only; red and amber
     carry price-down and warnings.
-- **Berthalla Navy** is the app's original navy and orange, kept as the alternative (Create → Personalise → App colours).
+- **Berthalla Navy** is the app's original navy and orange, kept as the alternative (Tools › Style → App colours; Create → Personalise before 0.13).
 - **Type:** Outfit, the kit's only typeface, at five static weights (Regular, Medium, SemiBold, Bold and ExtraBold:
   `res/font/outfit_*.ttf`). They were cut with fontTools from google/fonts' variable `Outfit[wght].ttf`, whose default
   instance is Thin, so no device can fall back to Thin. Licence: SIL OFL 1.1; it ships in

@@ -168,13 +168,7 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
         var exitReport by rememberExitReport()
         exitReport?.let { report -> ExitReportCard(report) { exitReport = null } }
         if (meetBert) Box(Modifier.bringIntoViewRequester(meetRequester)) { MeetBertCard { visits.meetBertDismissed = true; meetBert = false } }
-        val trail by produceState<LostTrailProgress?>(null, now) {
-            value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
-            // Leaving the game copies its save asynchronously; look once more so the card is current on return.
-            delay(1_500)
-            value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
-        }
-        LostTrailContinueCard(trail) { openLostTrail(context) }
+        LostTrailContinueCard(rememberLostTrailProgress(now)) { openLostTrail(context) }
 
         if (state is ActivityState.Available) state.activity.event?.let { event ->
             TournamentCard(event, now, delayed = state.updateDelayed || state.activity.isStaleAt(now), updatedAt = state.activity.updatedAtEpochMillis)
@@ -190,6 +184,7 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
             BERTOnboarding.hide(context.applicationContext)
             hidden = true
         } }
+        AroundThePackLink()
         AboutFooter()
     }
     if (board) NoticeboardSheet(state, now, journal.firstOrNull { it.text == current }, visit, journal.filter { it.text != current },
@@ -385,9 +380,22 @@ private fun OfficialRow(title: String, description: String, onClick: () -> Unit)
     }
 }
 
+/** The Lost Trail's saved progress, re-read with the clock tick (Home and Play both show it). */
+@Composable
+internal fun rememberLostTrailProgress(now: Long): LostTrailProgress? {
+    val context = LocalContext.current
+    val trail by produceState<LostTrailProgress?>(null, now) {
+        value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
+        // Leaving the game copies its save asynchronously; look once more so the card is current on return.
+        delay(1_500)
+        value = withContext(Dispatchers.IO) { LostTrailProgress.load(context.applicationContext) }
+    }
+    return trail
+}
+
 /** The game's own art, full width, with where the person is and how far they've come. */
 @Composable
-private fun LostTrailContinueCard(progress: LostTrailProgress?, open: () -> Unit) {
+internal fun LostTrailContinueCard(progress: LostTrailProgress?, open: () -> Unit) {
     val next = progress?.nextWorld
     val started = progress?.started == true
     val title = when {
@@ -486,7 +494,7 @@ internal fun formatTimeLeft(endsAt: Long, now: Long): String {
 }
 
 @Composable
-private fun TournamentCard(event: BERTEvent, now: Long, delayed: Boolean, updatedAt: Long) {
+internal fun TournamentCard(event: BERTEvent, now: Long, delayed: Boolean, updatedAt: Long) {
     val context = LocalContext.current
     val phase = event.phaseAt(now, delayed)
     val ended = phase == EventPhase.ENDED

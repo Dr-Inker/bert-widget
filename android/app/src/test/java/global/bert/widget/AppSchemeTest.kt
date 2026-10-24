@@ -60,8 +60,8 @@ class AppSchemeTest {
         app()
         capture("scheme-violet-home")
 
-        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("Personalise").performClick()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Style").performScrollTo().performClick()
         compose.onNodeWithTag("scheme-bert-violet").performScrollTo().assertIsSelected()
         capture("scheme-violet-personalise")
 
@@ -77,7 +77,7 @@ class AppSchemeTest {
         compose.onNodeWithText("Home", useUnmergedTree = true).performClick()
         capture("scheme-navy-home")
 
-        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithTag("scheme-bert-violet").performScrollTo().performClick()
         assertEquals(BERTScheme.BERT_VIOLET, BERTColors.scheme)
         assertEquals("bert-violet", BERTThemeStore(compose.activity).appSchemeId)

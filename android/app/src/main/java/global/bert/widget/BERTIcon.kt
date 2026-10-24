@@ -13,7 +13,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.unit.dp
 
-internal enum class BERTSymbol { HOME, EXPLORE, CREATE, TOOLS, PLAY, MUSIC, PACK, STORY, HEART, ARROW }
+internal enum class BERTSymbol { HOME, CREATE, TOOLS, PLAY, MUSIC, PACK, STORY, HEART, ARROW }
 
 /** One stroke weight and coordinate system; decorative icons inherit the control's text label. */
 @Composable
@@ -29,10 +29,6 @@ internal fun BERTIcon(symbol: BERTSymbol, color: Color = AccentText, modifier: M
                 BERTSymbol.HOME -> {
                     drawPath(path(3f to 10f, 12f to 3f, 21f to 10f), color, style = line)
                     drawPath(path(5f to 9f, 5f to 21f, 10f to 21f, 10f to 15f, 14f to 15f, 14f to 21f, 19f to 21f, 19f to 9f), color, style = line)
-                }
-                BERTSymbol.EXPLORE -> {
-                    drawCircle(color, 9f, Offset(12f, 12f), style = line)
-                    drawPath(path(16f to 8f, 14f to 14f, 8f to 16f, 10f to 10f, close = true), color, style = line)
                 }
                 BERTSymbol.CREATE -> {
                     drawPath(path(14f to 4f, 5f to 4f, 4f to 5f, 4f to 20f, 20f to 20f, 20f to 11f), color, style = line)

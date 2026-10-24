@@ -15,16 +15,16 @@ follow the sky; once Home scrolls past the scene, a page-colour scrim sits behin
 because the Scaffold consumes it). Bert's lines are in Gochi Hand. The "Bert's garden" widget (`BERTPlaceWidget`,
 `PlaceStamp`) crops the same scene around Bert at a whole-number scale. Art pipeline: `/opt/bert-widget-qa/art-0.12/`.
 
-0.11 made the BERT brand kit the default look (BERT Violet; Berthalla Navy under Create → Personalise → App colours)
+0.11 made the BERT brand kit the default look (BERT Violet; Berthalla Navy under Tools › Style → App colours since 0.13; it was Create → Personalise before)
 and 0.10 added My Bert. Release records: `docs/evidence/2026-10-15/`.
 
 ## Published v0.6.0
 
-Explore now opens **Super Bert World: The Lost Trail** in a private native game Activity.
+Play (Explore before 0.13; its links moved to Home's "Around the pack" sheet), Home and the garden gate open **Super Bert World: The Lost Trail** in a private native game Activity.
 All six worlds and their artwork are bundled in the APK and work offline. The dark game
 layout supports portrait and landscape, two-thumb touch controls with a Run toggle,
 native Pause and Back to Bert. Android Back pauses a running game first; backgrounding
-pauses input and audio. Returning to the app retains Explore. The game saves lanterns,
+pauses input and audio. Returning to the app keeps the screen you left. The game saves lanterns,
 collected items and opened gates locally; reopening offers Continue from lantern with
 safe health/position. World records persist. Saves are device-local and separate from
 website browser storage; uninstalling or clearing app data removes them.
@@ -93,7 +93,7 @@ The published v0.6.0 package is `global.bert.widget` (`versionCode` 16), require
 
 `tools/check-mobile-game.sh` from the repo root runs the Android gate and then checks the
 exact packaged HTML's touch/layout/save/Back behavior in Chromium under its production CSP.
-`LostTrailTest` checks native content policy and lifecycle; the existing Explore host UI
+`LostTrailTest` checks native content policy and lifecycle; the existing Play host UI
 test verifies the game card's explicit Activity launch. These checks complement each other
 but do not execute the production APK on a phone.
 

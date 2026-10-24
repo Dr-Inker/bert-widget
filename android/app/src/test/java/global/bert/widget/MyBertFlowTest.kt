@@ -65,8 +65,8 @@ class MyBertFlowTest {
         compose.waitUntil(15_000) { compose.onAllNodesWithText(text, substring = substring).fetchSemanticsNodes().isNotEmpty() }
 
     private fun openMyBertFromPersonalise() {
-        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("Personalise").performClick()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Style").performScrollTo().performClick()
         compose.onNodeWithTag("mybert-row").performScrollTo().performClick()
         waitFor("My Bert")
     }
@@ -121,6 +121,7 @@ class MyBertFlowTest {
         capture("mybert-theme")
 
         // Create: the holder's Bert is an art option and renders on the card.
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Art").performClick()
         compose.onNodeWithContentDescription("My Bert #2206").performScrollTo().performClick()
         compose.onNodeWithContentDescription("My Bert #2206").assertIsSelected()

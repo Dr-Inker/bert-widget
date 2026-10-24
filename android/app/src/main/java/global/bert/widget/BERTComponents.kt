@@ -59,7 +59,7 @@ internal enum class BERTScheme(
     }
 }
 
-/** The scheme in use. Read through the colour names below, so every screen follows a switch in Personalise. */
+/** The scheme in use. Read through the colour names below, so every screen follows a switch in Tools › Style. */
 internal object BERTColors {
     var scheme by mutableStateOf(BERTScheme.DEFAULT)
 }

@@ -133,9 +133,8 @@ class PlayStoreScreenshotsTest {
             File(output, "screen/web-$name.png").apply { parentFile?.mkdirs() }.outputStream().use { screen.compress(Bitmap.CompressFormat.PNG, 100, it) }
         }
         save("home")
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
-        scrollToTop(compose.onNode(hasContentDescription("Lost Trail", substring = true)))
-        save("explore")
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
+        save("play")
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.waitUntil(15_000) { compose.onAllNodes(hasContentDescription("Caption card preview:", substring = true)).fetchSemanticsNodes().isNotEmpty() }
         save("create")
@@ -179,9 +178,9 @@ class PlayStoreScreenshotsTest {
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         // Top of Market: the price, then the activity card, never under the pinned section tabs.
         shot("3-market", CAPTIONS.getValue("3-market"))
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
-        scrollToTop(compose.onNode(hasContentDescription("Lost Trail", substring = true)))
-        shot("4-explore", CAPTIONS.getValue("4-explore"))
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
+        scrollToTop(compose.onNodeWithText("through the gate"))
+        shot("4-play", CAPTIONS.getValue("4-play"))
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Alerts", useUnmergedTree = true).performClick()
         compose.onNode(hasContentDescription("Tournament ending") and isToggleable()).assertIsOn()
@@ -206,7 +205,7 @@ class PlayStoreScreenshotsTest {
             "1-today" to "Bert’s day, every day",
             "2-create" to "Make it a card",
             "3-market" to "Know the market",
-            "4-explore" to "Play the Lost Trail",
+            "4-play" to "Play the Lost Trail",
             "5-alerts" to "Alerts that don’t nag",
         )
     }

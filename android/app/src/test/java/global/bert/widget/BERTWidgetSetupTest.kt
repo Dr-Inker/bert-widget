@@ -26,7 +26,7 @@ import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 import java.io.File
 
-/** Personalise: each widget shows its own preview image above its Add button, under the same name the launcher picker uses. */
+/** Tools › Style: each widget shows its own preview image above its Add button, under the same name the launcher picker uses. */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "w360dp-h1900dp-xhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)

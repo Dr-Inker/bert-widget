@@ -34,23 +34,27 @@ try{
   const toast=await page.locator('#toast').boundingBox();
   assert.ok(toast.y+toast.height<frame.y+frame.height*.65,'Trail messages must stay above the ground and player');
   const controls={};
-  for(const key of ['left','right','run','bark','jump']){
-   const r=await page.locator(`[data-control=${key}]`).boundingBox();assert.ok(r.width>=48&&r.height>=48,`${key}: touch size`);
+  assert.equal(await page.locator('[data-control=run]').count(),0,'auto-run replaces the RUN toggle');
+  for(const key of ['left','right','bark','jump']){
+   const r=await page.locator(key==='left'||key==='right'?`[data-move=${key}]`:`[data-control=${key}]`).boundingBox();assert.ok(r.width>=48&&r.height>=48,`${key}: touch size`);
    assert.ok(r.x>=0&&r.y>=0&&r.x+r.width<=width+.1&&r.y+r.height<=height+.1,`${key}: inside viewport ${width}`);controls[key]=r;
   }
   for(const id of ['pause','sound']){const r=await page.locator('#'+id).boundingBox();assert.ok(r.width>=48&&r.height>=48);}
   const cdp=await context.newCDPSession(page);
-  await page.locator('[data-control=run]').tap();
-  const pts=['right','jump'].map((k,i)=>({x:controls[k].x+controls[k].width/2,y:controls[k].y+controls[k].height/2,id:i+1}));
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts});await page.evaluate(()=>__QA.advance(18));
-  let state=await page.evaluate(()=>__QA.read());assert.ok(state.p.vx>=5&&state.p.y<190&&state.stats.jumps===1);
+  const pts=['right','jump','left'].map((k,i)=>({x:controls[k].x+controls[k].width/2,y:controls[k].y+controls[k].height/2,id:i+1}));
+  // Holding ▶ breaks into a run while JUMP is held by a second thumb.
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts.slice(0,2)});await page.evaluate(()=>__QA.advance(40));
+  let state=await page.evaluate(()=>__QA.read());assert.ok(state.p.vx>=5&&state.stats.jumps===1,`auto-run jump: vx ${state.p.vx}`);
+  // Sliding the move thumb onto ◀ turns Bert without lifting.
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{...pts[2],id:1},pts[1]]});await page.evaluate(()=>__QA.advance(30));
+  state=await page.evaluate(()=>__QA.read());assert.ok(state.p.vx<-1,`slide to ◀: vx ${state.p.vx}`);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchCancel',touchPoints:[]});await page.evaluate(()=>__QA.advance(30));
   assert.ok(Math.abs((await page.evaluate(()=>__QA.read())).p.vx)<.1);
   await page.screenshot({path:`${dir}/playing-${width}.png`});
   const tick=(await page.evaluate(()=>__QA.read())).tick;
   assert.equal(await page.evaluate(()=>BertAppGame.back()),true);await page.evaluate(()=>__QA.advance(60));
   assert.equal((await page.evaluate(()=>__QA.read())).tick,tick);
-  assert.equal(await page.locator('[data-control=run]').getAttribute('aria-pressed'),'false');
+  assert.equal(await page.locator('.touch .pressed').count(),0,'pausing releases every control');
   assert.equal(await page.evaluate(()=>BertAppGame.back()),false);
   await page.locator('#resume').tap();await page.evaluate(()=>BertAppGame.pause());
   assert.equal((await page.evaluate(()=>__QA.read())).screen,'pause');

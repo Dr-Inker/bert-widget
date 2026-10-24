@@ -79,7 +79,7 @@ class LostTrailActivity : ComponentActivity() {
                     if (backgrounded) pauseGame()
                 }
                 // Without this, a renderer killed for memory takes the whole app process with it.
-                // Progress lives in the game's saved lanterns, so closing back to Explore loses nothing.
+                // Progress lives in the game's saved lanterns, so closing back to the app loses nothing.
                 override fun onRenderProcessGone(view: WebView, detail: RenderProcessGoneDetail): Boolean {
                     (view.parent as? ViewGroup)?.removeView(view)
                     view.destroy()

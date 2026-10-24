@@ -1,5 +1,55 @@
 # Next session — BERT app
 
+## START HERE (memo 24 October 2026): new Navy and Violet wallpapers, ready for the release after 0.13.0
+
+Antigravity redrew BERT Navy and BERT Violet (home, lock, picker previews): big Bert on a sunburst behind a ledge.
+Owner: "they look great", then "take the lead on sorting everything". Branch `wallpapers-next` (`dea6dd5` art,
+`67deaca` home fix, `c059d70` lock fix), **not** in the staged 0.13.0; `v013-nav` source is unchanged.
+- **S25 check done:** home wordmark sat behind the dock (owner spotted it) → removed from both home masters. Lock
+  tagline underline was struck through by One UI's charging line → removed from both lock masters. Bert's face sits
+  behind the bottom icon row on the owner's main page, as Berthalla Nights already does; owner fine with it.
+- **Sources:** `/opt/bert-widget-qa/wallpaper-sources-navy-violet/` (HTML masters, assets, `render.cjs`, README with
+  the encode recipe and S25 layout bands). Not in the repo because one asset is from the private brand kit. Renders
+  reproduce the committed WebPs byte for byte.
+- **Tests on `c059d70`:** 242 host tests pass. One earlier full run failed
+  `BERTUiTest.widgetStepOpensPersonaliseInTools` (scrollTo found the checklist text only in the unmerged tree); it
+  passes alone on both `v013-nav` and `wallpapers-next` and in a full re-run, so it is a flake, not this change.
+- **Phone:** restored to Berthalla Nights (seed colours match the pre-test dump). BERT Preview on the S25 is now
+  `bert-0.13.0-preview-wallpapers-fix1.apk` (before the lock fix). Leftover `/sdcard/bertui.xml` (a UI dump of BERT
+  Preview) to delete next time it's on adb.
+- **To ship:** after 0.13.0 is live, merge `wallpapers-next` into the main line and include it in the next version;
+  retake the Play screenshot that shows Tools › Style if it shows Navy or Violet.
+- Accepted by the owner, don't re-raise: Violet resembles Mayor Purple; no pack is plain any more.
+- Review page: https://claude.ai/artifact/A6DLpVsGegxtpNgYeLkEHk
+
+## START HERE (memo 23 October 2026, later): 0.13.0 STAGED, awaiting "run it"
+
+0.13.0 (29) from `b6e2f8f` (Play + Around the pack sheet + Tools › Style, and 0.12.1's Lost Trail fixes) is staged:
+record `docs/evidence/2026-10-23/release-0.13.0/README.md`; files in `/opt/bert-widget-qa/release-0.13/staged/`;
+website `release-0.13` at `dd49f44`. Owed by the owner: "run it" for the live ff; approval to install the signed build
+over the real app on the S25 and to copy the AAB to `BERT-Play\` (both blocked by the classifier as deploys); the Play
+upload and listing paste. After going live: merge `v013-nav` into the main line and push GitHub via the squash recipe.
+
+## START HERE (memo 23 October 2026): 0.13.0 preview, Play + Tools › Style
+
+Gemini left `docs/PROPOSAL-2026-10-23-UNIFIED-VISION.md` (untracked, in /opt/bert-widget and /opt/bert-widget-game).
+Owner: "take the lead, make a preview of the changes you think are beneficial". Verdict per module:
+- **Taken (A, navigation):** Explore → **Play** (Lost Trail picture + progress as on Home, Flappy Bert with a live
+  tournament under it, Bert Music, then the pack's links). Create = Art | Saved. Personalise moved to Tools as
+  **Style** (Android's "Wallpaper & style"); Tools pills 10dp so four fit at 360dp; the chosen pill scrolls into view.
+  The checklist's widget step opens Tools › Style.
+- **Not taken:** B (ViewModel; its code didn't compile and dropped the market-history loop), C (smooth soil gradient
+  reverses critique round 2's dithered steps; night Bert is indoors; dusk Bert checked on the 0.12.1 render and reads
+  fine), D/E (owner product/art calls; "two directions approved by the owner" has no record).
+
+State: branch `v013-nav`, worktree `/opt/bert-widget-nav`, built on `v0121-trail` (0.12.1 is still unpublished).
+Gate PASS at `ef4ac31`; independent Opus review: no must-fix, its two should-fixes applied. Preview APK (0.13.0 (29),
+`global.bert.widget.preview`, re-signed with the S25 preview key) at
+`/opt/bert-widget-qa/preview-0.13/bert-0.13.0-preview-ef4ac31.apk` (sha256 `88c979eb…`), copied to the PC at
+`C:\Users\Sjpch\BERT-Preview\`. Not yet installed: the S25 wasn't on adb.
+On release: the website's `/app/` tab image is now `web-play.png` (was `web-explore.png`) and the Play listing
+screenshot `4-play.png` (was `4-explore.png`); update `docs/play/LISTING.md` and the site to match.
+
 ## START HERE (memo 15 October 2026, night)
 
 **0.12.0 "Bert's day" IS LIVE (15 Oct, public checks pass).** berthalla is at `a54d1de` (`b317269` the release,

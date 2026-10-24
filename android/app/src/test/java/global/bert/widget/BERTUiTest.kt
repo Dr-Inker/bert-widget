@@ -91,7 +91,7 @@ class BERTUiTest {
         }
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         waitForPreview()
-        recordSection("create", listOf("Art", "Saved", "Personalise"), hasContentDescription("Caption card preview:", substring = true))
+        recordSection("create", listOf("Art", "Saved"), hasContentDescription("Caption card preview:", substring = true))
         capture("pinned-create-large")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         val freshness = "Delayed · Updated 42m ago"
@@ -329,7 +329,7 @@ class BERTUiTest {
     @Test fun largeTextHomeRemainsNavigable() {
         app(fontScale = 2f)
         val measurements = org.json.JSONArray()
-        for (label in listOf("Home", "Explore", "Create", "Tools")) {
+        for (label in listOf("Home", "Play", "Create", "Tools")) {
             compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
             val layout = mutableListOf<TextLayoutResult>()
             compose.onNodeWithText(label, useUnmergedTree = true).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }
@@ -354,7 +354,7 @@ class BERTUiTest {
     }
 
     // Landing-page captures: a fresh quote and a recorded 24-hour price curve (review fixture, not live data).
-    @Test fun marketingCapturesShowHealthyMarketAndExplore() {
+    @Test fun marketingCapturesShowHealthyMarketAndPlay() {
         val now = 1_789_000_000_000
         val fixture = org.json.JSONObject(requireNotNull(javaClass.classLoader).getResource("history-sample.json").readText())
         val points = fixture.getJSONArray("minutesBeforeNow")
@@ -377,9 +377,69 @@ class BERTUiTest {
         compose.onNodeWithText("24h ago").assertExists()
         compose.onNodeWithText("Couldn’t refresh. Showing the last saved quote.").assertDoesNotExist()
         capture("marketing-tools")
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
-        capture("marketing-explore")
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Play The Lost Trail").assertIsDisplayed()
+        // A live tournament sits under Flappy Bert on Play too.
+        compose.onNodeWithText("The Autumn Arc").performScrollTo().assertIsDisplayed()
+        capture("marketing-play")
+    }
+
+    /** 0.13: Play is games and music only; the pack's links open from "Around the pack" at the foot of Home. */
+    @Test fun packLinksLiveInHomesSheetNotOnPlay() {
+        app()
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Bert Music").performScrollTo().assertIsDisplayed()
+        for (gone in listOf("OFFICIAL BERT", "Woofhub", "Meet the community")) compose.onAllNodesWithText(gone).assertCountEquals(0)
+        compose.onNodeWithText("Home", useUnmergedTree = true).performClick()
+        compose.onNodeWithTag("around-the-pack").performScrollTo().performClick()
+        compose.onNodeWithTag("pack-sheet").assertExists()
+        compose.onNodeWithText("OFFICIAL BERT").assertIsDisplayed()
+        compose.onNodeWithText("Woofhub").performScrollTo().assertIsDisplayed()
+        capture("home-pack-sheet")
+        compose.onNodeWithTag("pack-close").performScrollTo().performClick()
+        compose.onAllNodesWithTag("pack-sheet").assertCountEquals(0)
+    }
+
+    /** 0.13: Personalise moved from Create to Tools (as Style), so the checklist's widget step lands there. */
+    @Test fun widgetStepOpensPersonaliseInTools() {
+        app()
+        compose.onNodeWithText("Put Bert on your home screen").performScrollTo().performClick()
+        compose.onNode(hasText("Tools") and hasClickAction()).assertIsSelected()
+        compose.onNode(hasText("Style") and hasClickAction()).assertIsSelected()
+        compose.onNodeWithText("A little BERT. Everywhere.").assertIsDisplayed()
+        capture("tools-style")
+        compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
+        compose.onAllNodes(hasText("Style") and hasClickAction()).assertCountEquals(0)
+    }
+
+    /**
+     * At 320dp and 2x text Style is off the end of the pinned row. Coming back to Tools (or arriving from the checklist)
+     * with Style chosen brings its pill into view, so the person can see which section they are in.
+     */
+    @Test @Config(qualifiers = "w320dp-h640dp-xhdpi") fun returningToToolsKeepsTheChosenSectionInView() {
+        app(fontScale = 2f)
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Style", useUnmergedTree = true).performScrollTo().performClick()
+        compose.onNodeWithText("Home", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.waitForIdle()
+        val bounds = compose.onNode(hasText("Style") and hasClickAction()).assertIsSelected().getUnclippedBoundsInRoot()
+        assertTrue("Style must be wholly on screen (${bounds.left}..${bounds.right})", bounds.left.value >= 0f && bounds.right.value <= 320.5f)
+        capture("compact-checklist-style")
+    }
+
+    /** Four Tools sections at the narrowest common phone width: every pill whole and on screen, none scrolled off. */
+    @Test @Config(qualifiers = "w360dp-h800dp-xhdpi") fun allFourToolsSectionsFitAt360dp() {
+        app()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        for (label in TOOLS_TABS) {
+            // Unclipped: the pinned row scrolls sideways, and clipped bounds would hide a pill that runs off the edge.
+            val bounds = compose.onNode(hasText(label) and hasClickAction()).assertIsDisplayed().getUnclippedBoundsInRoot()
+            assertTrue("$label must sit inside the 20dp page margins (${bounds.left}..${bounds.right})",
+                bounds.left.value >= 19.5f && bounds.right.value <= 340.5f)
+            assertEquals("$label stays on one line", 1, measureLabel(label, singleLine = true).getInt("lineCount"))
+        }
+        capture("tools-tabs-360")
     }
 
     @Test fun coldOfflineHomeKeepsAllDestinationsUsable() {
@@ -389,10 +449,10 @@ class BERTUiTest {
         compose.onNodeWithTag("place-board").performClick()
         compose.onNodeWithText("no post today. the postman’s on strike.").assertIsDisplayed()
         compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("The Lost Trail").assertIsDisplayed()
-        capture("explore")
-        compose.onNodeWithText("Play here · works offline").performScrollTo().performClick()
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Off the lead.").assertIsDisplayed()
+        capture("play")
+        compose.onNodeWithText("Play The Lost Trail").performScrollTo().performClick()
         val gameIntent = org.robolectric.Shadows.shadowOf(compose.activity).nextStartedActivity
         assertEquals(LostTrailActivity::class.java.name, gameIntent.component?.className)
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
@@ -434,7 +494,7 @@ class BERTUiTest {
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Your caption").performScrollTo().performTextReplacement("Keep my unfinished idea")
         compose.onNodeWithText("Cream", useUnmergedTree = true).performScrollTo().performClick()
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Keep my unfinished idea").assertExists()
         compose.onNodeWithText("Cream").assertIsSelected()
@@ -484,7 +544,7 @@ class BERTUiTest {
         compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
         val detailAfterRestoration = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2").getUnclippedBoundsInRoot()
         capture("collection-detail-restored$suffix")
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.waitUntil(15_000) { compose.onAllNodesWithContentDescription("Saved caption card: Pack memory 2").fetchSemanticsNodes().isNotEmpty() }
         val detailAfterTabSwitch = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2").getUnclippedBoundsInRoot()
@@ -597,7 +657,7 @@ class BERTUiTest {
         compose.onNodeWithText("102/96 · Remove 6 characters to preview, save or share.").assertExists()
         compose.onNodeWithText("Save card").performScrollTo().assertIsNotEnabled()
         compose.onNodeWithText("Share caption card").assertIsNotEnabled()
-        compose.onNodeWithText("Explore", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Your caption").assertTextContains(longCaption)
         restoration.emulateSavedInstanceStateRestore()
@@ -666,15 +726,17 @@ class BERTUiTest {
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Share caption card").performScrollTo()
         compose.onNodeWithText("Saved", useUnmergedTree = true).assertIsDisplayed().performClick()
-        compose.onNodeWithText("Personalise", useUnmergedTree = true).assertIsDisplayed().performClick()
-        compose.onNodeWithText("Lock screen only").performScrollTo()
         compose.onNodeWithText("Art", useUnmergedTree = true).assertIsDisplayed()
-        capture("personalize-large-scrolled")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Copy mint").performScrollTo()
         compose.onNodeWithText("Holdings", useUnmergedTree = true).assertIsDisplayed().performClick()
         compose.onNodeWithText("Save holdings").performScrollTo()
         compose.onNodeWithText("Market", useUnmergedTree = true).assertIsDisplayed()
+        // At 2x text the four Tools sections scroll sideways in their one pinned row; Style is still one swipe away.
+        compose.onNodeWithText("Style", useUnmergedTree = true).performScrollTo().assertIsDisplayed().performClick()
+        compose.onNodeWithText("Lock screen only").performScrollTo()
+        compose.onNodeWithText("Style", useUnmergedTree = true).assertIsDisplayed()
+        capture("personalize-large-scrolled")
     }
 
     @Test fun savedStateRestoresDestinationSectionAndUnfinishedCaption() {
@@ -701,18 +763,21 @@ class BERTUiTest {
         app(fontScale = 2f)
         capture("compact-home-large")
         val measurements = org.json.JSONArray()
-        for (label in listOf("Home", "Explore", "Create", "Tools")) {
+        for (label in listOf("Home", "Play", "Create", "Tools")) {
             compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
             measurements.put(measureLabel(label, singleLine = true))
         }
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Share caption card").performScrollTo().assertIsDisplayed()
-        for (label in listOf("Art", "Saved", "Personalise")) {
+        for (label in listOf("Art", "Saved")) {
             compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp)
             measurements.put(measureLabel(label, singleLine = true))
         }
         capture("compact-create-large")
-        compose.onNodeWithText("Personalise", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Style", useUnmergedTree = true).performScrollTo().performClick()
+        compose.onNode(hasText("Style") and hasClickAction()).assertHeightIsAtLeast(48.dp)
+        measurements.put(measureLabel("Style", singleLine = true))
         for (label in listOf("Apply both", "Home only", "Lock screen only", "Add Bert’s day", "Add BERT price", "Add BERT market desk")) {
             compose.onNodeWithText(label).performScrollTo().assertIsDisplayed()
             compose.onNode(hasText(label) and hasClickAction()).assertHeightIsAtLeast(48.dp).assertWidthIsAtLeast(48.dp)
@@ -720,8 +785,7 @@ class BERTUiTest {
             if (label == "Lock screen only") capture("compact-wallpaper-large")
         }
         capture("compact-widgets-large")
-        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
-        compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).performScrollTo().performClick()
         compose.onNodeWithText("Save holdings").performScrollTo().assertIsDisplayed()
         measurements.put(measureLabel("Save holdings"))
         capture("compact-holdings-large")

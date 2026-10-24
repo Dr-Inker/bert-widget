@@ -12,6 +12,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
@@ -47,8 +49,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
+/**
+ * Create makes things; Tools holds the market and the app's own settings. "Style" (widgets, colours, wallpapers) is
+ * Android's own word for that ("Wallpaper & style"), and short enough that four Tools sections fit across 360dp.
+ */
+internal val CREATE_TABS = listOf("Art", "Saved")
+internal val TOOLS_TABS = listOf("Market", "Holdings", "Alerts", "Style")
+
 internal enum class BERTDestination(val label: String, val icon: BERTSymbol) {
-    HOME("Home", BERTSymbol.HOME), EXPLORE("Explore", BERTSymbol.EXPLORE), CREATE("Create", BERTSymbol.CREATE), TOOLS("Tools", BERTSymbol.TOOLS)
+    HOME("Home", BERTSymbol.HOME), PLAY("Play", BERTSymbol.PLAY), CREATE("Create", BERTSymbol.CREATE), TOOLS("Tools", BERTSymbol.TOOLS)
 }
 
 class MainActivity : ComponentActivity() {
@@ -188,7 +197,7 @@ internal fun BERTApp(
         consumeEntry()
     }
     val savedScreens = rememberSaveableStateHolder()
-    // My Bert: the holder's chosen NFT, shared with Home, Create and Personalise; its screen opens over the current one.
+    // My Bert: the holder's chosen NFT, shared with Home, Create and Tools › Style; its screen opens over the current one.
     val myBertStore = remember { MyBertStore(context.applicationContext) }
     var chosenBert by remember { mutableStateOf(myBertStore.chosen()) }
     var myBertOpen by rememberSaveable { mutableStateOf(false) }
@@ -223,9 +232,10 @@ internal fun BERTApp(
                                 // The selected bottom destination already names the section. At larger
                                 // text sizes, prioritize its content over a repeated pinned heading.
                                 if (!largeText) AppHeader(shown)
-                                val tabPadding = if (largeText) 12.dp else 16.dp
-                                if (shown == BERTDestination.CREATE) SectionTabs(listOf("Art", "Saved", "Personalise"), createTab, tabPadding, singleRow = true) { createTab = it }
-                                else SectionTabs(listOf("Market", "Holdings", "Alerts"), toolsTab, tabPadding, singleRow = true) { toolsTab = it }
+                                // Tools has four sections: narrower pills keep all four on screen at 360dp.
+                                val tabPadding = if (largeText) 12.dp else if (shown == BERTDestination.TOOLS) 10.dp else 16.dp
+                                if (shown == BERTDestination.CREATE) SectionTabs(CREATE_TABS, createTab, tabPadding, singleRow = true) { createTab = it }
+                                else SectionTabs(TOOLS_TABS, toolsTab, tabPadding, singleRow = true) { toolsTab = it }
                             }
                         }
                         val screenKey = when (shown) {
@@ -246,7 +256,7 @@ internal fun BERTApp(
                                     makeCard = { caption -> cardSeed = caption; createTab = "Art"; destination = BERTDestination.CREATE },
                                 ) { step ->
                                     when (step) {
-                                        GettingStartedStep.WIDGET -> { destination = BERTDestination.CREATE; createTab = "Personalise" }
+                                        GettingStartedStep.WIDGET -> { destination = BERTDestination.TOOLS; toolsTab = "Style" }
                                         GettingStartedStep.GAME -> openLostTrail(context)
                                         GettingStartedStep.CARD -> { destination = BERTDestination.CREATE; createTab = "Art" }
                                         GettingStartedStep.ALERT -> { destination = BERTDestination.TOOLS; toolsTab = "Alerts" }
@@ -255,7 +265,7 @@ internal fun BERTApp(
                             } else BERTScreenContent(body) {
                                 if (!hasSections) AppHeader(shown)
                                 when (shown) {
-                                    BERTDestination.EXPLORE -> ExploreScreen()
+                                    BERTDestination.PLAY -> PlayScreen(activityState, now)
                                     BERTDestination.CREATE -> CreateScreen(key.removePrefix("CREATE-"), seedCaption = cardSeed, consumeSeed = { cardSeed = null }) { createTab = it }
                                     BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, key.removePrefix("TOOLS-"),
                                         refresh = refresh, savePosition = savePosition)
@@ -291,6 +301,7 @@ private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, posit
     when (tab) {
         "Market" -> MarketScreen(state, history, now, refreshing, refresh)
         "Alerts" -> AlertsScreen(state)
+        "Style" -> PersonaliseScreen()
         else -> HoldingsScreen(position, state, now, savePosition)
     }
 }
@@ -301,10 +312,14 @@ internal fun SectionTabs(tabs: List<String>, selected: String, horizontalPadding
     // option pickers wrap so every choice stays visible.
     val haptics = LocalHapticFeedback.current
     val rowModifier = if (singleRow) Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()) else Modifier.fillMaxWidth()
+    // A sideways-scrolling row opens unscrolled; bring the chosen section's pill on screen (e.g. Tools › Style at 2x text).
+    val inView = remember(tabs) { tabs.associateWith { BringIntoViewRequester() } }
+    if (singleRow) LaunchedEffect(selected) { inView[selected]?.bringIntoView() }
     FlowRow(rowModifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
         maxLines = if (singleRow) 1 else Int.MAX_VALUE) {
         tabs.forEach { tab ->
             Surface(color = if (tab == selected) PanelStrong else Navy, shape = RoundedCornerShape(14.dp),
+                modifier = Modifier.bringIntoViewRequester(inView.getValue(tab)),
                 border = BorderStroke(1.dp, if (tab == selected) AccentText else Muted.copy(alpha = 0.35f))) {
                 Box(Modifier.selectable(tab == selected, onClick = {
                     if (tab != selected) haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
