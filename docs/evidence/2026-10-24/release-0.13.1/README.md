@@ -1,6 +1,6 @@
 # BERT v0.13.1: new BERT Navy and BERT Violet wallpapers
 
-**LIVE 24 October 2026** (owner: "run it"): `/opt/berthalla` fast-forwarded `dd49f44` → `253c2c0`; `check-page.cjs public` passes (1440/768/390/320, no overflow, 6 downloads, 0.13.1); `bert-widget-0.13.1.apk` serves `bf78bfbb…`. The unversioned `bert-widget.apk` was still a Cloudflare HIT for 0.13.0 (`max-age=14400`, cached at the 0.13.0 launch; origin already serves `bf78bfbb…`); it expires by itself within 4 h, and no purge tool exists here. Rollback: `git -C /opt/berthalla reset --hard dd49f44`. Staged earlier the same day; App source `54cb48f` (branch
+**LIVE 24 October 2026** (owner: "run it"): `/opt/berthalla` fast-forwarded `dd49f44` → `253c2c0`; `check-page.cjs public` passes (1440/768/390/320, no overflow, 6 downloads, 0.13.1); `bert-widget-0.13.1.apk` serves `bf78bfbb…`. The unversioned `bert-widget.apk` was still a Cloudflare HIT for 0.13.0 (`max-age=14400`, cached at the 0.13.0 launch; origin already serves `bf78bfbb…`); it expires by itself within 4 h, and no purge tool exists here. GitHub `main` = `0ebbd95` (squashed onto `5d94274`, scrub scan clean). Rollback: `git -C /opt/berthalla reset --hard dd49f44`. Staged earlier the same day; App source `54cb48f` (branch
 `v0131-wallpapers`, on `v013-nav` at the live 0.13.0 record `35ee3a7`).
 
 - **APK 0.13.1 (30):** 7,356,446 bytes, SHA-256 `bf78bfbb3934b2e62c36ad94964d07c5acb4e4a4618aef79be72389ce1bafc1f`.

@@ -22,6 +22,9 @@ internal enum class BERTLink(val url: String, val launchLabel: String) {
     OFL_LICENSE("https://openfontlicense.org/open-font-license-official-text/", "Open in browser"),
     FEEDBACK("https://github.com/Dr-Inker/bert-widget/issues", "Open in browser"),
     SOURCE("https://github.com/Dr-Inker/bert-widget", "Open in browser"),
+    // The main market link: CoinMarketCap carries more retail weight than a DEX chart. It is a fixed destination, not a link
+    // built from quote data, and says nothing about where the app's prices come from (that stays DEX Screener and GeckoTerminal).
+    COINMARKETCAP("https://coinmarketcap.com/currencies/bertram-the-pomeranian/", "Open in browser"),
     APACHE_LICENSE("https://www.apache.org/licenses/LICENSE-2.0", "Open in browser"),
 }
 

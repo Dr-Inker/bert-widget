@@ -117,6 +117,21 @@ class HomeScreenUiTest {
         compose.onNodeWithText("the bakery opened early for the pups.").assertExists()
         capture("home-returning-earlier")
     }
+    // 0.13.2 (Antigravity critique 3.1): once its notes were read the board's link vanished, leaving only the pixel post.
+    @Test fun readNotesStayOneLabelledTapAway() {
+        val visits = BERTHomeVisits(compose.activity)
+        visits.meetBertDismissed = true
+        val day = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+        visits.recordOpen(day.minusDays(1))
+        visits.visit(now - 5 * hour, day.minusDays(1))
+        // Today's note was already seen on the last visit, so nothing is new.
+        BERTJournal(compose.activity).record(BERTActivity(now - 60_000, "woofmornin. the mayor is in.", "content", null), now = now - 6 * hour)
+        home(dispatch("woofmornin. the mayor is in.", "content"))
+        compose.onNodeWithText("new note", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("Read the noticeboard").assertIsDisplayed().assertHasClickAction().performClick()
+        compose.onNodeWithText("From Berthalla, first seen", substring = true).assertExists()
+        capture("home-read-noticeboard")
+    }
     @Test fun aStaleUpdateIsAmberAndNeverNew() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(ActivityState.Available(BERTActivity(now - 60_000, "an update saved earlier.", "smug", null), updateDelayed = true))
@@ -141,7 +156,7 @@ class HomeScreenUiTest {
     @Test fun theGardenGateLeadsToTheLostTrail() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(dispatch())
-        compose.onNodeWithTag("place-gate").assertContentDescriptionEquals("The garden gate: through it, The Lost Trail").performClick()
+        compose.onNodeWithTag("place-gate").assertContentDescriptionEquals("The garden gate to The Lost Trail").performClick()
         val game = org.robolectric.Shadows.shadowOf(compose.activity).nextStartedActivity
         assertEquals(LostTrailActivity::class.java.name, game.component?.className)
     }

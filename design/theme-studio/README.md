@@ -14,6 +14,12 @@ The older Mayor and Berthalla SVG compositions are retained as revision history,
   steps live outside the repo in `/opt/bert-widget-qa/wallpaper-sources-navy-violet/` (one asset is from the private
   brand kit). Home masters carry no wordmark: on phones the dock covers that band.
 
+- Mayor Purple home (0.13.2, 24 Oct 2026): the bottom-left `BERT` wordmark sat in the phone's dock band, so it was
+  erased from `generated/mayor-purple-home-v2-source.png` by `tools/erase-mayor-home-wordmark.py` (rebuilds the purple
+  gradient and the halftone lattice, 12.43 × 13.45 px, and never touches Bert's pixels). The shipped WebP replaces only
+  that area of the previous WebP with the edited master (bicubic cover-crop to 1440×3200, feathered), then WebP q92 m6,
+  so Bert stays pixel-identical to the approved art.
+
 ## Source provenance
 
 - `sources/bert-mayor-official.png` was served publicly by `bert.global` at `framerusercontent.com/images/3aLB5eoA6lFqSfok88rL6hS2cQ.png`.

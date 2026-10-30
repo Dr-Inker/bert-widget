@@ -37,6 +37,7 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BERTShortcutsTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @get:Rule val graphics = NativeGraphicsOnTestThread()
 
     private class Shortcut(val id: String, val icon: Int, val shortLabel: Int, val longLabel: Int, val targetPackage: String, val targetClass: String, val entry: String?)
 

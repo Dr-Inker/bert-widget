@@ -1,6 +1,97 @@
 # Next session — BERT app
 
+## START HERE (memo 30 October 2026): 0.14.0 rc2 staged at `30847cb` (website `c118bcb`); owed: owner "run it", Play upload, GitHub squash, platformer ff
+
+0.14.0 (32) rc2 is `v014` at `30847cb`: the 29 Oct build below plus `v014-afford` (Home labels: a You pill and
+Price ›, Play ›, News on the scene; the owner approved them on the S25). It supersedes 0.13.2 (never published) and
+rc1 (`fe58cfd`). Record: `docs/evidence/2026-10-30/release-0.14.0/README.md`.
+- **Files:** `/opt/bert-widget-qa/release-0.14.0/staged/`. APK `fee68fca…` (7,615,749 bytes, cert `f911463d…`),
+  AAB `b420efb8…`, mapping, `release.json`.
+- **Preview of the same code:** `/opt/bert-widget-qa/preview-0.14/bert-0.14.0-preview-30847cb.apk` (`184e7619…`).
+- **Gates:** host gate exit 0 (367 tests), release lint 0 errors. `check-apk.py` passes and fails on 0.13.2 and on
+  rc1. `verify-release`, the website suite (956/39) and `check-page.cjs staged` all pass.
+- **Website:** `release-0.14.0` at `c118bcb` in `/opt/bert-widget-site-release` (on the live `253c2c0`).
+
+Owed, in order:
+1. The owner's "run it": `git -C /opt/berthalla merge --ff-only release-0.14.0`, then
+   `node docs/evidence/2026-10-30/release-0.14.0/check-page.cjs public`, and compare the live APK with `fee68fca…`.
+   Rollback: `git -C /opt/berthalla reset --hard 253c2c0`.
+2. Play upload of `bert-0.14.0.aab` and its mapping (copy to the PC's `BERT-Play\` first), with the "What's new" text
+   in the record.
+3. GitHub squash onto `0ebbd95` (scrub scan first).
+4. Platformer: `git -C /opt/bert-platformer merge --ff-only real-bark` (`fair-jumps` `d3c70db` → `a70ac67`, which
+   carries the bundled pin `6c48410`).
+
+## (memo 29 October 2026, night, kept for the record): 0.14.0 (32) built and reviewed; S25 check next, then the owner's word
+
+0.14 answers an Android tester's feedback (home "needs love", the hard break into text, no sign the scene is tappable,
+profiles, a real bark, longer chart ranges, CoinMarketCap). Branch `v014`, worktree `/opt/bert-widget-v014`, HEAD
+`97a1cd6`, built on the staged-but-unshipped 0.13.2 (`1d78ed9`), so 0.14.0 can ship in its place.
+
+What's in it:
+- **Home:** Bert's line is a pixel speech bubble whose tail follows him (dream puffs towards the window at night);
+  the scene steps down into the page through four earth tones; newcomers get in-voice hints and glinting hotspots
+  until they pat him (upgraders from 0.13 are not newcomers). Board and official links grouped under the bubble.
+- **You page** (phone only, no account): avatar button top-right of Home; optional name (24 code points, cut on
+  grapheme boundaries), My Bert, Style, visits, The Lost Trail, cards, Draw Bert, holdings. Privacy texts updated.
+- **Market:** 1H 6H 24H 1W 1M 1Y and CoinMarketCap as the main link. **No "All":** GeckoTerminal's free API refuses
+  `before_timestamp` older than ~183 days (HTTP 401, checked live 29 Oct), so a year (~361 days, two daily pages) is
+  the most it can give; a refused or rate-limited second page keeps what arrived and says "Change since <date>".
+  A true all-time chart needs a paid source behind the Berthalla server, never a key in the app.
+- **The Lost Trail:** a recorded CC0 bark (Freesound 163459) replaces the synth tones; the bundled game is pinned to
+  platformer `6c48410`, which so far lives only on the platformer branch `real-bark`.
+
+Checks: host gate 344 tests + lint, exit 0 (read from the log, not the wrapper); `tools/qa/lost-trail-browser.mjs`
+PASS. Five independent review rounds (Opus x4, Sonnet x1), each smaller than the last; the last had no must-fix.
+
+Resume, in order:
+1. S25 on the PC (adb via `ssh pc`; see the 24 Oct memo below for the dance). Install
+   `/opt/bert-widget-qa/preview-0.14/bert-0.14.0-preview-97a1cd6.apk` (sha256 `48642d9b…`, re-signed with the
+   Preview key) as BERT Preview beside the real app.
+2. On the phone, check what host tests can't: the bark by ear; the glints' blink; the You button below the real
+   status bar on day and night skies; the bubble tail tracking Bert as he walks; TalkBack on Market (tap 1W after a
+   cold start and listen for "Loading prices…", then the change line; the amber note should not be read twice).
+3. Owner's word to ship 0.14.0 instead of 0.13.2, then the usual release recipe (signed APK/AAB, website branch,
+   "run it", Play upload, GitHub squash). At release, fast-forward platformer `fair-jumps` to `real-bark`.
+
+## START HERE (memo 24 October 2026, evening): PAUSED with 0.13.2 STAGED (critique fixes); device check, then "run it"
+
+**Paused by the owner after staging.** Nothing is half-done: every branch is committed, nothing is running.
+
+Resume, in order:
+1. Owner plugs the S25 into the drinkerlabs PC (adb: `ssh pc`, `C:\Users\Sjpch\platform-tools\adb.exe -s R5CY13S5TRD`;
+   the adb daemon restarts per ssh call, so `wait-for-device` first). Ask before applying wallpapers.
+2. `adb install -r C:\Users\Sjpch\BERT-Preview\bert-0.13.2-preview-533fce6.apk` (BERT Preview beside the real app).
+3. Check: Tools › Style opens at its top; Phone themes is navy/orange under Berthalla Navy; the Lock screen | Home screen
+   switch; Mayor Purple **home** applied: nothing behind the dock; Home's "Read the noticeboard" once notes are read.
+   Screenshots via `screencap` to /sdcard + `adb pull` (PowerShell `>` corrupts binaries). Verify wallpaper changes by
+   `dumpsys wallpaper` seed colours, not by tap results (layouts shift under taps).
+4. Restore the owner's wallpaper: **Berthalla Nights**, home and lock (pre-test seed colours: home
+   `[-16114118, -6343385]`, lock `[-13347460, -6474198]`). Delete the leftover `/sdcard/bertui.xml`.
+5. On the owner's "run it": steps in `docs/evidence/2026-10-24/release-0.13.2/README.md` (ff `/opt/berthalla` to
+   `release-0.13.2`, `check-page.cjs public`, compare the live versioned APK to `03bf2cbf…`; the unversioned
+   `bert-widget.apk` URL is Cloudflare-cached up to 4 h), then the GitHub squash onto `0ebbd95`, then mark the record LIVE.
+6. Owner: upload `bert-0.13.2.aab` + mapping from `BERT-Play\` (0.13.1's AAB is there too, if it was never uploaded,
+   0.13.2 supersedes it).
+
+State: the S25 runs BERT 0.13.0 from Play and BERT Preview `wallpapers-fix1` (0.13.1-era); wallpaper is Berthalla Nights.
+Antigravity's critique and our exchange: `docs/CRITIQUE-2026-10-24.md` and `docs/CRITIQUE-2026-10-24-RESPONSE.md`.
+Review page (wallpaper story): https://claude.ai/artifact/A6DLpVsGegxtpNgYeLkEHk
+
+0.13.2 (31) from `533fce6` (branch `v0132`, worktree `/opt/bert-widget-wallpapers`) is staged: record
+`docs/evidence/2026-10-24/release-0.13.2/README.md`; files in `/opt/bert-widget-qa/release-0.13.2/staged/`; website
+`release-0.13.2` at `3da6003` (on live `253c2c0`). AAB on the PC. Owed: an S25 check with the preview
+(`BERT-Preview\bert-0.13.2-preview-533fce6.apk`), the owner's "run it", the Play upload. After going live: GitHub
+squash onto `0ebbd95`. Design questions from the critique (Home/Play overlap, Create layout, the two Violet/Navy
+pickers, art/type mix) wait for an owner-led design pass.
+
+## Done (memo 24 October 2026, post-0.13.1): Antigravity 0.13.1 critique, reviewed and answered; fixes are 0.13.2 (above)
+
+Antigravity left a full-stack critique of `0.13.1` in `docs/CRITIQUE-2026-10-24.md` (covering the `0.13.1` wallpaper edits—orphaned ghost spotlights in `.violet-stage`/`.navy-stage`, Row 5 icon collision on S25 Home, `Mayor Purple` Home dock wordmark, hardcoded violet colors in `ThemeStudio()`, website "four worlds" copy—plus Home/Play/Create/Tools UX and Compose state/dead-code cleanup).
+
 ## 0.13.1 IS LIVE (24 October 2026): website `253c2c0`; Play upload of `bert-0.13.1.aab` owed by the owner
+
+GitHub `main` = `0ebbd95` (squashed onto `5d94274`). The unversioned `bert-widget.apk` URL was a Cloudflare cache HIT for 0.13.0 at go-live; expires within 4 h.
 
 (Staging memo kept for the record:)
 

@@ -35,6 +35,7 @@ import java.io.File
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class BERTUiTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @get:Rule val graphics = NativeGraphicsOnTestThread()
 
     private fun app(activity: ActivityState = ActivityState.Unavailable, fontScale: Float = 1f, restoration: StateRestorationTester? = null,
                     quote: QuoteState = QuoteState.Unavailable("No connection"), history: List<BERTPriceSample> = emptyList(),
@@ -403,6 +404,8 @@ class BERTUiTest {
     /** 0.13: Personalise moved from Create to Tools (as Style), so the checklist's widget step lands there. */
     @Test fun widgetStepOpensPersonaliseInTools() {
         app()
+        // The checklist reads its progress off the main thread, so on a loaded host it can land after Home first draws.
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Put Bert on your home screen").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("Put Bert on your home screen").performScrollTo().performClick()
         compose.onNode(hasText("Tools") and hasClickAction()).assertIsSelected()
         compose.onNode(hasText("Style") and hasClickAction()).assertIsSelected()
@@ -550,7 +553,8 @@ class BERTUiTest {
         val detailAfterTabSwitch = compose.onNodeWithContentDescription("Saved caption card: Pack memory 2").getUnclippedBoundsInRoot()
         compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
         compose.onNodeWithText("Saved").assertIsSelected()
-        compose.onNodeWithText("Your collection").assertExists()
+        // Like every other step here, wait for the list to come back: under a loaded host it can land a frame or two late.
+        compose.waitUntil(15_000) { compose.onAllNodesWithText("Your collection").fetchSemanticsNodes().isNotEmpty() }
         val afterBack = compose.onNodeWithText("Pack memory 2", useUnmergedTree = true).getUnclippedBoundsInRoot()
         val measurements = org.json.JSONObject().put("fontScale", fontScale)
             .put("anchorBeforeTopDp", before.top.value).put("anchorAfterButtonTopDp", afterButton.top.value)

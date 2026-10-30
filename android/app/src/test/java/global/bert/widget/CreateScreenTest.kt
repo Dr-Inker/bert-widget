@@ -42,6 +42,7 @@ class CreateScreenTest {
     @Before @After fun freshShareCache() = forgetFileProviderPaths()
 
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @get:Rule val graphics = NativeGraphicsOnTestThread()
     private val haptics = mutableListOf<HapticFeedbackType>()
 
     private fun openCreate(fontScale: Float = 1f) {

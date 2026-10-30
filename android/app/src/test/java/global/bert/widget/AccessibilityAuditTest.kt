@@ -31,6 +31,7 @@ import org.robolectric.annotation.GraphicsMode
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class AccessibilityAuditTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @get:Rule val graphics = NativeGraphicsOnTestThread()
 
     private fun audit(screen: String): List<String> {
         compose.waitForIdle()
@@ -68,6 +69,10 @@ class AccessibilityAuditTest {
                 findings += audit("$screen (scrolled ${i + 1})")
             }
         }
+        // The You button sits on Home's sky, so it is judged at the top of Home, and the page behind it is scrolled through.
+        compose.onNodeWithTag("you-button").performClick()
+        scrollThrough("You")
+        compose.onNodeWithText("Back").performScrollTo().performClick()
         scrollThrough("Home")
         for ((destination, tabs) in listOf("Play" to listOf<String>(), "Create" to listOf("Art", "Saved"), "Tools" to listOf("Market", "Holdings", "Alerts", "Style"))) {
             compose.onNodeWithText(destination, useUnmergedTree = true).performClick()

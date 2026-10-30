@@ -50,6 +50,7 @@ import java.util.TimeZone
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class PlayStoreScreenshotsTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @get:Rule val graphics = NativeGraphicsOnTestThread()
     private val zone = ZoneId.of("Europe/London")
     // Monday 12 October 2026, 09:10 in London: a weekday morning, so Home shows Bert's morning greeting.
     private val now = LocalDateTime.of(2026, 10, 12, 9, 10).atZone(zone).toInstant().toEpochMilli()

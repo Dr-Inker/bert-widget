@@ -48,6 +48,7 @@ The Android companion app and Jetpack Glance widget provide:
 - Super Bert World: The Lost Trail, playable offline
 - Current USD price, 24-hour change, 1H/6H activity, market cap, volume and liquidity, with live, delayed and
   last-updated status; opt-in alerts
+- Price history for 1H, 6H, 24H, 1W, 1M and 1Y, with a CoinMarketCap link beside the DEX Screener one (0.14). 1Y reaches back about 361 days: GeckoTerminal's free API refuses anything older than about 183 days as a starting point, which also rules out an all-time chart
 - Optional, locally stored BERT holdings in a dedicated position panel
 - Four home-screen widgets: Bert's garden, Bert's day, BERT price (Compact 2×2) and BERT market desk (4×2)
 - A Theme Studio with four phone-wallpaper packs and matching widget palettes (BERT Violet, Mayor Purple, Woofhub
@@ -55,7 +56,7 @@ The Android companion app and Jetpack Glance widget provide:
 
 Each theme pack includes distinct Home and Lock Screen artwork plus a matching widget palette. The Compact widget still fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed APK supports Android 8.0 and newer.
 
-Market data comes straight from the public DEX Screener (quote) and GeckoTerminal (24-hour history) APIs, so those services see the phone's IP address when it refreshes. The Berthalla quote service is used only when a direct request fails or no longer validates; those requests carry `?via=fallback`. No holdings, history or identifiers are sent anywhere.
+Market data comes straight from the public DEX Screener (quote) and GeckoTerminal (price history) APIs, so those services see the phone's IP address when it refreshes. The Berthalla quote service is used only when a direct request fails or no longer validates; those requests carry `?via=fallback`. The 1W, 1M and 1Y charts have no Berthalla fallback (the server only serves 24 hours) and are fetched from GeckoTerminal only when that range is chosen. No holdings, history or identifiers are sent anywhere.
 
 Background refresh runs only while at least one widget is placed; without widgets, the app refreshes while it is open. Widgets show an absolute "as of" time and switch to delayed when a quote passes 30 minutes, including offline.
 

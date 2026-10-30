@@ -11,8 +11,8 @@ android {
         applicationId = "global.bert.widget"
         minSdk = 26
         targetSdk = 36
-        versionCode = 30
-        versionName = "0.13.1"
+        versionCode = 32
+        versionName = "0.14.0"
         // res/xml/shortcuts.xml cannot see the variant's applicationId; the preview build adds a suffix (see below).
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
@@ -87,6 +87,8 @@ android {
             it.doFirst { scratch.mkdirs() }
             it.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
             it.jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
+            // Render-only review fixtures (no assertions) stay out of the gate's count; -Pshots runs them.
+            if (!project.hasProperty("shots")) it.filter.excludeTestsMatching("*HomeAffordanceShotsTest")
         }
     }
 

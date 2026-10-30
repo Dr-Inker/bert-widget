@@ -31,6 +31,7 @@ class MyBertFlowTest {
     @Before @After fun freshShareCache() = forgetFileProviderPaths()
 
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
+    @get:Rule val graphics = NativeGraphicsOnTestThread()
     private val now = 1_789_000_000_000
 
     @Before fun clean() {

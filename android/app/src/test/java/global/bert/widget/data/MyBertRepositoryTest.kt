@@ -15,6 +15,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -31,6 +32,7 @@ import java.net.URI
 class MyBertRepositoryTest {
     private val context get() = RuntimeEnvironment.getApplication()
     private val staker = MyBertFixtures.STAKER
+    @get:Rule val graphics = global.bert.widget.NativeGraphicsOnTestThread()
 
     @Before fun clean() {
         MyBertStore(context).forget()

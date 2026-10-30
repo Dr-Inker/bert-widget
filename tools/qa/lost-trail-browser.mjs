@@ -12,6 +12,7 @@ const manifest=JSON.parse(fs.readFileSync(root+'/android/app/src/main/assets/gam
 const hash=createHash('sha256').update(html).digest('hex');assert.equal(hash,manifest.sha256);
 // The bundled file must be the game repository's committed build at the pinned source, byte for byte.
 assert.deepEqual(html,execFileSync('git',['show',`${manifest.sourceSha}:index.html`],{cwd:'/opt/bert-platformer',maxBuffer:16*1024*1024}),'Bundled game differs from the pinned platformer build');
+const pick=({decoded,sample,synth})=>({decoded,sample,synth});
 const dir=process.env.EVIDENCE_DIR||'/tmp/bert-mobile-game';fs.mkdirSync(dir,{recursive:true});
 const url='https://appassets.androidplatform.net/lost-trail/index.html?app';
 const csp="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'";
@@ -85,6 +86,20 @@ try{
  await page.reload();await page.waitForFunction(()=>__QA?.ready());await page.evaluate(()=>__QA.manual());await page.locator('#start').tap();
  const resumed=await page.evaluate(()=>__QA.read());assert.equal(resumed.checkpoint.id,0);assert.equal(resumed.coins,earned.coins);assert.equal(resumed.switches[0].active,true);assert.equal(resumed.p.x,earned.checkpoint.x);
  result.checkpoint={earned,resumed};await page.screenshot({path:dir+'/lantern-resumed.png'});
+ // The bark must be the embedded recording, decoded under the native CSP after a real tap (not the synth fallback), and mute must silence it.
+ // Each decoded buffer is tagged with its place in the bundle and each one started is logged, so the gate can tell which sample played.
+ const audioPage=await ctx.newPage();audioPage.on('pageerror',e=>result.errors.push(e.message));
+ await audioPage.addInitScript(()=>{window.__barkPlays=[];let n=0;const decode=BaseAudioContext.prototype.decodeAudioData,start=AudioBufferSourceNode.prototype.start;
+  BaseAudioContext.prototype.decodeAudioData=function(...a){const i=n++;return decode.apply(this,a).then(b=>{if(b)b.__barkIndex=i;return b;});};
+  AudioBufferSourceNode.prototype.start=function(...a){if(this.buffer?.__barkIndex!==undefined)window.__barkPlays.push(this.buffer.__barkIndex);return start.apply(this,a);};});
+ await audioPage.goto(url+'&qa');await audioPage.waitForFunction(()=>__QA?.ready());await audioPage.evaluate(()=>__QA.manual());await audioPage.locator('#start').tap();
+ await audioPage.waitForFunction(()=>__QA.audio().decoded===2,null,{timeout:10000});
+ const bark=async()=>{await audioPage.keyboard.down('KeyF');await audioPage.evaluate(()=>__QA.advance(2));await audioPage.keyboard.up('KeyF');await audioPage.evaluate(()=>__QA.advance(30));return audioPage.evaluate(()=>__QA.audio());};
+ const plays=()=>audioPage.evaluate(()=>window.__barkPlays);
+ assert.deepEqual(pick(await bark()),{decoded:2,sample:1,synth:0},'first bark plays the recorded sample');assert.deepEqual(await plays(),[0],'first bark plays the first sample');
+ assert.deepEqual(pick(await bark()),{decoded:2,sample:2,synth:0},'second bark plays a recorded sample');assert.deepEqual(await plays(),[0,1],'second bark plays the other sample');
+ await audioPage.locator('#sound').tap();assert.deepEqual(pick(await bark()),{decoded:2,sample:2,synth:0},'a muted bark makes no sound');assert.deepEqual(await plays(),[0,1],'a muted bark starts no sample');
+ result.audio=await audioPage.evaluate(()=>__QA.audio());await audioPage.close();
  // Production load omits the diagnostic flag; no QA hooks and no external requests.
  await page.goto(url);await page.waitForFunction(()=>window.BertAppGame);assert.equal(await page.evaluate(()=>typeof window.__QA),'undefined');
  assert.deepEqual(result.errors,[]);assert.deepEqual(result.remoteRequests,[]);

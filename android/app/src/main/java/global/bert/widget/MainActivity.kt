@@ -15,6 +15,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -202,18 +203,27 @@ internal fun BERTApp(
     var chosenBert by remember { mutableStateOf(myBertStore.chosen()) }
     var myBertOpen by rememberSaveable { mutableStateOf(false) }
     val myBert = MyBertHandle(chosenBert, open = { myBertOpen = true }, update = { chosenBert = it })
+    // You: the person's own page, opened over the current tab like My Bert. My Bert opens over it, and Back returns here.
+    var youOpen by rememberSaveable { mutableStateOf(false) }
 
     BackHandler(destination != BERTDestination.HOME) { destination = BERTDestination.HOME }
+    BackHandler(youOpen) { youOpen = false }
     BackHandler(myBertOpen) { myBertOpen = false }
 
-    CompositionLocalProvider(LocalMyBert provides myBert) {
+    CompositionLocalProvider(LocalMyBert provides myBert, LocalOpenYou provides { youOpen = true }) {
         Scaffold(
             containerColor = Navy,
             contentWindowInsets = WindowInsets.safeDrawing,
-            bottomBar = { BERTNavigation(destination) { myBertOpen = false; destination = it } },
+            bottomBar = { BERTNavigation(destination) { myBertOpen = false; youOpen = false; destination = it } },
         ) { padding ->
             if (myBertOpen) {
                 MyBertScreen(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), close = { myBertOpen = false })
+            } else if (youOpen) {
+                YouScreen(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), holdingsSet = position.amount != null,
+                    close = { youOpen = false },
+                    openStyle = { youOpen = false; destination = BERTDestination.TOOLS; toolsTab = "Style" },
+                    openHoldings = { youOpen = false; destination = BERTDestination.TOOLS; toolsTab = "Holdings" },
+                    openSaved = { youOpen = false; destination = BERTDestination.CREATE; createTab = "Saved" })
             } else {
                 // A short crossfade between destinations, and again between sections, so nothing hard-cuts.
                 // Home's scene runs under the status bar (it is the top of the screen); every other screen keeps the inset.
@@ -315,7 +325,8 @@ internal fun SectionTabs(tabs: List<String>, selected: String, horizontalPadding
     // A sideways-scrolling row opens unscrolled; bring the chosen section's pill on screen (e.g. Tools › Style at 2x text).
     val inView = remember(tabs) { tabs.associateWith { BringIntoViewRequester() } }
     if (singleRow) LaunchedEffect(selected) { inView[selected]?.bringIntoView() }
-    FlowRow(rowModifier, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+    // One selectable group, so TalkBack reads each pill as "1 of 2" and so on.
+    FlowRow(rowModifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
         maxLines = if (singleRow) 1 else Int.MAX_VALUE) {
         tabs.forEach { tab ->
             Surface(color = if (tab == selected) PanelStrong else Navy, shape = RoundedCornerShape(14.dp),

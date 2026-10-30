@@ -22,7 +22,7 @@ text below was updated for 0.12 after that upload: paste the short and full desc
 >
 > **Widgets** — Bert's garden (a small window onto Home, wherever his day has got to), Bert's day (his photo, mood, latest update and tournament countdown), or the BERT price at a glance with a 24-hour chart. Every widget shows when its data is from, even offline.
 >
-> **Tools** — the BERT market price and 24-hour chart, an optional private holdings record, and opt-in alerts for tournaments, Berthalla's daily updates, price levels and big moves.
+> **Tools** — the BERT market price with price charts from an hour to a year (1H, 6H, 24H, 1W, 1M, 1Y) and links to CoinMarketCap and DEX Screener, an optional private holdings record, and opt-in alerts for tournaments, Berthalla's daily updates, price levels and big moves.
 >
 > **Themes** — four matching Home and Lock screen wallpaper packs, and the app in BERT Violet or the original Berthalla Navy, all under Tools › Style.
 >
@@ -64,7 +64,13 @@ Today, Create, Market, Play and Alerts. Captions: "Bert’s day, every day", "Ma
 - **Data collected:** none. **Data shared:** none.
 - The app makes requests to DEX Screener, GeckoTerminal and berthalla.io for public data; these services see the
   device's IP address as any web request does, and no identifiers, holdings or account data are sent. Holdings, cards,
-  alert settings and game progress stay in private app storage; Android backup is disabled.
+  alert settings, game progress and the optional name Bert calls them on the You page (0.14) stay in private app storage; Android
+  backup is disabled.
+- **You page (0.14, optional):** a person can type a name for Bert to call them by (up to 24 characters; it shows in the
+  noticeboard's heading). It is written only to private app storage, is never sent to any server or to the developer, and
+  "Forget my name" on the page deletes it. It is on-device only, so it is not "collected" for this form and nothing
+  changes in the answers above; it is not an account, and there is no sign-in. Draw Bert on that page only opens
+  berthalla.io/studio in the browser, and sends nothing from the app.
 - **My Bert (0.10, optional, off until used):** a person can paste a public Solana wallet address to show the Bert NFT
   they hold. On their tap, the app sends that address to Magic Eden
   (`api-mainnet.magiceden.dev`, held and listed Berts) and to the public Solana RPC (`api.mainnet-beta.solana.com`,

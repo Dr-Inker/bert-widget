@@ -16,11 +16,31 @@ class BERTHomeVisits(context: Context) {
 
     /** Counts [today] once. A clock set backwards neither counts nor rewinds the last day. */
     fun recordOpen(today: LocalDate = LocalDate.now()): Int = synchronized(lock) {
+        settleOpenedBefore014(today)
         val last = preferences.getLong(LAST_DAY, Long.MIN_VALUE)
         val days = preferences.getInt(DAYS, 0)
         if (today.toEpochDay() <= last) return days
         preferences.edit().putLong(LAST_DAY, today.toEpochDay()).putInt(DAYS, days + 1).apply()
         days + 1
+    }
+
+    /**
+     * Whether the app had been opened on a day before [today] by a version older than 0.14, for [global.bert.widget.PlaceDiscovery]
+     * to greet someone updating as a regular. It is settled once, from what the older versions left, by the first open
+     * this version counts (or by this question, if it comes first), and the opens this version counts afterwards never
+     * change it. Otherwise someone whose very first open was a widget tap straight into Market (which counts the day but
+     * never shows Home) would come back to Home the next day, be taken for a regular, and never be shown round.
+     */
+    fun openedBefore014(today: LocalDate): Boolean = synchronized(lock) { settleOpenedBefore014(today) }
+
+    private fun settleOpenedBefore014(today: LocalDate): Boolean {
+        if (!preferences.contains(OPENED_BEFORE_014)) {
+            // An open on a day before [today] (a clock set backwards aside): this is not the first day.
+            val earlier = preferences.contains(LAST_DAY) &&
+                (preferences.getLong(LAST_DAY, Long.MIN_VALUE) < today.toEpochDay() || preferences.getInt(DAYS, 0) >= 2)
+            preferences.edit().putBoolean(OPENED_BEFORE_014, earlier).apply()
+        }
+        return preferences.getBoolean(OPENED_BEFORE_014, false)
     }
 
     /**
@@ -49,6 +69,7 @@ class BERTHomeVisits(context: Context) {
         private const val SEEN_AT = "home_seen_at"
         private const val SINCE = "home_since"
         private const val MEET_BERT = "meet_bert_dismissed"
+        private const val OPENED_BEFORE_014 = "opened_before_0_14"
         const val SITTING_GAP = 30 * 60_000L
         /** Today's update is "New" only while it is this young and the person hasn't seen it in an earlier sitting. */
         const val NEW_WINDOW = 6 * 3_600_000L

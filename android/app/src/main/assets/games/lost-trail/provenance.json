@@ -1,9 +1,10 @@
 {
   "sourceRepository": "bert-platformer",
-  "sourceSha": "5892765656a9ae547bf9029cb88f47d93d0a5512",
-  "sha256": "20ae1eb78b7cacaec70aa52de6560290e1a9e9a2e300b533f23c04796e69d0ca",
-  "bytes": 571158,
+  "sourceSha": "6c48410312911af2091bc6285048e8ab4ba259db",
+  "sha256": "b63fc04e7c3dc3b18218f4348521cfb5b5bb452d5332468391bb3197254f97a2",
+  "bytes": 581468,
   "buildCommand": "node tools/build-expedition.mjs",
   "art": "Owner-approved Bert, 22 completed PixelLab jobs (incl. title key art) and the title Bert pixelated from the canonical reference; see platformer manifest",
-  "thumbnail": "Title key art (platformer jobs/title-landscape) with the title Bert, 2x nearest-neighbour, platformer source 35c37dbf7dcd2d8ed802fcf24874fd4c68d9b52b"
+  "thumbnail": "Title key art (platformer jobs/title-landscape) with the title Bert, 2x nearest-neighbour, platformer source 35c37dbf7dcd2d8ed802fcf24874fd4c68d9b52b",
+  "bark": "Recorded Chihuahua bark, CC0 1.0: Freesound 163459 'LBS_FX DOG Small Alert Bark001.wav' by LittleBigSounds, https://freesound.org/s/163459/, retrieved 2026-10-29; source preview SHA-256 02546b58a07530cd5539041c989e413e64a592901349c8e2885c594db414dce6; cut into two 0.27 s MP3 clips and embedded as base64, see platformer assets/audio/bark/PROVENANCE.md and assets/licences/CC0-Bark-Freesound-163459.txt"
 }

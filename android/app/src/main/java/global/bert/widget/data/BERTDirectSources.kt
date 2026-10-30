@@ -13,6 +13,11 @@ object BERTDirectSources {
     const val MAX_QUOTE_BYTES = 512 * 1_024
     const val MAX_HISTORY_BYTES = 256 * 1_024
     const val HISTORY_INTERVAL_SECONDS = 300L
+    /** One range page is a few hundred candles, about 20 KB; this leaves room without letting a response run away. */
+    const val MAX_RANGE_BYTES = 256 * 1_024
+    private const val MAX_RANGE_CANDLES = 1_000
+    /** 2024-08-01: before the BERT token existed, so an earlier timestamp is garbage. */
+    private const val EARLIEST_CANDLE_SECONDS = 1_722_470_400L
     private const val WINDOW_SECONDS = 24L * 60 * 60
     private const val HISTORY_LIMIT = WINDOW_SECONDS / HISTORY_INTERVAL_SECONDS + 1
 
@@ -20,6 +25,41 @@ object BERTDirectSources {
         require(SOLANA_ADDRESS.matches(pool)) { "Invalid pool address" }
         return "$base/networks/solana/pools/$pool/ohlcv/minute?aggregate=${HISTORY_INTERVAL_SECONDS / 60}" +
             "&limit=$HISTORY_LIMIT&currency=usd&token=base"
+    }
+
+    /** One page of a long chart range; [beforeTimestamp] (epoch seconds, a candle open) asks for the candles before it. */
+    fun rangeUrl(base: String, pool: String, spec: BERTCandleSpec, beforeTimestamp: Long? = null): String {
+        require(SOLANA_ADDRESS.matches(pool)) { "Invalid pool address" }
+        require(beforeTimestamp == null || beforeTimestamp > 0) { "Invalid page marker" }
+        return "$base/networks/solana/pools/$pool/ohlcv/${spec.timeframe}?aggregate=${spec.aggregate}" +
+            "&limit=${spec.limit}&currency=usd&token=base" + (beforeTimestamp?.let { "&before_timestamp=$it" } ?: "")
+    }
+
+    /**
+     * Validates one GeckoTerminal OHLCV page for a long range and returns its [candleOpenEpochSeconds, close] pairs in
+     * ascending order. Held to the same rules as [historyEnvelope] (the BERT mint, finite positive closes, sane
+     * timestamps), with candles aligned to the range's own hour or day. A single bad candle is dropped like the 24-hour
+     * history does, but a page that is mostly bad is rejected whole, so a changed format cannot pass as a thin chart.
+     */
+    fun rangeCandles(raw: String, spec: BERTCandleSpec, nowEpochMillis: Long): List<Pair<Long, Double>> {
+        val root = JSONObject(raw)
+        val base = root.getJSONObject("meta").getJSONObject("base")
+        require(base.getString("address") == BERTQuoteRepository.BERT_MINT) { "History is not for the BERT mint" }
+        val list = root.getJSONObject("data").getJSONObject("attributes").getJSONArray("ohlcv_list")
+        require(list.length() <= MAX_RANGE_CANDLES) { "Too many candles" }
+        val nowSeconds = nowEpochMillis / 1_000
+        val byTime = sortedMapOf<Long, Double>()
+        var rejected = 0
+        for (index in 0 until list.length()) {
+            val candle = list.optJSONArray(index)
+            val time = (candle?.opt(0) as? Number)?.toLong()
+            val close = (candle?.takeIf { it.length() >= 5 }?.opt(4) as? Number)?.toDouble()
+            val valid = time != null && close != null && time % spec.alignSeconds == 0L &&
+                time >= EARLIEST_CANDLE_SECONDS && time <= nowSeconds + 60 && close.isFinite() && close > 0
+            if (valid) byTime[requireNotNull(time)] = requireNotNull(close) else rejected++
+        }
+        require(rejected <= byTime.size) { "Too many invalid candles" }
+        return byTime.map { it.key to it.value }
     }
 
     /** DEX Screener token-pairs array → quote envelope for the deepest-liquidity BERT base-token pool. */

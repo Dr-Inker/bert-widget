@@ -23,6 +23,10 @@ key, never signs anything, and cannot move or spend anything. It shows no prices
 
 Notes for the owner (not for publishing):
 
+- 0.14 adds the You page. Its one stored item is an optional name for Bert to call the person by, kept only in the
+  app's private storage and never sent anywhere. If berthalla.io/app/privacy/ lists what stays on the phone (holdings,
+  cards, alerts, game progress), add "the name you ask Bert to call you, on the You page" to that list; "Forget my name"
+  on the page deletes it, as does clearing the app's data. The Play Data safety answers do not change (on-device only, not collected).
 - Keep the hosts list in step with `MyBertSources.HOSTS` in the app.
 - If the Play Data safety form ends up declaring the wallet address as collected (see `docs/play/LISTING.md`), add one
   sentence here to match: "The Play Store lists this as optional financial info used only for app functionality."

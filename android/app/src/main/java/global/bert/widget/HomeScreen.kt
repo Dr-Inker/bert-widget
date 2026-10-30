@@ -56,6 +56,7 @@ import global.bert.widget.data.HomeVisit
 import global.bert.widget.data.JournalEntry
 import global.bert.widget.data.LostTrailProgress
 import global.bert.widget.data.QuoteState
+import global.bert.widget.data.YouProfile
 import global.bert.widget.data.BERTEvent
 import global.bert.widget.data.BERTStanding
 import global.bert.widget.data.EventPhase
@@ -66,6 +67,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
 import java.time.ZoneId
@@ -109,21 +111,39 @@ internal fun HomeScreen(modifier: Modifier, state: ActivityState, now: Long, ref
         val covered by remember(widthPx, statusPx, screenPx) {
             derivedStateOf { widthPx > 0 && scroll.value > placeHeightPx(widthPx, screenPx) - statusPx }
         }
+        // Where the You button floats over the scene (it scrolls with it, so this holds at any scroll), with a 4dp margin.
+        // Top right on screen whatever the language's direction, like the picture it sits on (BertsPlace keeps the scene
+        // left to right). Before its first layout its width is 0, so for one frame only its right margin is kept clear:
+        // the scene keeps its tap targets out from under it. Its width is measured, so large text is allowed for.
+        var youWidthPx by remember { mutableIntStateOf(0) }
+        val youOverlay = youOverlay(widthPx, statusPx, youWidthPx, LocalDensity.current)
         Column(Modifier.fillMaxSize().onSizeChanged { widthPx = it.width }.verticalScroll(scroll)
             .semantics { customActions = listOf(CustomAccessibilityAction("Refresh") { retry(); true }) }) {
-            HomeContent(state, now, quote, openMarket, makeCard, openStep, covered)
+            HomeContent(state, now, quote, openMarket, makeCard, openStep, covered, youOverlay)
         }
         // The page's own colour behind the status bar, so the clock never sits on top of a card.
         // Sized from the raw inset: the app's Scaffold has already consumed the status-bar inset, so
         // windowInsetsTopHeight(statusBars) would be zero here.
         if (covered) Box(Modifier.fillMaxWidth().height(with(LocalDensity.current) { statusPx.toDp() }).background(Navy).testTag("status-scrim"))
+        // The You button rides on the sky below the status bar and scrolls away with it, so it never floats over cards.
+        // It comes after the page here so that it is drawn over the scene, which would also make it the last thing
+        // TalkBack reaches, after everything on Home (and gone by then, once the page has scrolled). Put first in the
+        // reading order, it is read where it sits: at the top of the screen, before the scene.
+        val density = LocalDensity.current
+        val youGonePx = statusPx + with(density) { 64.dp.toPx() }
+        val youShown by remember(youGonePx) { derivedStateOf { scroll.value < youGonePx } }
+        if (youShown) YouButton(Modifier.align(androidx.compose.ui.AbsoluteAlignment.TopRight)
+            .absolutePadding(top = with(density) { statusPx.toDp() } + YOU_TOP, right = YOU_END)
+            .onSizeChanged { youWidthPx = it.width } // inside the padding: the pill itself
+            .offset { androidx.compose.ui.unit.IntOffset(0, -scroll.value) }.semantics { traversalIndex = -1f })
     }
 }
 
 @Composable
 private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: QuoteState,
                                     openMarket: () -> Unit, makeCard: (String) -> Unit, openStep: (GettingStartedStep) -> Unit,
-                                    skyCovered: Boolean = false) {
+                                    skyCovered: Boolean = false,
+                                    youOverlay: androidx.compose.ui.unit.IntRect = androidx.compose.ui.unit.IntRect.Zero) {
     val context = LocalContext.current
     val visits = remember { BERTHomeVisits(context.applicationContext) }
     val journalStore = remember { BERTJournal(context.applicationContext) }
@@ -153,18 +173,27 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
     var board by rememberSaveable { mutableStateOf(false) }
     val price = (quote as? QuoteState.Available)?.quote?.priceUsd
     BertsPlace(now, activity?.mood, price, fresh.size, openBoard = { board = true }, openMarket = openMarket, meetBert = { meetBert = true; askedToMeet = true },
-        openTrail = { openLostTrail(context) }, skyCovered = skyCovered)
-    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        openTrail = { openLostTrail(context) }, skyCovered = skyCovered, overlay = youOverlay)
+    // 0.14: the speech bubble already leaves room under the scene, so the page starts close beneath it.
+    Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
         val chosen = LocalMyBert.current.chosen
-        if (chosen != null || fresh.isNotEmpty()) FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
-            itemVerticalAlignment = Alignment.CenterVertically) {
-            chosen?.let { MyBertChip(it) }
-            if (fresh.isNotEmpty()) TextButton(onClick = { board = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                Text(if (fresh.size == 1) "1 new note on the board" else "${fresh.size.coerceAtMost(6)} new notes on the board",
-                    fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+        // The board keeps a labelled way in once its notes are read: otherwise the only one is the pixel noticeboard.
+        val boardHasNotes = current != null || journal.isNotEmpty()
+        // The board link and the official links are one quiet group; both rows are 48dp touch targets already,
+        // so the column's 18dp gap between them read as a hole.
+        Column {
+            if (chosen != null || boardHasNotes) FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
+                itemVerticalAlignment = Alignment.CenterVertically) {
+                chosen?.let { MyBertChip(it) }
+                if (fresh.isNotEmpty()) TextButton(onClick = { board = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
+                    Text(if (fresh.size == 1) "1 new note on the board" else "${fresh.size.coerceAtMost(6)} new notes on the board",
+                        fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                } else if (boardHasNotes) TextButton(onClick = { board = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
+                    Text("Read the noticeboard", color = Muted, fontSize = 15.sp, fontWeight = FontWeight.Medium)
+                }
             }
+            OfficialChips()
         }
-        OfficialChips()
         var exitReport by rememberExitReport()
         exitReport?.let { report -> ExitReportCard(report) { exitReport = null } }
         if (meetBert) Box(Modifier.bringIntoViewRequester(meetRequester)) { MeetBertCard { visits.meetBertDismissed = true; meetBert = false } }
@@ -201,7 +230,10 @@ private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntr
     ModalBottomSheet(onDismissRequest = close, containerColor = Panel, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 22.dp, end = 22.dp, bottom = 28.dp)
             .testTag("noticeboard"), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-            Text("on the board", fontFamily = BertHand, fontSize = 26.sp, color = Cream, modifier = Modifier.semantics { heading() })
+            // The name from the You page, if the person gave one; read when the board opens, so it is never stale.
+            val name = remember { YouProfile(context.applicationContext).name() }
+            Text(if (name.isEmpty()) "on the board" else "on the board for $name", fontFamily = BertHand, fontSize = 26.sp, color = Cream,
+                modifier = Modifier.semantics { heading() })
             var dispatch: String? = null
             when (state) {
                 ActivityState.Loading -> Text("checking the board…", color = Muted)
@@ -541,3 +573,20 @@ private fun StandingRow(row: BERTStanding, leader: Boolean) {
         row.prizeUsd?.let { Text("${'$'}$it", color = Amber, fontSize = 13.sp, fontWeight = FontWeight.Bold, modifier = Modifier.widthIn(min = 40.dp)) }
     }
 }
+
+/** Where Home's You button floats: this far below the status bar, this tall. The scene keeps its tap targets below it. */
+private val YOU_TOP = 10.dp
+private val YOU_END = 16.dp
+
+/**
+ * Where Home's You button floats over the scene, in the page's pixels, with a 4dp margin round it: [YOU_END] in from the
+ * right of a page [widthPx] wide, [YOU_TOP] under a status bar [statusPx] tall, [YOU_HEIGHT] tall and [youWidthPx] wide
+ * (measured; 0, and the page's width 0, on the first frame, when it covers nothing). Shared with the placement sweep.
+ */
+internal fun youOverlay(widthPx: Int, statusPx: Int, youWidthPx: Int, density: androidx.compose.ui.unit.Density): androidx.compose.ui.unit.IntRect =
+    with(density) {
+        val margin = 4.dp.roundToPx()
+        androidx.compose.ui.unit.IntRect(widthPx - YOU_END.roundToPx() - youWidthPx - margin, 0, widthPx,
+            statusPx + (YOU_TOP + YOU_HEIGHT).roundToPx() + margin)
+    }
+internal val YOU_HEIGHT = 48.dp

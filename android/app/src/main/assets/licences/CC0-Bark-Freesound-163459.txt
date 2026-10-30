@@ -1,0 +1,12 @@
+Bert's bark sound effect in The Lost Trail
+
+Recording: "LBS_FX DOG Small Alert Bark001.wav" by LittleBigSounds
+Source:    https://freesound.org/s/163459/
+Licence:   Creative Commons 0 1.0 Universal (public domain dedication)
+           https://creativecommons.org/publicdomain/zero/1.0/
+Retrieved: 2026-10-29
+Source file used (Freesound HQ preview, MP3): SHA-256 02546b58a07530cd5539041c989e413e64a592901349c8e2885c594db414dce6
+
+CC0 requires no attribution and permits copying, modification and commercial use. This note records where the sound came from.
+The shipped game cuts two single barks from the recording, filters and normalises them, and embeds them as MP3 data
+(platformer repository: assets/audio/bark/PROVENANCE.md).

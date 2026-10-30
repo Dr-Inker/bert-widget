@@ -5,6 +5,8 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
+import global.bert.widget.data.BERTChartWindow
 import kotlin.math.max
 
 fun formatPrice(value: Double): String = NumberFormat.getCurrencyInstance(Locale.US).apply {
@@ -72,3 +74,54 @@ fun formatExactTokenAmount(value: Double): String =
 
 /** Relative axis label for a chart window edge: "24h ago", "6h ago", "1h ago". */
 fun formatWindowStart(durationMillis: Long): String = "${durationMillis / 3_600_000}h ago"
+
+/**
+ * The zone a long range's dates are read in. 1Y's prices are daily candles, which GeckoTerminal opens and closes at UTC
+ * midnight, so they keep UTC's calendar: a daily close at UTC midnight is never read as the day before west of Greenwich
+ * (or a 1 October candle as "30 Sep" in New York). 1W's and 1M's are hourly and 4-hourly closes, moments like any other,
+ * so they take this phone's calendar: in UTC, a week seen at 08:00 on 30 October in Sydney began on "22 Oct" and looked
+ * like eight days, and one seen at 22:00 on 29 October in New York began on "23 Oct" and looked like six.
+ */
+fun rangeDateZone(window: BERTChartWindow, phoneZone: TimeZone = TimeZone.getDefault()): TimeZone =
+    if (window.candles?.timeframe == "day") TimeZone.getTimeZone("UTC") else phoneZone
+
+/**
+ * Dates on a long range's chart: "3 Nov" across a week or a month, "3 Nov 2025" across a year, in the range's own zone
+ * (see [rangeDateZone]) unless [zone] says otherwise. Callers keep one per range; SimpleDateFormat is not cheap.
+ */
+fun rangeDateFormat(window: BERTChartWindow, locale: Locale = Locale.getDefault(), zone: TimeZone = rangeDateZone(window)): SimpleDateFormat =
+    SimpleDateFormat(if (window == BERTChartWindow.YEAR) "d MMM yyyy" else "d MMM", locale).apply { timeZone = zone }
+
+/**
+ * "23 Oct–30 Oct" under a long range's chart, from its first price to its last. The first is dated by [dates], the range's
+ * own calendar (see [rangeDateZone]). The last usually is not a candle: it is the price of the candle still in progress at
+ * the moment the copy was fetched ([lastIsFetch]), so it is dated on this phone's calendar by [localDates]. That only
+ * differs on 1Y, whose candles keep UTC's days: otherwise at breakfast on 30 October in Sydney (still the 29th in UTC)
+ * the line would end "–29 Oct" right beside "Now".
+ */
+fun formatRangeSpan(firstEpochMillis: Long, lastEpochMillis: Long, lastIsFetch: Boolean, dates: SimpleDateFormat, localDates: SimpleDateFormat): String =
+    "${dates.format(Date(firstEpochMillis))}–${(if (lastIsFetch) localDates else dates).format(Date(lastEpochMillis))}"
+
+/**
+ * The chart's left-edge label. The short windows read as elapsed hours and the long ones as a plain span, unless the
+ * prices start late (a year whose older half was refused), when it is the date of the first price, from [dates]: the
+ * range's own calendar, the same one the span under the chart starts on.
+ */
+fun formatWindowStart(window: BERTChartWindow, originEpochMillis: Long, startsLate: Boolean = false,
+                      dates: SimpleDateFormat = rangeDateFormat(window)): String = when {
+    startsLate -> dates.format(Date(originEpochMillis))
+    window == BERTChartWindow.WEEK -> "1 week ago"
+    window == BERTChartWindow.MONTH -> "1 month ago"
+    window == BERTChartWindow.YEAR -> "1 year ago"
+    else -> formatWindowStart(window.durationMillis)
+}
+
+/** "30 minutes", "2.5 hours", "2.5 days": the longest gap a chart line is drawn across, for the spoken summary. */
+fun formatGapLimit(millis: Long): String {
+    fun plain(value: Double) = if (value == Math.floor(value)) value.toLong().toString() else String.format(Locale.US, "%.1f", value)
+    return when {
+        millis < 3_600_000L -> "${plain(millis / 60_000.0)} minutes"
+        millis < 48 * 3_600_000L -> "${plain(millis / 3_600_000.0)} hours"
+        else -> "${plain(millis / 86_400_000.0)} days"
+    }
+}
