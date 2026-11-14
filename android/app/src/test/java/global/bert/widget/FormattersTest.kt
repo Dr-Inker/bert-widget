@@ -116,4 +116,22 @@ class FormattersTest {
         assertEquals("0.001", formatExactTokenAmount(0.001))
         assertEquals("250,000.123456", formatExactTokenAmount(250_000.123456))
     }
+
+    /**
+     * Review of 0.14.2: a 24-hour chart's prices run from yesterday's clock time to today's, so "09:18–09:08" read as if
+     * time ran backwards. Across midnight each end names its day; within one day the clock times stand alone.
+     */
+    @Test fun `a short chart's span names the days when it crosses midnight`() {
+        val zone = TimeZone.getDefault()
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"))
+        try {
+            val sunday = 1_791_710_280_000L // Sunday 11 October 2026, 09:18 UTC
+            val monday = sunday + 24 * 3_600_000L - 10 * 60_000L // Monday 09:08
+            assertEquals("Sun 09:18–Mon 09:08", formatClockSpan(sunday, monday, Locale.UK))
+            assertEquals("08:08–09:08", formatClockSpan(monday - 3_600_000L, monday, Locale.UK))
+            assertEquals("Sun 23:30–Mon 00:30", formatClockSpan(sunday + 14 * 3_600_000L + 12 * 60_000L, sunday + 15 * 3_600_000L + 12 * 60_000L, Locale.UK))
+        } finally {
+            TimeZone.setDefault(zone)
+        }
+    }
 }

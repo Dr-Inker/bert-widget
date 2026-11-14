@@ -35,6 +35,8 @@ class LostTrailTest {
         val activity = controller.get()
         val view = activity.gameView
         val shadow = shadowOf(view)
+        // A day spent only in the game is a day the app was opened (the visit streak).
+        assertEquals(java.time.LocalDate.now(), PlaceDiscovery(activity).streak()?.last)
         assertEquals(LostTrailContent.URL, shadow.lastLoadedUrl)
         assertTrue(view.settings.javaScriptEnabled)
         assertTrue(view.settings.domStorageEnabled)

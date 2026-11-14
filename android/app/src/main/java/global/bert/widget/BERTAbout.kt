@@ -37,6 +37,10 @@ internal fun AboutSheet(close: () -> Unit) {
                 "and your holdings, cards, alerts and the name you ask Bert to call you on the You page stay on this phone. If you add a wallet address in My Bert, it stays on this " +
                 "phone too, and is sent only to Magic Eden and the Solana network to find your Berts, never to Berthalla.", color = Muted, fontSize = 15.sp, lineHeight = 22.sp)
             Text("Version ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})", color = Muted, fontSize = 13.sp)
+            // An install from the website with a newer BERT waiting (never a Play install): shown here even once Home's row is hidden.
+            LocalAppUpdate.current?.let { update ->
+                AboutRow("BERT ${update.release.version} is out", "Get it from the BERT page on berthalla.io.") { openBERTLink(context, BERTLink.APP) }
+            }
 
             AboutRow("Privacy policy", "What stays on your phone and what the app fetches.") { openBERTLink(context, BERTLink.PRIVACY) }
             AboutRow("Send feedback", "Report a bug or suggest something on GitHub.") { openBERTLink(context, BERTLink.FEEDBACK) }

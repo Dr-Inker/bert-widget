@@ -134,6 +134,12 @@ class LostTrailActivity : ComponentActivity() {
         if (!rendererGone) gameView.onPause()
         super.onPause()
     }
+    override fun onStart() {
+        super.onStart()
+        // A day spent only in the game is still a day the app was opened (VisitStreak.kt); once per date.
+        PlaceDiscovery(applicationContext).visit(java.time.LocalDate.now())
+    }
+
     override fun onResume() {
         super.onResume()
         if (!rendererGone) gameView.onResume()
@@ -150,6 +156,5 @@ class LostTrailActivity : ComponentActivity() {
 }
 
 internal fun openLostTrail(context: Context) {
-    BERTOnboarding.markPlayedGame(context)
     context.startActivity(Intent(context, LostTrailActivity::class.java))
 }

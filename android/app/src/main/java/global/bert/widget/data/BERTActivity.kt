@@ -20,10 +20,13 @@ data class BERTActivity(
             val root = JSONObject(raw)
             val seconds = root.opt("updated_at") as? Number ?: error("Missing activity timestamp")
             val value = seconds.toDouble()
-            require(value.isFinite() && value > 0 && value <= (now + 60_000) / 1000.0 && value % 1.0 == 0.0) {
+            // status.json is stamped by the server's clock; a phone up to ten minutes slow reads it as written just now
+            // (critique 2026-11-12 ENG-6), and anything further ahead is not trusted.
+            require(value.isFinite() && value > 0 && value <= (now + MAX_CLOCK_LAG_MILLIS) / 1000.0 && value % 1.0 == 0.0) {
                 "Invalid activity timestamp"
             }
-            val dispatch = root.boundedText("latest_post", 800, multiline = true)
+            // Shown on Home and sent as a notification: no bidirectional controls, like player names (SEC-2).
+            val dispatch = root.boundedText("latest_post", 800, multiline = true)?.let(::withoutBidi)?.trim()?.takeIf { it.isNotEmpty() }
             val mood = root.boundedText("mood", 32)
             // A bad optional event must not hide an otherwise valid dispatch.
             val event = root.optJSONObject("flappy")?.let { json ->
@@ -39,13 +42,20 @@ data class BERTActivity(
                     )
                 }.getOrNull()
             }
-            require(dispatch != null || mood != null || event != null) { "Empty activity" }
-            return BERTActivity(seconds.toLong() * 1000, dispatch, mood, event)
+            if (dispatch == null && mood == null && event == null) throw EmptyActivityException()
+            return BERTActivity(minOf(seconds.toLong() * 1000, now), dispatch, mood, event)
         }
+
+        private const val MAX_CLOCK_LAG_MILLIS = 10 * 60_000L
+
+        private fun isBidiControl(char: Char) =
+            char in '\u202A'..'\u202E' || char in '\u2066'..'\u2069' || char == '\u200F' || char == '\u200E'
+
+        private fun withoutBidi(text: String) = text.filterNot(::isBidiControl)
 
         // Player names are untrusted text: bounded, no control or bidirectional-override characters.
         internal fun playerText(raw: String): String? = raw
-            .filterNot { it.isISOControl() || it in '\u202A'..'\u202E' || it in '\u2066'..'\u2069' || it == '\u200F' || it == '\u200E' }
+            .filterNot { it.isISOControl() || isBidiControl(it) }
             .trim().take(32).takeIf { it.isNotEmpty() }
 
         private fun parseStandings(array: org.json.JSONArray): List<BERTStanding> = buildList {
@@ -97,8 +107,23 @@ enum class EventPhase(val label: String) {
     OPEN("TOURNAMENT OPEN"), ENDED("TOURNAMENT ENDED"), UPCOMING("COMING UP"), UNCONFIRMED("STATUS UNCONFIRMED")
 }
 
+/** The feed answered, well formed, with nothing in it: a quiet day, not a fault. */
+class EmptyActivityException : IllegalArgumentException("Empty activity")
+
 sealed interface ActivityState {
     data object Loading : ActivityState
     data class Available(val activity: BERTActivity, val updateDelayed: Boolean = false) : ActivityState
+    /** The feed could not be fetched (or made no sense) and nothing is saved: the connection is the problem. */
     data object Unavailable : ActivityState
+    /** The feed was fetched and is empty, and nothing is saved: there is just no post. */
+    data object Empty : ActivityState
+
+    companion object {
+        /** What a failed refresh leaves: the [saved] feed, marked delayed, if there is one; else whether it was empty or unreachable. */
+        fun afterFailure(error: Throwable, saved: BERTActivity?): ActivityState = when {
+            saved != null -> Available(saved, updateDelayed = true)
+            error is EmptyActivityException -> Empty
+            else -> Unavailable
+        }
+    }
 }

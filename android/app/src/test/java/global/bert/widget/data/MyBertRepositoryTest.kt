@@ -173,8 +173,12 @@ class MyBertRepositoryTest {
         repository.choose(list.berts.first())
         BERTThemeStore(context).matchMyBert = true
         assertTrue(MyBertStore(context).thumbnails.listFiles()!!.isNotEmpty())
+        // A shared card copy (it may show the chosen Bert) waits in the cache until the next share prunes it.
+        val sharedCards = java.io.File(context.cacheDir, "caption-cards").apply { mkdirs() }
+        sharedCards.resolve("card-1.png").writeBytes(byteArrayOf(1))
 
         MyBertStore(context).forget()
+        assertFalse("shared card copies go too", sharedCards.exists())
         assertNull(MyBertStore(context).wallet())
         assertNull(MyBertStore(context).cachedList(staker, System.currentTimeMillis()))
         assertNull(MyBertStore(context).chosen())

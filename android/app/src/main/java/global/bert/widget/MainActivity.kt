@@ -1,5 +1,6 @@
 package global.bert.widget
 
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -42,12 +43,10 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.repeatOnLifecycle
 import global.bert.widget.data.*
-import global.bert.widget.widget.updateAllBERTWidgets
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
 /**
@@ -64,15 +63,19 @@ internal enum class BERTDestination(val label: String, val icon: BERTSymbol) {
 class MainActivity : ComponentActivity() {
     // A widget or notification tap names a destination; a restored activity keeps where the person was.
     private var entry by mutableStateOf<BERTEntry?>(null)
+    // Outlives a rotation or theme change, so the screen keeps its data rather than fetching it all again.
+    private val live by lazy { ViewModelProvider(this, liveModelFactory(applicationContext))[BERTLiveModel::class.java] }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Fetches while the app is open reach the placed widgets once, when it leaves the screen (critique 2026-11-12 ENG-4).
+        lifecycle.addObserver(live.widgets)
         // Reopening from Recents replays the original intent (API 26-30); that is not a fresh tap.
         val fromHistory = intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0
         if (savedInstanceState == null && !fromHistory) entry = BERTEntry.from(intent)
         enableEdgeToEdge(statusBarStyle = SystemBarStyle.dark(0), navigationBarStyle = SystemBarStyle.dark(0))
         setContent {
-            BERTTheme { BERTScreen(lifecycle, entry) { entry = null } }
+            BERTTheme { BERTScreen(lifecycle, live, entry) { entry = null } }
         }
     }
 
@@ -81,97 +84,37 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         entry = BERTEntry.from(intent)
     }
+
+    internal companion object {
+        /** Where the live data comes from; a test swaps in repositories with a fake network. */
+        var liveModelFactory: (Context) -> ViewModelProvider.Factory = BERTLiveModel::factory
+    }
 }
 
 @Composable
-private fun BERTScreen(lifecycle: Lifecycle, entry: BERTEntry?, consumeEntry: () -> Unit) {
+private fun BERTScreen(lifecycle: Lifecycle, live: BERTLiveModel, entry: BERTEntry?, consumeEntry: () -> Unit) {
     val context = LocalContext.current
-    val repository = remember { BERTQuoteRepository(context.applicationContext) }
-    val activityRepository = remember { BERTActivityRepository(context.applicationContext) }
-    val historyStore = remember { BERTPriceHistory(context.applicationContext) }
-    val marketHistoryRepository = remember { BERTMarketHistoryRepository(context.applicationContext) }
-    val holdingsStore = remember { BERTHoldingsStore(context.applicationContext) }
-    val scope = rememberCoroutineScope()
-    var state by remember { mutableStateOf<QuoteState>(repository.load()?.let { QuoteState.Available(it) } ?: QuoteState.Loading) }
-    var history by remember { mutableStateOf(historyStore.load()) }
-    var marketHistory by remember { mutableStateOf(marketHistoryRepository.load()) }
-    var position by remember { mutableStateOf(holdingsStore.loadPosition()) }
-    var refreshing by remember { mutableStateOf(false) }
-    var activityState by remember { mutableStateOf<ActivityState>(activityRepository.load()?.let { ActivityState.Available(it) } ?: ActivityState.Loading) }
-    var activityRefreshing by remember { mutableStateOf(false) }
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-
-    suspend fun updateWidgets() {
-        try { updateAllBERTWidgets(context) }
-        catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { /* A launcher failure must not turn a valid quote into a network error. */ }
-    }
-
-    suspend fun refresh() {
-        if (refreshing) return
-        refreshing = true
-        try {
-            state = QuoteState.Available(repository.refresh())
-            history = historyStore.load()
-            updateWidgets()
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: Exception) {
-            state = repository.load()?.let { QuoteState.Available(it, true) }
-                ?: QuoteState.Unavailable("BERT market data is unavailable right now.")
-        } finally {
-            now = System.currentTimeMillis()
-            refreshing = false
-        }
-    }
-
-    suspend fun refreshMarketHistory() {
-        // Optional enrichment: on failure the chart keeps the cached server history plus device quotes.
-        try { marketHistory = marketHistoryRepository.refresh() }
-        catch (cancelled: CancellationException) { throw cancelled }
-        catch (_: Exception) { marketHistory = marketHistoryRepository.load() }
-    }
-
-    suspend fun refreshActivity() {
-        if (activityRefreshing) return
-        activityRefreshing = true
-        try {
-            val activity = activityRepository.refresh()
-            activityState = ActivityState.Available(activity)
-            // Read here, so it is not news for a later dispatch alert.
-            activity.dispatch?.let { BERTAlertStore(context.applicationContext).markDispatchSeen(it) }
-            updateWidgets() // the Bert widget shows this feed
-        } catch (cancelled: CancellationException) {
-            throw cancelled
-        } catch (_: Exception) {
-            activityState = activityRepository.load()?.let { ActivityState.Available(it, true) } ?: ActivityState.Unavailable
-        } finally {
-            now = System.currentTimeMillis()
-            activityRefreshing = false
-        }
-    }
-
     LaunchedEffect(lifecycle) {
         lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            launch { while (true) { now = System.currentTimeMillis(); delay(15_000) } }
             launch(Dispatchers.IO) { BERTHomeVisits(context.applicationContext).recordOpen() } // "Day N with Bert"
-            launch { while (true) { refreshActivity(); delay(5 * 60_000) } }
-            launch { while (true) { refreshMarketHistory(); delay(5 * 60_000) } }
-            while (true) { refresh(); delay(60_000) }
+            live.keepFresh()
         }
     }
-    val chartHistory = remember(marketHistory, history, now) { BERTPriceHistory.combine(marketHistory, history, now) }
-    BERTApp(state, activityState, chartHistory, position, now, refreshing, activityRefreshing,
-        entry = entry, consumeEntry = consumeEntry,
-        refresh = { scope.launch { refresh() } },
-        refreshActivity = { scope.launch { refreshActivity() } },
-        savePosition = {
-            holdingsStore.savePosition(it)
-            position = it
-            scope.launch { updateWidgets() }
-        },
-    )
+    val now = live.now
+    val chartHistory = remember(live.market, live.history, now) { BERTPriceHistory.combine(live.market, live.history, now) }
+    val update = remember(live.update, live.updateHiddenOnHome) { live.update?.let { AppUpdate(it, live.updateHiddenOnHome) { live.hideUpdate() } } }
+    CompositionLocalProvider(LocalWidgetPush provides { live.widgets.pushNow() }, LocalAppUpdate provides update) {
+        BERTApp(live.quote, live.activity, chartHistory, live.position, now, live.refreshing, live.activityRefreshing,
+            entry = entry, consumeEntry = consumeEntry,
+            refresh = { live.refresh() },
+            refreshActivity = { live.refreshActivity() },
+            savePosition = { live.savePosition(it) },
+        )
+    }
 }
+
+/** Re-renders the placed widgets after a person's own change; the open app provides it, previews and tests leave it a no-op. */
+internal val LocalWidgetPush = staticCompositionLocalOf<() -> Unit> { {} }
 
 @Composable
 internal fun BERTApp(
@@ -186,7 +129,23 @@ internal fun BERTApp(
     var createTab by rememberSaveable { mutableStateOf("Art") }
     // "Make it a card" hands Create a caption once; Create consumes it so returning later keeps the person's own edits.
     var cardSeed by rememberSaveable { mutableStateOf<String?>(null) }
+    // The checklist's widget step asks Style once to bring its widgets to the top; Style clears it when it has.
+    var showWidgets by rememberSaveable { mutableStateOf(false) }
+    // The destination You sent the person to (Tools for Style or Holdings, Create for Saved) and the one You was opened
+    // over: while they stay there, Back returns to You rather than past it. A bottom-bar tab or a widget tap ends it.
+    var youSent by rememberSaveable { mutableStateOf<BERTDestination?>(null) }
+    var youFrom by rememberSaveable { mutableStateOf(BERTDestination.HOME) }
     val context = LocalContext.current
+    // 0.15, the visit streak counts days the app was opened, from any way in (Home, a widget, an alert, a shortcut):
+    // here, each time the app comes to the front, once per date (VisitStreak.kt). Next to recordOpen() in spirit; here
+    // rather than in BERTScreen so the app's own date (`now`) is the one the garden shows, and tests reach it.
+    // Keyed on the date as well: an app left in Recents overnight comes back holding yesterday's clock until the first
+    // tick, and midnight can pass with the app open. Either way the new date counts as soon as the app knows it.
+    val appLifecycle = androidx.lifecycle.compose.LocalLifecycleOwner.current.lifecycle
+    val openedOn = java.time.Instant.ofEpochMilli(now).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+    LaunchedEffect(appLifecycle, openedOn) {
+        appLifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) { PlaceDiscovery(context.applicationContext).visit(openedOn) }
+    }
     LaunchedEffect(entry) {
         when (entry) {
             BERTEntry.MARKET -> { destination = BERTDestination.TOOLS; toolsTab = "Market" }
@@ -195,6 +154,7 @@ internal fun BERTApp(
             BERTEntry.GAME -> openLostTrail(context) // once: consumeEntry below clears the entry
             null -> return@LaunchedEffect
         }
+        youSent = null
         consumeEntry()
     }
     val savedScreens = rememberSaveableStateHolder()
@@ -205,8 +165,10 @@ internal fun BERTApp(
     val myBert = MyBertHandle(chosenBert, open = { myBertOpen = true }, update = { chosenBert = it })
     // You: the person's own page, opened over the current tab like My Bert. My Bert opens over it, and Back returns here.
     var youOpen by rememberSaveable { mutableStateOf(false) }
+    val sendFromYou = { to: BERTDestination -> youFrom = destination; youSent = to; youOpen = false; destination = to }
 
     BackHandler(destination != BERTDestination.HOME) { destination = BERTDestination.HOME }
+    BackHandler(youSent != null && youSent == destination && !youOpen) { youSent = null; destination = youFrom; youOpen = true }
     BackHandler(youOpen) { youOpen = false }
     BackHandler(myBertOpen) { myBertOpen = false }
 
@@ -214,16 +176,16 @@ internal fun BERTApp(
         Scaffold(
             containerColor = Navy,
             contentWindowInsets = WindowInsets.safeDrawing,
-            bottomBar = { BERTNavigation(destination) { myBertOpen = false; youOpen = false; destination = it } },
+            bottomBar = { BERTNavigation(destination) { myBertOpen = false; youOpen = false; youSent = null; destination = it } },
         ) { padding ->
             if (myBertOpen) {
                 MyBertScreen(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), close = { myBertOpen = false })
             } else if (youOpen) {
                 YouScreen(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).imePadding(), holdingsSet = position.amount != null,
                     close = { youOpen = false },
-                    openStyle = { youOpen = false; destination = BERTDestination.TOOLS; toolsTab = "Style" },
-                    openHoldings = { youOpen = false; destination = BERTDestination.TOOLS; toolsTab = "Holdings" },
-                    openSaved = { youOpen = false; destination = BERTDestination.CREATE; createTab = "Saved" })
+                    openStyle = { toolsTab = "Style"; sendFromYou(BERTDestination.TOOLS) },
+                    openHoldings = { toolsTab = "Holdings"; sendFromYou(BERTDestination.TOOLS) },
+                    openSaved = { createTab = "Saved"; sendFromYou(BERTDestination.CREATE) })
             } else {
                 // A short crossfade between destinations, and again between sections, so nothing hard-cuts.
                 // Home's scene runs under the status bar (it is the top of the screen); every other screen keeps the inset.
@@ -266,7 +228,7 @@ internal fun BERTApp(
                                     makeCard = { caption -> cardSeed = caption; createTab = "Art"; destination = BERTDestination.CREATE },
                                 ) { step ->
                                     when (step) {
-                                        GettingStartedStep.WIDGET -> { destination = BERTDestination.TOOLS; toolsTab = "Style" }
+                                        GettingStartedStep.WIDGET -> { showWidgets = true; destination = BERTDestination.TOOLS; toolsTab = "Style" }
                                         GettingStartedStep.GAME -> openLostTrail(context)
                                         GettingStartedStep.CARD -> { destination = BERTDestination.CREATE; createTab = "Art" }
                                         GettingStartedStep.ALERT -> { destination = BERTDestination.TOOLS; toolsTab = "Alerts" }
@@ -278,7 +240,7 @@ internal fun BERTApp(
                                     BERTDestination.PLAY -> PlayScreen(activityState, now)
                                     BERTDestination.CREATE -> CreateScreen(key.removePrefix("CREATE-"), seedCaption = cardSeed, consumeSeed = { cardSeed = null }) { createTab = it }
                                     BERTDestination.TOOLS -> ToolsScreen(state, history, position, now, refreshing, key.removePrefix("TOOLS-"),
-                                        refresh = refresh, savePosition = savePosition)
+                                        refresh = refresh, savePosition = savePosition, showWidgets = showWidgets) { showWidgets = false }
                                     BERTDestination.HOME -> Unit
                                 }
                             }
@@ -307,11 +269,12 @@ internal fun BERTScreenContent(
 @Composable
 private fun ToolsScreen(state: QuoteState, history: List<BERTPriceSample>, position: BERTPosition, now: Long,
                         refreshing: Boolean, tab: String,
-                        refresh: () -> Unit, savePosition: (BERTPosition) -> Unit) {
+                        refresh: () -> Unit, savePosition: (BERTPosition) -> Unit,
+                        showWidgets: Boolean = false, widgetsShown: () -> Unit = {}) {
     when (tab) {
         "Market" -> MarketScreen(state, history, now, refreshing, refresh)
         "Alerts" -> AlertsScreen(state)
-        "Style" -> PersonaliseScreen()
+        "Style" -> PersonaliseScreen(showWidgets, widgetsShown)
         else -> HoldingsScreen(position, state, now, savePosition)
     }
 }

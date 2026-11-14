@@ -54,15 +54,32 @@ internal fun CreateScreen(tab: String, seedCaption: String? = null, consumeSeed:
     }
 }
 
-/** Tools → Style: how BERT looks in the app, on the home screen and behind it. */
+/**
+ * Tools → Style: how BERT looks in the app, on the home screen and behind it. [showWidgets] is Home's checklist step "Put
+ * Bert on your home screen": the widgets are scrolled to the top of the screen, whatever the text size, and [widgetsShown]
+ * clears the request so an ordinary visit later opens Style where the person left it.
+ */
 @Composable
-internal fun PersonaliseScreen() {
+internal fun PersonaliseScreen(showWidgets: Boolean = false, widgetsShown: () -> Unit = {}) {
     val context = LocalContext.current
-    Text("A little BERT. Everywhere.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+    val top = remember { BringIntoViewRequester() }
+    val widgets = remember { BringIntoViewRequester() }
+    LaunchedEffect(showWidgets) {
+        if (showWidgets) try {
+            // Style keeps where it was scrolled. Back to its top first: a widgets card scrolled away above, and taller than
+            // the screen, would otherwise be brought in by its bottom edge, its heading still out of sight. From the top,
+            // bringing the card into view puts its heading at the top of the screen whatever the text size.
+            top.bringIntoView()
+            widgets.bringIntoView()
+        } finally { widgetsShown() }
+    }
+    Text("A little BERT. Everywhere.", color = Cream, fontSize = 22.sp, fontWeight = FontWeight.Bold,
+        modifier = Modifier.bringIntoViewRequester(top))
     Text("Widgets for a quick glance. Wallpapers for the rest of your day.", color = Muted, fontSize = 14.sp)
+    // Widgets first: they are what most people come here for, and Home's checklist step lands here to place one.
+    Box(Modifier.bringIntoViewRequester(widgets)) { WidgetSetup(context) }
     AppColours()
     MyBertRow()
-    WidgetSetup(context)
     ThemeStudio()
 }
 

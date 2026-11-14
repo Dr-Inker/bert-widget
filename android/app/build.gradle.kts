@@ -11,12 +11,14 @@ android {
         applicationId = "global.bert.widget"
         minSdk = 26
         targetSdk = 36
-        versionCode = 32
-        versionName = "0.14.0"
+        versionCode = 35
+        versionName = "0.15.0"
         // res/xml/shortcuts.xml cannot see the variant's applicationId; the preview build adds a suffix (see below).
         buildConfigField("String", "BERT_QUOTE_URL", "\"https://berthalla.io/widget/api/quote\"")
         buildConfigField("String", "BERT_ACTIVITY_URL", "\"https://berthalla.io/status.json\"")
         buildConfigField("String", "BERT_HISTORY_URL", "\"https://berthalla.io/widget/api/history\"")
+        // The website's latest-release note, read at most once a day by installs that did not come from Google Play.
+        buildConfigField("String", "BERT_RELEASE_URL", "\"https://berthalla.io/widget/release.json\"")
         // Phones query the public market APIs directly; the Berthalla URLs above are the fallback.
         buildConfigField("String", "BERT_DIRECT_QUOTE_URL", "\"https://api.dexscreener.com/token-pairs/v1/solana/HgBRWfYxEfvPhtqkaeymCQtHCrKE46qQ43pKe8HCpump\"")
         buildConfigField("String", "BERT_DIRECT_HISTORY_BASE", "\"https://api.geckoterminal.com/api/v2\"")
@@ -52,6 +54,8 @@ android {
             buildConfigField("String", "BERT_QUOTE_URL", "\"http://10.0.2.2:8787/v1/bert/quote\"")
             buildConfigField("String", "BERT_ACTIVITY_URL", "\"http://10.0.2.2:8787/v1/bert/activity\"")
             buildConfigField("String", "BERT_HISTORY_URL", "\"http://10.0.2.2:8787/v1/bert/history\"")
+            // Debug builds never ask the live site whether a newer BERT is out.
+            buildConfigField("String", "BERT_RELEASE_URL", "\"\"")
             // Emulator fixtures exercise the server path only.
             buildConfigField("String", "BERT_DIRECT_QUOTE_URL", "\"\"")
             buildConfigField("String", "BERT_DIRECT_HISTORY_BASE", "\"\"")
@@ -87,8 +91,14 @@ android {
             it.doFirst { scratch.mkdirs() }
             it.systemProperty("robolectric.dependency.repo.url", "https://repo.maven.apache.org/maven2")
             it.jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED", "--add-opens=java.base/java.util=ALL-UNNAMED")
-            // Render-only review fixtures (no assertions) stay out of the gate's count; -Pshots runs them.
-            if (!project.hasProperty("shots")) it.filter.excludeTestsMatching("*HomeAffordanceShotsTest")
+            // Render-only review fixtures (no assertions, or one assertIsDisplayed before the picture) stay out of the gate's
+            // count; -Pshots runs them (tools/check-android.sh -Pshots). No release step reads their PNGs.
+            if (!project.hasProperty("shots")) {
+                it.filter.excludeTestsMatching("*HomeAffordanceShotsTest")
+                it.filter.excludeTestsMatching("*BertSaysHomeShotsTest")
+                it.filter.excludeTestsMatching("*SlateAndPaperShotsTest")
+                it.filter.excludeTestsMatching("*YouScreenTest.homeTop*")
+            }
         }
     }
 

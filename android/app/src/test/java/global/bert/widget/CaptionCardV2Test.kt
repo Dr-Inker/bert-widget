@@ -3,8 +3,10 @@ package global.bert.widget
 import android.app.Application
 import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Typeface
 import org.json.JSONObject
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -40,6 +42,23 @@ class CaptionCardV2Test {
             y += h
         }
         File("build/outputs/host-ui/caption-cards-v2.png").apply { parentFile?.mkdirs() }.outputStream().use { sheet.compress(Bitmap.CompressFormat.PNG, 100, it) }
+    }
+
+    /**
+     * Critique 2026-11-12 ART-5: the card is the one thing that leaves the app, so it is set in the app's own Outfit (Bold
+     * for the caption and label, Medium for the address), not the phone's Roboto. Each card is drawn three ways: as the
+     * app draws it, with Outfit read straight from the bundled font files, and with the system font. It must match the
+     * first and differ from the second.
+     */
+    @Test fun theCardIsSetInTheBundledOutfitNotTheSystemFont() {
+        val outfit = CardType(Typeface.createFromFile(File("src/main/res/font/outfit_bold.ttf")), Typeface.createFromFile(File("src/main/res/font/outfit_medium.ttf")))
+        val system = CardType(Typeface.create("sans-serif", Typeface.BOLD), Typeface.create("sans-serif-medium", Typeface.NORMAL))
+        for (format in CardFormat.entries) for (layout in CardLayout.entries) {
+            val style = CardStyle(CardArt.PHOTO, layout, format)
+            val card = renderCaption(context, caption, 0, style).bitmap
+            assertTrue("$layout $format: drawn in Outfit", card.sameAs(renderCaption(context, caption, 0, style, outfit).bitmap))
+            assertFalse("$layout $format: not in the system font", card.sameAs(renderCaption(context, caption, 0, style, system).bitmap))
+        }
     }
 
     @Test fun storyCardRoundTripsWithItsStyle() {

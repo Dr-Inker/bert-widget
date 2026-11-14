@@ -176,6 +176,8 @@ class MyBertStore(private val context: Context) {
         preferences.edit().clear().apply()
         directory.deleteRecursively()
         thumbnails.deleteRecursively()
+        // Shared card copies wait in the cache until the next share prunes them; a My Bert card among them goes now.
+        File(context.cacheDir, "caption-cards").deleteRecursively()
     }
 
     companion object {

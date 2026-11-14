@@ -1,6 +1,7 @@
 package global.bert.widget.data
 
 import global.bert.widget.formatGapLimit
+import global.bert.widget.formatLastSpan
 import global.bert.widget.formatPercent
 import global.bert.widget.formatWindowStart
 import global.bert.widget.rangeDateFormat
@@ -76,9 +77,59 @@ class BERTChartWindowTest {
         val half = daily(183)
         assertTrue(BERTChartWindow.YEAR.startsLate(half, now))
         assertEquals(half.first().observedAtEpochMillis, BERTChartWindow.YEAR.originEpochMillis(half, now))
-        // The 5-minute ranges have no late start, and no prices is not late either.
-        assertFalse(BERTChartWindow.DAY.startsLate(listOf(BERTPriceSample(now, 0.01)), now))
+        // No prices is not late.
         assertFalse(BERTChartWindow.YEAR.startsLate(emptyList(), now))
+        assertFalse(BERTChartWindow.DAY.startsLate(emptyList(), now))
+    }
+
+    @Test fun `a short range whose stored prices cover less than its window starts late`() {
+        // Five-minute prices over the last [hours], ending [endedAgo] before now.
+        fun fiveMinute(hours: Int, endedAgo: Long = 0) = (hours * 12 downTo 0).map { BERTPriceSample(now - endedAgo - it * 300_000L, 0.01) }
+        // Three hours of prices is not a day, nor six hours: the chart starts at its first price.
+        val three = fiveMinute(3)
+        assertTrue(BERTChartWindow.DAY.startsLate(three, now))
+        assertEquals(now - 3 * 3_600_000L, BERTChartWindow.DAY.originEpochMillis(three, now))
+        assertTrue(BERTChartWindow.SIX_HOURS.startsLate(three, now))
+        assertTrue(BERTChartWindow.HOUR.startsLate(listOf(BERTPriceSample(now - 20 * 60_000L, 0.01), BERTPriceSample(now, 0.01)), now))
+        // A full history (289 five-minute prices) covers each short window, also once the oldest prices pass out of it.
+        for (endedAgo in listOf(0L, 2 * 60_000L, 10 * 60_000L)) {
+            val day = fiveMinute(24, endedAgo)
+            for (window in listOf(BERTChartWindow.HOUR, BERTChartWindow.SIX_HOURS, BERTChartWindow.DAY)) {
+                assertFalse("${window.label}, $endedAgo ms old", window.startsLate(window.samples(day, now), now))
+                assertEquals(now - window.durationMillis, window.originEpochMillis(window.samples(day, now), now))
+            }
+        }
+    }
+
+    @Test fun `a late short range names how far back its prices reach`() {
+        val hour = 3_600_000L
+        assertEquals("3h ago", formatWindowStart(BERTChartWindow.DAY, now - 3 * hour, startsLate = true, nowEpochMillis = now))
+        // Whole hours, rounded down, so the label never claims more than the prices cover.
+        assertEquals("20h ago", formatWindowStart(BERTChartWindow.DAY, now - 20 * hour - 55 * 60_000L, startsLate = true, nowEpochMillis = now))
+        assertEquals("95m ago", formatWindowStart(BERTChartWindow.SIX_HOURS, now - 95 * 60_000L, startsLate = true, nowEpochMillis = now))
+        assertEquals("20m ago", formatWindowStart(BERTChartWindow.HOUR, now - 20 * 60_000L, startsLate = true, nowEpochMillis = now))
+        // Not late: the window's own length, as before.
+        assertEquals("24h ago", formatWindowStart(BERTChartWindow.DAY, now - day, nowEpochMillis = now))
+        assertEquals("the last 3 hours", formatLastSpan(3 * hour))
+        assertEquals("the last 20 hours", formatLastSpan(20 * hour + 55 * 60_000L))
+        assertEquals("the last 95 minutes", formatLastSpan(95 * 60_000L))
+        assertEquals("the last minute", formatLastSpan(60_000L + 20_000L))
+    }
+
+    @Test fun `a line needs prices that join up`() {
+        fun at(vararg minutesAgo: Long) = minutesAgo.map { BERTPriceSample(now - it * 60_000L, 0.01) }
+        // The critique's history (2026-11-12 UX-5): only the last two of five prices are within 30 minutes of a neighbour.
+        val critique = at(1_200, 300, 120, 50, 42)
+        assertEquals(listOf(false, false, false, true, true), BERTChartWindow.DAY.joined(critique).toList())
+        assertFalse(BERTChartWindow.DAY.hasLine(critique))
+        assertFalse(BERTChartWindow.DAY.hasLine(at(10, 5)))
+        assertTrue(BERTChartWindow.DAY.hasLine(at(10, 5, 0)))
+        // Three joined among many loose dots is still mostly dots.
+        assertFalse(BERTChartWindow.DAY.hasLine(at(600, 500, 400, 300, 200, 10, 5, 0)))
+        assertTrue(BERTChartWindow.DAY.hasLine(at(600, 300, 15, 10, 5, 0)))
+        assertTrue(BERTChartWindow.DAY.hasLine((288 downTo 0).map { BERTPriceSample(now - it * 300_000L, 0.01) }))
+        // Long ranges join by their own candle: daily closes a day apart are a line.
+        assertTrue(BERTChartWindow.YEAR.hasLine((0 until 30).map { BERTPriceSample(now - it * day, 0.01) }.reversed()))
     }
 
     @Test fun `change is first close to last close`() {

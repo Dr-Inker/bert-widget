@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Bert's day widget: pixel Bert, already drawn at a whole number of device pixels per art pixel, shown unscaled
+  (scaleType center) so no launcher or density can resample him. Decorative: the caption beside him says his mood.
+-->
+<ImageView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/note_image"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:importantForAccessibility="no"
+    android:scaleType="center" />

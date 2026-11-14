@@ -7,6 +7,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -41,6 +42,7 @@ internal fun HoldingsScreen(position: BERTPosition, state: QuoteState, now: Long
                 } else Text("Add your total cost to see an estimated gain or loss.", color = Muted, fontSize = 13.sp)
             }
         }
+        WidgetSwitch()
         if (!editing) {
             Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = { editing = true }, modifier = Modifier.fillMaxWidth()) { Text("Edit holdings") }
             TextButton(onClick = { removing = true }) { Text("Remove holdings", color = Muted) }
@@ -60,6 +62,20 @@ internal fun HoldingsScreen(position: BERTPosition, state: QuoteState, now: Long
             confirmButton = { TextButton(onClick = { save(BERTPosition()); removing = false; editing = true }) { Text("Remove") } },
             dismissButton = { TextButton(onClick = { removing = false }) { Text("Keep holdings") } },
         )
+    }
+}
+
+/** "Show my holdings on the Market widget": off, the widget keeps the market figures and leaves out the position. */
+@Composable
+private fun WidgetSwitch() {
+    val context = LocalContext.current
+    val store = remember { BERTHoldingsStore(context.applicationContext) }
+    val push = LocalWidgetPush.current
+    var shown by remember { mutableStateOf(store.showOnWidget) }
+    AlertSwitch("Show my holdings on the Market widget", "When off, the widget shows BERT’s price and market only.", shown) {
+        store.showOnWidget = it
+        shown = it
+        push()
     }
 }
 
@@ -117,7 +133,7 @@ private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save
                 if (parsedAmount != null && (cost.isBlank() || parsedCost != null)) save(BERTPosition(parsedAmount, parsedCost))
             }, modifier = Modifier.fillMaxWidth()) { Text("Save holdings") }
             if (onCancel != null) TextButton(onClick = onCancel) { Text("Cancel", color = Cream) }
-            Text("Your BERT amount also appears on the Market widget. Clearing app data or uninstalling removes this record.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
+            Text("Your BERT amount also appears on the Market widget, unless you switch that off. Clearing app data or uninstalling removes this record.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
         }
     }
 }

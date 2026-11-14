@@ -22,7 +22,10 @@ enum class BERTThemePack(
     val textArgb: Long,
     val mutedArgb: Long,
     val accentArgb: Long,
-    /** The Bert widget's mood pill, which sits over the picture: orange on dark ink unless a pack says otherwise. */
+    /**
+     * The pack's highlight and the ink on it: orange on dark ink unless a pack says otherwise. It was the Bert's day
+     * widget's mood pill until 0.15; that widget is now paper and slate, the same under every pack.
+     */
     val highlightArgb: Long = 0xFFFF9433,
     val onHighlightArgb: Long = 0xFF1F0E02,
 ) {

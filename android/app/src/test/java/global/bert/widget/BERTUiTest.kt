@@ -39,9 +39,9 @@ class BERTUiTest {
 
     private fun app(activity: ActivityState = ActivityState.Unavailable, fontScale: Float = 1f, restoration: StateRestorationTester? = null,
                     quote: QuoteState = QuoteState.Unavailable("No connection"), history: List<BERTPriceSample> = emptyList(),
-                    initialPosition: BERTPosition = BERTPosition(), holdingsStore: BERTHoldingsStore? = null) {
+                    initialPosition: BERTPosition = BERTPosition(), holdingsStore: BERTHoldingsStore? = null, widgetPush: () -> Unit = {}) {
         val content: @Composable () -> Unit = {
-            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale), LocalWidgetPush provides widgetPush) {
               BERTTheme {
                 var position by remember { mutableStateOf(holdingsStore?.loadPosition() ?: initialPosition) }
                 BERTApp(quote, activity, history, position,
@@ -61,8 +61,73 @@ class BERTUiTest {
         change1hPct = 3.4, change6hPct = -8.25, buys1h = 64, sells1h = 25, buys24h = 1_204, sells24h = 987,
     ), updateDelayed = true)
 
-    private fun marketHistoryFixture() = listOf(1_200L to 0.008, 300L to 0.003, 120L to 0.005, 50L to 0.004, 42L to 0.0042)
+    /**
+     * 5-minute prices over the last [hours], as GeckoTerminal's history gives them, from [from] to [to] with a small wobble
+     * that is zero on each whole hour, so first to last is exactly [from] to [to].
+     */
+    private fun fiveMinutePrices(from: Double, to: Double, hours: Int = 24) = (hours * 12 downTo 0).map { k ->
+        BERTPriceSample(1_789_000_000_000 - k * 300_000L, from + (to - from) * (hours * 12 - k) / (hours * 12.0) + 0.00002 * kotlin.math.sin(k * Math.PI / 12))
+    }
+
+    /** A whole day of prices that agrees with the quote's -12.50%. */
+    private fun marketHistoryFixture() = fiveMinutePrices(0.0048, 0.0042)
+
+    /** The critique's sparse history (2026-11-12 UX-5): five prices, the first 20 hours old, -47.50% first to last. */
+    private fun sparseHistoryFixture() = listOf(1_200L to 0.008, 300L to 0.003, 120L to 0.005, 50L to 0.004, 42L to 0.0042)
         .map { (minutes, price) -> BERTPriceSample(1_789_000_000_000 - minutes * 60_000, price) }
+
+    @Test fun market24hChangeIsTheQuotesWhenTheChartCoversTheDay() {
+        // The critique's figures: the quote says -12.50% over 24 hours, the stored prices fall 47.50% first to last.
+        app(quote = marketFixture(), history = fiveMinutePrices(0.008, 0.0042))
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("-12.50% · past 24h").assertExists()
+        compose.onNodeWithText("Change over the past 24 hours -12.50%").assertExists()
+        compose.onAllNodes(hasText("-47.50%", substring = true)).assertCountEquals(0)
+        compose.onNodeWithText("24h ago").assertExists()
+        // The other ranges keep the chart's own first-to-last figure.
+        compose.onNode(hasText("6H") and hasClickAction()).performScrollTo().performClick()
+        compose.onNode(hasText("Change over the past 6 hours -", substring = true)).assertExists()
+        compose.onAllNodes(hasText("Change over", substring = true) and hasText("-12.50%", substring = true)).assertCountEquals(0)
+    }
+
+    @Test fun market24hChartSaysWhatItCoversWhenItsPricesStartLate() {
+        // Only three hours of prices stored: the chart must not claim a day, and its figure is its own, not the quote's.
+        app(quote = marketFixture(), history = fiveMinutePrices(0.0040, 0.0042, hours = 3))
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Change over the last 3 hours +5.00%").assertExists()
+        compose.onNodeWithText("3h ago").assertExists()
+        compose.onNodeWithContentDescription("37 prices over the last 3 hours", substring = true).assertExists()
+        compose.onAllNodes(hasText("past 24 hours", substring = true)).assertCountEquals(0)
+        compose.onAllNodes(hasText("24h ago")).assertCountEquals(0)
+        compose.onAllNodes(hasContentDescription("24H window", substring = true)).assertCountEquals(0)
+        compose.onNodeWithText("3h ago").performScrollTo()
+        capture("market-short-history")
+    }
+
+    @Test fun marketSparsePricesSayNotEnoughHistoryInsteadOfLooseDots() = checkSparsePrices()
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xhdpi")
+    fun marketSparsePricesSayNotEnoughHistoryAtLargeText() = checkSparsePrices(fontScale = 2f)
+
+    private fun checkSparsePrices(fontScale: Float = 1f) {
+        app(fontScale = fontScale, quote = marketFixture(), history = sparseHistoryFixture())
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Not enough price history yet").performScrollTo().assertIsDisplayed()
+        measureLabel("Not enough price history yet") // whole, not clipped, at any size
+        compose.onAllNodes(hasContentDescription("prices over", substring = true)).assertCountEquals(0)
+        compose.onAllNodes(hasText("past 24 hours", substring = true)).assertCountEquals(0)
+        compose.onAllNodes(hasText("-47.50%", substring = true)).assertCountEquals(0)
+        compose.onAllNodes(hasText("24h ago")).assertCountEquals(0)
+        // The other short ranges hold too few joined prices as well.
+        for (range in listOf("6H", "1H")) {
+            compose.onNode(hasText(range) and hasClickAction()).performScrollTo().performClick()
+            compose.onNodeWithText("Not enough price history yet").assertExists()
+        }
+        compose.onNode(hasText("24H") and hasClickAction()).performScrollTo().performClick()
+        compose.onNodeWithText("The chart fills in as more prices arrive.").performScrollTo()
+        capture("market-sparse-history${if (fontScale > 1f) "-large" else ""}")
+    }
 
     @Test fun populatedToolsKeepPricesAndControlsReadable() = checkPopulatedTools()
 
@@ -125,7 +190,7 @@ class BERTUiTest {
             measurements.put(measureLabel(label))
         }
         compose.onNodeWithText("Couldn’t refresh. Showing the last saved quote.").assertExists()
-        compose.onNode(hasContentDescription("5 prices over", substring = true)).performScrollTo()
+        compose.onNode(hasContentDescription("289 prices over", substring = true)).performScrollTo()
         capture("market-ranges$suffix")
         for (label in listOf("1H", "6H", "24H")) {
             val target = compose.onNode(hasText(label) and hasClickAction()).fetchSemanticsNode().touchBoundsInRoot
@@ -184,11 +249,11 @@ class BERTUiTest {
         fun checkChart(label: String, summary: String) {
             compose.onNodeWithText(label).performScrollTo().performClick()
             compose.onNodeWithText(label).assertIsSelected()
-            compose.onNodeWithContentDescription(summary).assertExists()
+            compose.onNodeWithContentDescription(summary, substring = true).assertExists()
         }
-        checkChart("24H", "5 prices over the selected 24H window. Low $0.003, high $0.008. Gaps over 30 minutes are not connected.")
-        checkChart("6H", "4 prices over the selected 6H window. Low $0.003, high $0.005. Gaps over 30 minutes are not connected.")
-        checkChart("1H", "2 prices over the selected 1H window. Low $0.004, high $0.0042. Gaps over 30 minutes are not connected.")
+        checkChart("24H", "289 prices over the selected 24H window.")
+        checkChart("6H", "73 prices over the selected 6H window.")
+        checkChart("1H", "13 prices over the selected 1H window.")
         capture("market-one-hour")
         compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Market", useUnmergedTree = true).performClick()
@@ -232,6 +297,28 @@ class BERTUiTest {
         compose.onNodeWithText("BERT amount").assertExists()
     }
 
+    /** Critique 2026-11-12 PRIV-1: the switch is on for existing holdings, keeps the choice, and re-renders the widgets each time. */
+    @Test fun holdingsSwitchKeepsTheChoiceAndRerendersTheWidgets() {
+        val store = BERTHoldingsStore(compose.activity)
+        store.savePosition(BERTPosition(250_000.0))
+        var pushes = 0
+        app(holdingsStore = store, widgetPush = { pushes++ })
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Holdings", useUnmergedTree = true).performClick()
+        val switch = compose.onNodeWithContentDescription("Show my holdings on the Market widget")
+        switch.performScrollTo().assertIsOn()
+        capture("holdings-widget-switch")
+        switch.performClick()
+        switch.assertIsOff()
+        assertFalse(BERTHoldingsStore(compose.activity).showOnWidget)
+        assertEquals(1, pushes)
+        switch.performClick()
+        switch.assertIsOn()
+        assertTrue(BERTHoldingsStore(compose.activity).showOnWidget)
+        assertEquals(2, pushes)
+        assertEquals(BERTPosition(250_000.0), store.loadPosition())
+    }
+
     @Test fun tournamentCardShowsCountdownPoolAndStandingsUnderTheDispatch() {
         val now = 1_789_000_000_000
         val event = BERTEvent("The Autumn Arc", now + (2 * 24 + 7) * 3_600_000L, "live", pool = 250, sponsor = "Dr. Inker LABS",
@@ -257,11 +344,11 @@ class BERTUiTest {
             quote = QuoteState.Available(BERTQuote(0.0154, -7.92, null, null, null, "fresh", now - 30_000, "dexscreener", "raydium",
                 "https://dexscreener.com/solana/BmsZE6TkZYskyS1PatPKRyyazGdxWFxdia4BuvLg9AgY")),
             initialPosition = BERTPosition(1_000_000.0))
-        // 0.12: the price is chalked on the sign by the gate (the percent and the bag live in Tools).
-        compose.onNodeWithTag("place-tag").assertContentDescriptionEquals("Chalkboard: BERT \$0.0154")
+        // 0.15: the price is on the slate under the garden (the percent and the bag live in Tools).
+        compose.onNodeWithTag("home-price").assertHasClickAction()
         compose.onNodeWithText("Play The Lost Trail").performScrollTo().assertIsDisplayed()
         capture("home-today")
-        compose.onNodeWithTag("place-board").performScrollTo().performClick()
+        compose.onNodeWithTag("board-row").performScrollTo().performClick()
         compose.onNodeWithText("Make it a card").performScrollTo().performClick()
         // A dispatch longer than a caption arrives as its first sentence, never as an over-limit error.
         compose.onNodeWithText("woofmornin.", useUnmergedTree = true).assertExists()
@@ -310,8 +397,9 @@ class BERTUiTest {
         app(ActivityState.Available(BERTActivity(1_789_000_000_000,
             "The town is quiet. My hat is not. A very good day to make something.", "curious", null)))
         capture("home-activity")
-        compose.onNodeWithTag("place-board").performClick()
-        compose.onNodeWithText("The town is quiet. My hat is not. A very good day to make something.").assertIsDisplayed()
+        compose.onNodeWithTag("board-row").performScrollTo().performClick()
+        // On the sheet (0.15: Home's note says the same, pinned up under the scene).
+        compose.onNode(hasText("The town is quiet. My hat is not. A very good day to make something.") and hasAnyAncestor(hasTestTag("noticeboard"))).assertIsDisplayed()
         capture("home-board-activity")
         compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
@@ -376,6 +464,8 @@ class BERTUiTest {
         capture("marketing-home")
         compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
         compose.onNodeWithText("24h ago").assertExists()
+        // The chart's day reads as the price card's +1.63%, never its own first to last (+1.99%) beside it.
+        compose.onNodeWithText("Change over the past 24 hours +1.63%").assertExists()
         compose.onNodeWithText("Couldn’t refresh. Showing the last saved quote.").assertDoesNotExist()
         capture("marketing-tools")
         compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
@@ -409,7 +499,9 @@ class BERTUiTest {
         compose.onNodeWithText("Put Bert on your home screen").performScrollTo().performClick()
         compose.onNode(hasText("Tools") and hasClickAction()).assertIsSelected()
         compose.onNode(hasText("Style") and hasClickAction()).assertIsSelected()
-        compose.onNodeWithText("A little BERT. Everywhere.").assertIsDisplayed()
+        // The step brings the widgets to the top; Style's intro is just above them.
+        compose.onNodeWithText("HOME-SCREEN WIDGETS").assertIsDisplayed()
+        compose.onNodeWithText("A little BERT. Everywhere.").assertExists()
         capture("tools-style")
         compose.onNodeWithText("Create", useUnmergedTree = true).performClick()
         compose.onAllNodes(hasText("Style") and hasClickAction()).assertCountEquals(0)
@@ -449,9 +541,8 @@ class BERTUiTest {
         app()
         compose.onNodeWithTag("berts-place").assertIsDisplayed()
         capture("home-offline")
-        compose.onNodeWithTag("place-board").performClick()
-        compose.onNodeWithText("no post today. the postman’s on strike.").assertIsDisplayed()
-        compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
+        // The pinned note says why there is nothing to read; with nothing saved there is no board to open.
+        compose.onNodeWithText("can’t reach the board right now", substring = true).assertExists()
         compose.onNodeWithText("Play", useUnmergedTree = true).performClick()
         compose.onNodeWithText("Off the lead.").assertIsDisplayed()
         capture("play")
@@ -714,7 +805,7 @@ class BERTUiTest {
     @Test fun longDispatchCanBeReadWithoutLosingNavigation() {
         val dispatch = "A long dispatch for the pack. ".repeat(20)
         app(ActivityState.Available(BERTActivity(1_789_000_000_000, dispatch, null, null)))
-        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithTag("board-row").performScrollTo().performClick()
         compose.onNodeWithText("Read full update").performScrollTo().performClick()
         val layout = mutableListOf<TextLayoutResult>()
         compose.onNodeWithText(dispatch).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }

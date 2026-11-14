@@ -64,6 +64,13 @@ private val CORNER = intArrayOf(3, 1, 1)
 // tail, on the first renders: it needs paper inside its outline to be seen against the loam.)
 private const val TAIL_W = 8
 
+/**
+ * Where Bert's voice comes from, which decides what joins the bubble to the scene: a tail up to him in the garden, dream
+ * puffs rising towards the lit window while he sleeps indoors, or nothing once a knock has woken him (the window is dark,
+ * he is awake behind it, and a dream would be a lie).
+ */
+internal enum class BubbleFrom { GARDEN, DREAM, AWAKE_INDOORS }
+
 /** The bubble's paper in the scene's light: bright by day, dimmer at dusk, moonlit at night so it never glares. */
 internal data class BubbleTone(val outline: Color, val fill: Color, val shade: Color, val ink: Color) {
     companion object {
@@ -78,12 +85,14 @@ internal data class BubbleTone(val outline: Color, val fill: Color, val shade: C
 /**
  * [line] in a bubble from Bert, standing in the fade from the scene to the page. The bubble is sized to the words and
  * set under [anchor] (place art x); the tail follows [speaker] (read at draw time, so it swings as he walks without
- * moving the words). [toWindow]: he is indoors, and the bubble trails puffs up towards the lit window instead.
- * [resting] is the line he goes back to: the space is kept for whichever of the two is taller, so a pat never makes the
- * page below jump.
+ * moving the words). [from]: in the garden the tail points at him; asleep indoors the bubble trails puffs up towards the
+ * lit window instead; woken indoors it has neither.
+ * [resting] is the line he goes back to, and [reserve] everything else he can say here (pats, remarks, day lines): the
+ * space is kept for the tallest of them all at this width and text size, so nothing he says makes the page below jump.
  */
 @Composable
-internal fun BertSays(line: String, resting: String, time: PlaceTime, earth: Color, toWindow: Boolean, anchor: Int, speaker: () -> Int) {
+internal fun BertSays(line: String, resting: String, time: PlaceTime, earth: Color, from: BubbleFrom, anchor: Int, speaker: () -> Int,
+                      reserve: List<String> = emptyList()) {
     val tone = BubbleTone.of(time)
     val page = Navy
     BoxWithConstraints(Modifier.fillMaxWidth()) {
@@ -97,6 +106,7 @@ internal fun BertSays(line: String, resting: String, time: PlaceTime, earth: Col
         var box by remember { mutableStateOf(Triple(0, 0, 0)) }
         val fade = remember(earth, page, frame) { fadeBitmap(earth, page, frame.shown) }
         val bubbles = remember { BubbleCache() }
+        val measurer = androidx.compose.ui.text.rememberTextMeasurer(cacheSize = 64)
         Layout(content = {
             Text(line, style = style)
             Text(resting, style = style, modifier = Modifier.clearAndSetSemantics {})
@@ -109,7 +119,7 @@ internal fun BertSays(line: String, resting: String, time: PlaceTime, earth: Col
                     drawImage(fade, dstOffset = IntOffset(frame.left, 0), dstSize = IntSize(fade.width * k, fade.height * k),
                         filterQuality = FilterQuality.None)
                     if (w <= 0) return@run
-                    val bubble = bubbles.get(w, h, speaker() - frame.x0 - left, toWindow, tone)
+                    val bubble = bubbles.get(w, h, speaker() - frame.x0 - left, from, tone)
                     // The bitmap's extra rows (tail or puffs) stand above the bubble's top edge, which is in the loam.
                     val top = -(SCENE_ROWS - BUBBLE_TOP) - (bubble.height - h)
                     drawImage(bubble, dstOffset = IntOffset(frame.left + left * k, top * k),
@@ -124,7 +134,8 @@ internal fun BertSays(line: String, resting: String, time: PlaceTime, earth: Col
             fun art(px: Int) = (px + k - 1) / k
             val w = art(said.width) + 2 * PAD_X
             val h = art(said.height) + 2 * PAD_Y
-            val tallest = maxOf(h, art(rest.height) + 2 * PAD_Y)
+            val reserved = reserve.maxOfOrNull { measurer.measure(it, style, constraints = Constraints(maxWidth = textMax)).size.height } ?: 0
+            val tallest = maxOf(h, art(rest.height) + 2 * PAD_Y, art(reserved) + 2 * PAD_Y)
             // Centred under its anchor, kept off the page's edges, on whole art pixels.
             val minLeft = art(margin); val maxLeft = areaWidth / k - art(margin) - w
             val left = (anchor - frame.x0 - w / 2).coerceAtMost(maxLeft).coerceAtLeast(minLeft)
@@ -177,26 +188,26 @@ private fun tailX(w: Int, target: Int): Int {
  * clamped position (a target past the corner draws the same tail) and, for the night puffs, which way they lean.
  */
 internal class BubbleCache {
-    private data class Key(val w: Int, val h: Int, val tail: Int, val leanLeft: Boolean, val toWindow: Boolean, val tone: BubbleTone)
+    private data class Key(val w: Int, val h: Int, val tail: Int, val leanLeft: Boolean, val from: BubbleFrom, val tone: BubbleTone)
     private var key: Key? = null
     private var image: ImageBitmap? = null
 
-    fun get(w: Int, h: Int, target: Int, toWindow: Boolean, tone: BubbleTone): ImageBitmap {
+    fun get(w: Int, h: Int, target: Int, from: BubbleFrom, tone: BubbleTone): ImageBitmap {
         val tail = tailX(w, target)
-        val next = Key(w, h, tail, toWindow && target < tail, toWindow, tone)
+        val next = Key(w, h, tail, from == BubbleFrom.DREAM && target < tail, from, tone)
         image?.let { if (next == key) return it }
-        return bubbleBitmap(w, h, tail, next.leanLeft, toWindow, tone).also { key = next; image = it }
+        return bubbleBitmap(w, h, tail, next.leanLeft, from, tone).also { key = next; image = it }
     }
 }
 
 /**
  * The bubble, one bitmap pixel per art px: [w] x [h] with stepped corners, plus the rows above it for the tail (or, at
- * night, the puffs). [edgeX] is where the tail leaves the bubble, in art px from its left edge (see [tailX]); [leanLeft]
- * turns the puffs the other way. Drawn as a mask first, then every masked pixel with an unmasked neighbour is outline, so
+ * night, the puffs; woken, the same rows are left empty so the bubble does not move). [edgeX] is where the tail leaves the
+ * bubble, in art px from its left edge (see [tailX]); [leanLeft] turns the puffs the other way. Drawn as a mask first, then every masked pixel with an unmasked neighbour is outline, so
  * the tail and the bubble share one unbroken line.
  */
-private fun bubbleBitmap(w: Int, h: Int, edgeX: Int, leanLeft: Boolean, toWindow: Boolean, tone: BubbleTone): ImageBitmap {
-    val rise = if (toWindow) PUFF_RISE else BUBBLE_TOP - TAIL_TIP
+private fun bubbleBitmap(w: Int, h: Int, edgeX: Int, leanLeft: Boolean, from: BubbleFrom, tone: BubbleTone): ImageBitmap {
+    val rise = if (from == BubbleFrom.GARDEN) BUBBLE_TOP - TAIL_TIP else PUFF_RISE
     val rows = h + rise
     val mask = BooleanArray(w * rows)
     val puff = BooleanArray(w * rows)
@@ -208,13 +219,13 @@ private fun bubbleBitmap(w: Int, h: Int, edgeX: Int, leanLeft: Boolean, toWindow
     }
     // The diagonal falls away towards the bubble's middle, so the wedge opens into it.
     val dir = if (edgeX < w / 2) 1 else -1
-    if (!toWindow) {
+    if (from == BubbleFrom.GARDEN) {
         // Row i up from the bubble (1 = just above its top edge, rise = the tip).
         for (i in 1..rise + 1) {
             val width = (2 + (rise + 1 - i) / 2).coerceAtMost(TAIL_W)
             for (d in 0 until width) set(edgeX + dir * d, rise - i + 1)
         }
-    } else {
+    } else if (from == BubbleFrom.DREAM) {
         // Three puffs, each smaller and higher, leaning towards the window: a voice from indoors, asleep. They are kept
         // apart from the bubble and each other (they are paper of their own, not part of its outline), and drawn
         // without one: at night the outline is the colour of the dark grass and a puff that small would vanish into it.

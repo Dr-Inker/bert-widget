@@ -4,4 +4,18 @@
     <color name="bert_navy">#071A2F</color>
     <!-- BERT Violet's background (brand kit), the default scheme: window, splash and system bars. -->
     <color name="bert_violet">#100B16</color>
+    <!-- Bert's day widget (0.15): a note from Bert on paper; the event chalked on a slate. Numbers on slate, Bert's words on paper. -->
+    <color name="note_paper">#F7EEDA</color>
+    <color name="note_shade">#E6D5B5</color>
+    <color name="note_shade_edge">#D8C49E</color>
+    <color name="note_ink">#2A1A0F</color>
+    <!-- The handwritten "feeling …" caption: 5.5:1 on the shade, 6.9:1 on the paper. -->
+    <color name="note_caption">#6B4A2C</color>
+    <!-- The mockup's #8A6A4A is 4.3:1 on the paper; this is the nearest brown at 4.5:1 or more (4.85:1). -->
+    <color name="note_eyebrow">#806244</color>
+    <!-- A saved copy (the feed has not refreshed for 30 minutes): rust, 6.0:1 on the paper. -->
+    <color name="note_stale">#9A3B1A</color>
+    <color name="note_slate">#30343D</color>
+    <color name="note_wood">#674A38</color>
+    <color name="note_chalk">#F4D488</color>
 </resources>

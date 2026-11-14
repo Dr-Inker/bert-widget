@@ -5,10 +5,7 @@ import android.content.Context
 import androidx.compose.foundation.Canvas
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.runtime.key
-import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
 import kotlinx.coroutines.flow.collectLatest
@@ -54,13 +51,9 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.role
+import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.semantics.isTraversalGroup
-import androidx.compose.ui.unit.sp
-import androidx.compose.ui.draw.shadow
-import androidx.compose.foundation.border
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Dp
@@ -71,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
 import global.bert.widget.data.BERTHomeVisits
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -79,8 +73,8 @@ import kotlin.math.ceil
 /**
  * 0.12, “Bert’s day” (docs/CONCEPT-0.12-BERTS-PLACE.md): Home opens onto Bert's garden at the phone's own time of day.
  * Where he is follows his routine; how he stands follows his mood. The scene is never a card: full width, from the top
- * of the screen, with the noticeboard (Berthalla's note), the price tag on the gate post and this month's paw prints
- * all in the picture.
+ * of the screen, with the noticeboard (Berthalla's note), Bert's chalked tally of the visit streak and this month's paw
+ * prints all in the picture.
  */
 
 /** Bert's handwriting, as on berthalla.io (Gochi Hand, SIL Open Font License 1.1). */
@@ -99,6 +93,16 @@ internal enum class PlaceTime(val image: Int, val wide: Int, val light: Boolean,
         val m = ColorMatrix().apply { setToSaturation(1f - desat) }
         m.timesAssign(ColorMatrix().apply { setToScale(r, g, b, 1f) })
         ColorFilter.colorMatrix(m)
+    }
+
+    /** [c] in this light, as [filter] draws it (for a colour that then needs warming up after dark, like the pin). */
+    fun lit(c: Color): Color {
+        val (tr, tg, tb) = tint ?: return c
+        val s = 1f - desat
+        val r = (0.213f + 0.787f * s) * c.red + 0.715f * (1 - s) * c.green + 0.072f * (1 - s) * c.blue
+        val g = 0.213f * (1 - s) * c.red + (0.715f + 0.285f * s) * c.green + 0.072f * (1 - s) * c.blue
+        val b = 0.213f * (1 - s) * c.red + 0.715f * (1 - s) * c.green + (0.072f + 0.928f * s) * c.blue
+        return Color((r * tr).coerceIn(0f, 1f), (g * tg).coerceIn(0f, 1f), (b * tb).coerceIn(0f, 1f), c.alpha)
     }
 }
 
@@ -159,96 +163,198 @@ internal object BertLines {
     fun of(slot: BertSlot, day: LocalDate): String = bank.getValue(slot).let { it[(day.dayOfYear + slot.ordinal) % it.size] }
 
     /** Every line he can say in the bubble, so tests can check each one fits. */
-    internal val every: List<String> get() = bank.values.flatten() + pats + naps + listOf(TOO_MANY, WOKEN) +
-        PlaceSpot.entries.map { it.hint } + BertSlot.entries.mapNotNull { hint(it, PlaceFirsts(1, false, emptySet()), gate = true) }
+    internal val every: List<String> get() = bank.values.flatten() + pats + naps + listOf(TOO_MANY, WOKEN) + milestones.values +
+        PlaceThing.entries.flatMap { it.remarks } + NEWS_BELOW + BertSlot.entries.mapNotNull { hint(it, PlaceFirsts(1, false)) } +
+        streakDays.values + streakBack + streakRuns.indices.map { streakDay(998, it) } +
+        listOf(VisitStreak(1, 1, LocalDate.MIN), VisitStreak(998, 998, LocalDate.MIN), VisitStreak(998, 999, LocalDate.MIN)).map { streakTold(it) }
 
     /**
-     * For someone new, Bert says what the picture does instead of his daily line. These must read with no lore at all
-     * (no hat, no hoodie, no mayor): they are the first words a person hears from him. Until they have patted him it is
-     * one thing a day, the pat first (at night he is indoors, so it is the window). Once patted, in the same sitting, he
-     * moves on to a spot they have not tried yet, one at a time, until each has been found; then his own line. Null when
-     * there is nothing left to show (or the first days are over).
+     * For someone new, Bert asks for a pat instead of saying his daily line (at night he is indoors, so it is the
+     * window). These must read with no lore at all (no hat, no hoodie, no mayor): they are the first words a person
+     * hears from him. Null once he has been patted (or the window knocked), or once the first days are over.
      */
-    fun hint(slot: BertSlot, firsts: PlaceFirsts, gate: Boolean): String? {
-        if (!firsts.showingRound) return null
-        val spots = PlaceSpot.entries.filter { it !in firsts.tapped && (gate || it != PlaceSpot.GATE) }.map { it.hint }
-        if (firsts.patted) return spots.firstOrNull()
-        val first = when (slot) {
+    fun hint(slot: BertSlot, firsts: PlaceFirsts): String? {
+        if (!firsts.showingRound || firsts.patted) return null
+        return when (slot) {
             BertSlot.BED -> "tap the window. i\u2019m a light sleeper."
             BertSlot.NAP -> "asleep. pats still accepted."
             else -> "pat me. i permit it."
         }
-        val all = listOf(first) + spots
-        return all[(firsts.days - 1).coerceAtLeast(0) % all.size]
+    }
+
+    /** What he says, once ever, on a lifetime pat count; it takes the place of that pat's own reply. */
+    val milestones = linkedMapOf(
+        10 to "ten pats. you\u2019re getting good at this.",
+        50 to "fifty pats. i\u2019ve been counting, obviously.",
+        100 to "a hundred pats. i\u2019ll have that framed.",
+        500 to "five hundred pats. we\u2019re practically family.",
+        1000 to "a thousand pats. a legend of this lawn.",
+    )
+
+    /** The first open on a new day of a run: his word on it, once that day; some lengths have their own. */
+    val streakDays = linkedMapOf(
+        3 to "three days running. people will talk.",
+        7 to "a whole week of visits. i\u2019m touched.",
+        14 to "two weeks in a row. you know the hedge by now.",
+        30 to "thirty days running. practically a neighbour.",
+        50 to "fifty days in a row. i saved you a spot on the lawn.",
+        100 to "a hundred days running. the daisies talk about you.",
+        200 to "two hundred days. the gate squeaks your name.",
+        365 to "a whole year of days. i don\u2019t say this lightly: good.",
+    )
+    private val streakRuns = listOf<(Int) -> String>({ "back again. $it days running." }, { "$it days in a row. i\u2019ve noticed." },
+        { "day $it. the gate remembers you." })
+    /** Day [n] of a run (2 or more), on the [turn]th of his everyday ways of saying it. */
+    fun streakDay(n: Int, turn: Int): String = streakDays[n] ?: streakRuns[turn % streakRuns.size](n)
+    /** A new run after a gap: glad to see them, and nothing more. No guilt, no lost streak, no "come back tomorrow". */
+    val streakBack = listOf("there you are. the garden kept your spot.", "welcome back. the daisies didn\u2019t notice a thing.",
+        "you\u2019re here. that\u2019s the main thing.")
+
+    /** What he says on the first open of a new day, or null (the first open ever, the same day again, the clock gone back). */
+    fun dayLine(step: StreakStep, day: LocalDate): String? = when (step.change) {
+        StreakChange.NEXT_DAY -> streakDay(step.streak.days, day.dayOfYear)
+        StreakChange.RESTARTED -> streakBack[day.dayOfYear % streakBack.size]
+        else -> null
+    }
+
+    /** What he can say in [slot] besides his resting line, with [streak] as it stands on [day]. */
+    fun sayable(slot: BertSlot, streak: VisitStreak, day: LocalDate): List<String> = buildList {
+        if (slot == BertSlot.BED) add(WOKEN)
+        else {
+            addAll(if (slot == BertSlot.NAP) naps else pats + TOO_MANY)
+            addAll(PlaceThing.entries.flatMap { it.remarks }); add(NEWS_BELOW); add(streakTold(streak)); addAll(milestones.values)
+        }
+        add(streakDay(streak.days, day.dayOfYear)); addAll(streakBack)
+    }
+
+    /** A tap on the noticeboard while it has a fresh note: where to read it, before any of his remarks. */
+    const val NEWS_BELOW = "something new. it\u2019s pinned up just below."
+
+    /** A tap on the chalkboard (its first in a sitting): the run and the best, his way. */
+    fun streakTold(s: VisitStreak): String = when {
+        s.days == 1 && s.best <= 1 -> "day one. everyone starts somewhere."
+        s.days == 1 -> "day one of a new run. best is ${s.best}."
+        s.days >= s.best -> "${s.days} days running. your best yet."
+        else -> "${s.days} days running. best is ${s.best}."
     }
 }
 
 /**
- * The three things in the picture that open something, and where each one's glint sits (place art px): on the stone
- * ball of the gate's left post (clear of Bert at the gate and on gate duty), the chalkboard frame's top corner and the
- * noticeboard's roof. Each sits on something darker than the sky, so a pale star shows by day.
+ * The things in the picture Bert has a word about when they are tapped. 0.15: the garden is where you play with Bert,
+ * not a menu; Market, the board and the trail are one tap away under it (the slate, the note, the trail section and
+ * the Play tab), so nothing here goes anywhere. [tag] is the thing's tap target. Lines are lowercase and dry, in his
+ * voice; nothing about prices beyond his own chalk.
  */
-internal enum class PlaceSpot(val key: String, val glintX: Int, val glintY: Int, val hint: String) {
-    GATE("gate", 262, 226, "the gate goes somewhere. try it."),
-    CHALK("chalk", 181, 248, "the chalkboard knows the price."),
-    BOARD("board", 366, 255, "the noticeboard has today\u2019s news."),
+internal enum class PlaceThing(val tag: String, val remarks: List<String>) {
+    BLOSSOM("place-blossom", listOf("best shade in the garden. reserved.", "petals everywhere. i am not sweeping them.",
+        "that bush and i go back years.")),
+    CHALK("place-tag", listOf("chalked it myself. paws are not ideal for this.", "my chalkboard. i keep it tidy, mostly.",
+        "i drew a paw on it once. still proud.")),
+    COTTAGE("place-cottage", listOf("home. the lamp knows when i\u2019m due.", "door, roof, chimney. all mine.",
+        "i nap in there when the lawn gets busy.")),
+    GATE("place-gate", listOf("the gate. it squeaks. i allow it.", "the way to the trail is further down the page.",
+        "i let things in. selectively.")),
+    BOARD("place-board", listOf("the noticeboard. i pin things up. badly.", "news goes up here. i read it first.",
+        "if it\u2019s on the board, i\u2019ve sniffed it.")),
 }
 
-/** How long the place keeps showing a newcomer around: Bert's hints stop after this many distinct days. */
+/** How long the place keeps showing a newcomer around: Bert asks for a pat on at most this many distinct days. */
 internal const val FIRST_DAYS = 5
 
-/**
- * What a person has found in the place so far: [days] they have come round (ever, counted once a day), whether they
- * have [patted] Bert, and which spots they have [tapped].
- */
-internal data class PlaceFirsts(val days: Int, val patted: Boolean, val tapped: Set<PlaceSpot>) {
+/** What a person has done in the place so far: [days] they have come round (ever, counted once a day), and whether they have [patted] Bert. */
+internal data class PlaceFirsts(val days: Int, val patted: Boolean) {
     val showingRound: Boolean get() = days <= FIRST_DAYS
 }
 
 /**
- * The newcomer state, in the same `bert_place` preferences as [BertVisits]. It only ever counts up: nothing resets,
- * and nothing is lost by staying away.
+ * The newcomer state and the lifetime pat count, in the same `bert_place` preferences as [BertVisits], on the phone
+ * only. It only ever counts up: nothing resets, and nothing is lost by staying away. (0.14 also kept a `tapped` list of
+ * the spots found; 0.15 neither reads nor writes it.)
  */
 internal class PlaceDiscovery(private val context: Context) {
     private val prefs = context.getSharedPreferences("bert_place", Context.MODE_PRIVATE)
 
-    /** Counts [today] once (a clock set backwards neither counts nor rewinds) and returns what has been found. */
+    /** Counts [today] once (a clock set backwards neither counts nor rewinds) and returns what has been done. */
     fun record(today: LocalDate): PlaceFirsts {
         // These keys are new in 0.14, so someone updating from 0.13 has none and would be greeted as a stranger in a
         // garden they have visited for weeks. Anyone who came round before today (a paw print on another day, kept since
-        // well before 0.14, or the app opened on another day by an older version) starts as having patted Bert and found
-        // every spot. Only the first record after the update can do this; a fresh install leaves no such trace, even when
-        // its first days were spent in Market from the widget (0.14 counts those opens, but not as an older version's).
-        if (!prefs.contains(KEY_SEEN_DAYS) && cameBefore(today)) {
-            prefs.edit().putBoolean(KEY_PATTED, true).putString(KEY_TAPPED, PlaceSpot.entries.joinToString(",") { it.key }).apply()
-        }
+        // well before 0.14, or the app opened on another day by an older version) starts as having patted Bert. Only the
+        // first record after the update can do this; a fresh install leaves no such trace, even when its first days were
+        // spent in Market from the widget (0.14 counts those opens, but not as an older version's).
+        if (!prefs.contains(KEY_SEEN_DAYS) && cameBefore(today)) prefs.edit().putBoolean(KEY_PATTED, true).apply()
         val last = prefs.getLong(KEY_LAST_DAY, Long.MIN_VALUE)
         var days = prefs.getInt(KEY_SEEN_DAYS, 0)
         if (today.toEpochDay() > last) {
             days += 1
             prefs.edit().putLong(KEY_LAST_DAY, today.toEpochDay()).putInt(KEY_SEEN_DAYS, days).apply()
+        } else if (last > today.toEpochDay() + CLOCK_SLACK_DAYS) {
+            // The clock was set forward and has come back: count from today again rather than wait for that date.
+            prefs.edit().putLong(KEY_LAST_DAY, today.toEpochDay()).apply()
         }
-        val tapped = prefs.getString(KEY_TAPPED, "").orEmpty().split(',').mapNotNull { k -> PlaceSpot.entries.firstOrNull { it.key == k } }
-        return PlaceFirsts(days, prefs.getBoolean(KEY_PATTED, false), tapped.toSet())
+        return PlaceFirsts(days, prefs.getBoolean(KEY_PATTED, false))
     }
 
     fun patted() { prefs.edit().putBoolean(KEY_PATTED, true).apply() }
 
+    /** Pats ever given, on this phone. */
+    val pats: Int get() = prefs.getInt(KEY_PATS, 0)
+
+    /** Counts one more pat and returns the new lifetime count. Each count is reached once, so each milestone fires once. */
+    fun pat(): Int = (pats + 1).also { prefs.edit().putInt(KEY_PATS, it).apply() }
+
+    /** The visit streak as stored, without counting anything; null before the first. */
+    fun streak(): VisitStreak? = if (!prefs.contains(KEY_STREAK_DAY)) null
+        else VisitStreak(prefs.getInt(KEY_STREAK, 1), prefs.getInt(KEY_STREAK_BEST, 1), LocalDate.ofEpochDay(prefs.getLong(KEY_STREAK_DAY, 0)),
+            if (prefs.contains(KEY_STREAK_ANCHOR)) LocalDate.ofEpochDay(prefs.getLong(KEY_STREAK_ANCHOR, 0)) else null)
+
+    /** What opening the app on [today] does or did: the step that was stored today, or the one an open now would make. */
+    private fun step(today: LocalDate): StreakStep {
+        val stored = streak()
+        if (stored != null && stored.last == today)
+            return StreakStep(stored.copy(anchor = null), prefs.getString(KEY_STREAK_CHANGE, null)?.let { runCatching { StreakChange.valueOf(it) }.getOrNull() } ?: StreakChange.SAME_DAY)
+        // Installs from before 0.15 have no streak yet: this month's paw prints may prove a run (seededStreak); otherwise
+        // the run starts at one, not at their [PlaceFirsts.days] total, which counts days ever, not in a row.
+        if (stored == null) seededStreak(BertVisits(context).thisMonth(today), today)?.let { return StreakStep(it, StreakChange.FIRST) }
+        return visitStreakOn(stored, today)
+    }
+
+    /**
+     * The app was opened (or came back to the front) on [today], from any way in: Home, a widget, an alert or a
+     * shortcut. Counts it by [visitStreakOn], once per date, and returns the day's step.
+     */
+    fun visit(today: LocalDate): StreakStep {
+        val step = step(today)
+        if (step.streak != streak()) prefs.edit().apply {
+            putInt(KEY_STREAK, step.streak.days); putInt(KEY_STREAK_BEST, step.streak.best); putLong(KEY_STREAK_DAY, step.streak.last.toEpochDay())
+            step.streak.anchor?.let { putLong(KEY_STREAK_ANCHOR, it.toEpochDay()) } ?: remove(KEY_STREAK_ANCHOR)
+            // The day's change is kept for Bert's word later that day; a same-day tidy-up never overwrites it.
+            if (step.change in COUNTED) putString(KEY_STREAK_CHANGE, step.change.name)
+        }.apply()
+        return step
+    }
+
+    /** The streak as it stands on [today], for showing (the chalkboard, the You page): never writes. */
+    fun streakOn(today: LocalDate): StreakStep = step(today)
+
+    /** The day Bert last said his word on a new day of the run (once seen; see BertsPlace). */
+    fun daySaidOn(): LocalDate? = if (prefs.contains(KEY_DAY_SAID)) LocalDate.ofEpochDay(prefs.getLong(KEY_DAY_SAID, 0)) else null
+    fun daySaid(today: LocalDate) { prefs.edit().putLong(KEY_DAY_SAID, today.toEpochDay()).apply() }
+
     private fun cameBefore(today: LocalDate): Boolean =
         BertVisits(context).cameBefore(today) || BERTHomeVisits(context).openedBefore014(today)
-
-    fun tapped(spot: PlaceSpot, firsts: PlaceFirsts): PlaceFirsts {
-        if (spot in firsts.tapped) return firsts
-        val next = firsts.copy(tapped = firsts.tapped + spot)
-        prefs.edit().putString(KEY_TAPPED, next.tapped.joinToString(",") { it.key }).apply()
-        return next
-    }
 
     private companion object {
         const val KEY_LAST_DAY = "first_last_day"
         const val KEY_SEEN_DAYS = "first_days"
         const val KEY_PATTED = "patted"
-        const val KEY_TAPPED = "tapped"
+        const val KEY_PATS = "pats_ever"
+        const val KEY_STREAK = "streak_days"
+        const val KEY_STREAK_BEST = "streak_best"
+        const val KEY_STREAK_DAY = "streak_last_day"
+        const val KEY_STREAK_CHANGE = "streak_change"
+        const val KEY_STREAK_ANCHOR = "streak_anchor_day"
+        val COUNTED = setOf(StreakChange.FIRST, StreakChange.NEXT_DAY, StreakChange.RESTARTED)
+        const val KEY_DAY_SAID = "streak_said_day"
     }
 }
 
@@ -320,20 +426,16 @@ internal fun placeFrame(widthPx: Float, screenHeightPx: Float): PlaceFrame {
 internal fun placeHeightPx(widthPx: Int, screenHeightPx: Int): Int = placeFrame(widthPx.toFloat(), screenHeightPx.toFloat()).heightPx
 private const val PLACE_FEET_TOP = 198          // an 84 px standing frame's top, so his feet land on the grass line
 private const val PLACE_NAP_TOP = 232           // the 84 x 56 sun-nap frame's top
-// Bert's face and hat in an 84 px standing frame, either way he faces (from the sprites' own pixels): x 18..66, rows 0..46.
-private const val FACE_X = 18
-private const val FACE_W = 48
-private const val FACE_H = 48
 private val BOARD = PlaceRect(356, 250, 34, 34)       // the noticeboard, standing against the wall past the gate
 private val CHALK = PlaceRect(138, 248, 48, 36)      // the A-frame chalkboard between the blossom and the gate
-private val SLATE = PlaceRect(148, 251, 32, 24)      // its writable slate
-private val GATEWAY = PlaceRect(248, 211, 92, 72)    // the picket gate and its posts: through it, The Lost Trail
+private val GATEWAY = PlaceRect(248, 211, 92, 72)    // the picket gate and its posts
 private val WINDOW = PlaceRect(262, 104, 28, 32)
+private val COTTAGE = PlaceRect(166, 30, 172, 128)   // the cottage, chimney to doorstep (by day; at night the window is its target)
+private val BLOSSOM = PlaceRect(0, 128, 142, 112)    // the blossom bush's crown, down to the hedge
 
 private val SLATE_FACE = PlaceRect(150, 252, 30, 23) // the slate inside its frame, which lightens under a finger
 private val BOARD_FACE = PlaceRect(362, 260, 22, 15) // the noticeboard's back panel, papers and all
 private val PICKETS = PlaceRect(272, 240, 45, 41)    // the picket gate between its posts, which jumps when pressed
-private val GATE_SIGN = PlaceRect(252, 240, 84, 43)  // the gate for its label: post to post, from the pickets' tops
 // Where the fresh note goes (the bare corner of the board's panel, over the old notes' edge), and where the board's own
 // paper and panel colours are read from.
 private const val NOTE_X = 375
@@ -362,209 +464,27 @@ private const val PRESS_HELD_MS = 180L
 
 private data class PlaceRect(val x: Int, val y: Int, val w: Int, val h: Int)
 
-/** A tap target in the picture, where the art puts it ([natural], page px), and whether it may be moved for the You button. */
-internal data class PlaceTarget(val natural: IntRect, val movable: Boolean)
-
 /**
- * 0.14 labels (owner on the S25: the pixel cues "are minute on a phone screen"): a small tag in the You button's style on
- * each thing in the picture that opens something. [ABOVE] it, its tail pointing down at it; to its [RIGHT] or [LEFT],
- * pointing across; or [OVER] its foot, with no tail.
+ * A tap target in the picture, where the art puts it ([natural], page px), whether it may be moved for the You button,
+ * and whether a moved target must keep off it ([blocks]: everything but Bert, who stands in front of things).
  */
-internal enum class LabelSide { ABOVE, RIGHT, LEFT, OVER }
-
-/** What a label may say, longest first: the "›" goes first, then the words shorten. */
-internal fun labelTexts(spot: PlaceSpot, newNotes: Int): List<String> = when (spot) {
-    PlaceSpot.CHALK -> listOf("Price ›", "Price")
-    PlaceSpot.GATE -> listOf("Play ›", "Play")
-    PlaceSpot.BOARD -> if (newNotes > 0) {
-        val n = if (newNotes > 9) "9+" else "$newNotes"
-        listOf("News · $n", "News $n", n)
-    } else listOf("News")
-}
-
-/** A label's measures, in page px: its tail's length and half-width, its gap from its thing, its margin, its distance from others. */
-internal data class LabelDims(val tail: Int, val tailHalf: Int, val gap: Int, val margin: Int, val apart: Int)
-
-/**
- * A placed label: which of its texts, its tag's box, which side of its thing, and where its tail's tip is (page px);
- * [floating] when, for want of room, it stands clear above its thing rather than touching it.
- */
-internal data class PlacedLabel(val text: String, val box: IntRect, val side: LabelSide, val tip: IntOffset, val floating: Boolean = false) {
-    /** The box and its tail: everything the label covers. */
-    val bounds: IntRect get() = when (side) {
-        LabelSide.ABOVE -> IntRect(box.left, box.top, box.right, tip.y)
-        LabelSide.RIGHT -> IntRect(tip.x, box.top, box.right, box.bottom)
-        LabelSide.LEFT -> IntRect(box.left, box.top, tip.x, box.bottom)
-        LabelSide.OVER -> box
-    }
-}
-
-/**
- * Where each thing's label prefers to go, in order. The chalkboard's goes beside it (above it is where Bert's face
- * passes on his rounds, and over it would hide the price); the gate's hangs on the gate, like a sign, or else stands
- * on its pickets' tops; the board's sits on its roof.
- */
-private fun labelSides(spot: PlaceSpot) = when (spot) {
-    PlaceSpot.CHALK -> listOf(LabelSide.RIGHT, LabelSide.ABOVE, LabelSide.LEFT, LabelSide.OVER)
-    PlaceSpot.GATE -> listOf(LabelSide.OVER, LabelSide.ABOVE)
-    PlaceSpot.BOARD -> listOf(LabelSide.ABOVE, LabelSide.LEFT, LabelSide.OVER)
-}
-
-/**
- * Each labelled thing's art, unpadded: what its label points at, and what other labels keep off. The gate's is the
- * gate itself, post to post from the pickets' tops down (GATE_SIGN), not its whole tap target, whose top is the post
- * balls' sky: a label pointing there floated over nothing.
- */
-internal fun labelAnchors(frame: PlaceFrame, gate: Boolean): Map<PlaceSpot, IntRect> = buildMap {
-    put(PlaceSpot.CHALK, frame.px(CHALK.x, CHALK.y, CHALK.w, CHALK.h))
-    if (gate) put(PlaceSpot.GATE, frame.px(GATE_SIGN.x, GATE_SIGN.y, GATE_SIGN.w, GATE_SIGN.h))
-    put(PlaceSpot.BOARD, frame.px(BOARD.x, BOARD.y, BOARD.w, BOARD.h))
-}
-
-/**
- * What no label may cover in [slot] (page px): Bert's face wherever it can be in this part of the day (his walk, a
- * pat's hop, facing either way), so the labels never move as he walks; the chalked price; his bubble's tail; and at
- * night the window's target (where it finally is) and the dream puffs rising from his bubble. The You button is added
- * by the caller.
- */
-internal fun labelKeepOff(frame: PlaceFrame, slot: BertSlot, window: IntRect?): List<IntRect> = buildList {
-    val xs = listOfNotNull(slot.bertX, slot.walk?.first, slot.walk?.last)
-    if (slot == BertSlot.NAP) slot.bertX?.let { add(frame.px(it + 7, PLACE_NAP_TOP + 12, 70, 38)) }
-    else if (xs.isNotEmpty()) add(frame.px(xs.min() + FACE_X, PLACE_FEET_TOP - 4, xs.max() - xs.min() + FACE_W, FACE_H + 4))
-    add(frame.px(SLATE.x, SLATE.y + 6, SLATE.w, 12))
-    // The bubble's tail, which rises from the loam to just under his feet wherever he is that part of the day.
-    if (xs.isNotEmpty() && slot != BertSlot.NAP) add(frame.px(xs.min() + BERT_MID - 10, 282, xs.max() - xs.min() + 20 + 8, PLACE_H - 282))
-    if (slot == BertSlot.NAP) slot.bertX?.let { add(frame.px(it + BERT_MID - 10, 282, 28, PLACE_H - 282)) }
-    if (slot == BertSlot.BED) {
-        window?.let { add(it) }
-        // The puffs: three, leaning either way from under the window, from the loam up to row 270 (BertSays).
-        add(frame.px(WINDOW_MID - 14, 269, 28, PLACE_H - 269))
-    }
-}
-
-/** Labels end above this row: the top of Bert's bubble, which stands a little into the scene's loam. */
-internal fun labelGround(frame: PlaceFrame): Int = LABEL_GROUND * frame.k
-
-/**
- * Where each label goes. For each thing, each of its texts (longest first), each side it prefers, and nudges along that
- * side, the first box that stays inside [scene] by [LabelDims.margin], ends above [ground] (the bubble's loam), keeps its
- * tail on its thing, and covers nothing in [keepOff], no other thing's middle and no label already placed (by
- * [LabelDims.apart]); the things are taken in whichever order shortens and drops the least. A label that fits nowhere is
- * left out (null) rather than let anything collide.
- * [measure] sizes a text's tag. Pure, so it can be swept with the targets.
- */
-internal fun placeLabels(anchors: Map<PlaceSpot, IntRect>, texts: (PlaceSpot) -> List<String>, measure: (String) -> IntSize,
-                         scene: IntRect, ground: Int, keepOff: List<IntRect>, dims: LabelDims): Map<PlaceSpot, PlacedLabel?> {
-    // The other things' middles (each art inset by a third across, a quarter down): a label may lean on another thing's
-    // edge, a post or a frame, but never sits on the thing itself, where it would read as that thing's.
-    val middles = anchors.mapValues { (_, it) -> IntRect(it.left + it.width / 3, it.top + it.height / 4, it.right - it.width / 3, it.bottom - it.height / 4) }
-    val sizes = HashMap<String, IntSize>()
-    fun sizeOf(text: String) = sizes.getOrPut(text) { measure(text) }
-
-    // Every way one label could go, best first: its longest text before shorter ones; for each, its preferred sides in
-    // turn, each with small nudges along it and then larger ones (and a sign on its thing lifted up it if its foot is
-    // taken), before the next side.
-    fun candidates(spot: PlaceSpot, a: IntRect): Sequence<PlacedLabel> = sequence {
-        for (text in texts(spot)) {
-            val size = sizeOf(text)
-            val w = size.width
-            val h = size.height
-            val r = h / 2 + dims.tailHalf
-            for (side in labelSides(spot)) for (lift in if (side == LabelSide.OVER) listOf(0, h / 2, h) else listOf(0)) for (tier in listOf(0..2, 3..6)) {
-                val span = if (side == LabelSide.ABOVE || side == LabelSide.OVER) w else h
-                for (step in tier) for (d in if (step == 0) listOf(0) else listOf(step * span / 6, -step * span / 6)) {
-                    val label = when (side) {
-                        LabelSide.ABOVE -> {
-                            val left = a.left + a.width / 2 - w / 2 + d
-                            val bottom = a.top - dims.gap - dims.tail
-                            if (w < 2 * r) continue
-                            val tipX = (a.left + a.width / 2).coerceIn(left + r, left + w - r)
-                            if (tipX < a.left + dims.tailHalf || tipX > a.right - dims.tailHalf) continue
-                            PlacedLabel(text, IntRect(left, bottom - h, left + w, bottom), side, IntOffset(tipX, a.top - dims.gap))
-                        }
-                        LabelSide.RIGHT, LabelSide.LEFT -> {
-                            val top = a.top + a.height / 2 - h / 2 + d
-                            val tipY = (a.top + a.height / 2).coerceIn(top + h / 4, top + h - h / 4)
-                            if (tipY < a.top + dims.tailHalf || tipY > a.bottom - dims.tailHalf) continue
-                            if (side == LabelSide.RIGHT) {
-                                val left = a.right + dims.gap + dims.tail
-                                PlacedLabel(text, IntRect(left, top, left + w, top + h), side, IntOffset(a.right + dims.gap, tipY))
-                            } else {
-                                val right = a.left - dims.gap - dims.tail
-                                PlacedLabel(text, IntRect(right - w, top, right, top + h), side, IntOffset(a.left - dims.gap, tipY))
-                            }
-                        }
-                        LabelSide.OVER -> {
-                            val left = a.left + a.width / 2 - w / 2 + d
-                            // On its foot, or lifted up it (at night the dream puffs rise past the gate's foot).
-                            val bottom = minOf(a.bottom, ground) - dims.gap - lift
-                            if (bottom - h < a.top) continue
-                            val box = IntRect(left, bottom - h, left + w, bottom)
-                            if (minOf(box.right, a.right) - maxOf(box.left, a.left) < minOf(w, a.width) / 2) continue
-                            PlacedLabel(text, box, side, IntOffset((a.left + a.width / 2).coerceIn(box.left, box.right), bottom))
-                        }
-                    }
-                    yield(label)
-                }
-            }
-        }
-        // Last of all, only where nothing nearer fits any of its texts (a small, dense or large-text screen): standing a
-        // little clear above its thing, its tail pointing down at it from the air, rather than not there at all.
-        for (text in texts(spot)) {
-            val size = sizeOf(text)
-            val w = size.width
-            val h = size.height
-            val r = h / 2 + dims.tailHalf
-            if (w < 2 * r) continue
-            for (lift in listOf(h / 2, h)) for (step in 0..6) for (d in if (step == 0) listOf(0) else listOf(step * w / 6, -step * w / 6)) {
-                val left = a.left + a.width / 2 - w / 2 + d
-                val bottom = a.top - dims.gap - dims.tail - lift
-                val tipX = (a.left + a.width / 2).coerceIn(left + r, left + w - r)
-                if (tipX < a.left + dims.tailHalf || tipX > a.right - dims.tailHalf) continue
-                yield(PlacedLabel(text, IntRect(left, bottom - h, left + w, bottom), LabelSide.ABOVE, IntOffset(tipX, bottom + dims.tail), floating = true))
-            }
-        }
-    }
-
-    // One pass in a given order: each label takes the first way that is clear of everything so far.
-    fun pass(order: List<PlaceSpot>): Map<PlaceSpot, PlacedLabel?> {
-        val placed = LinkedHashMap<PlaceSpot, PlacedLabel?>()
-        for (spot in order) {
-            val a = anchors.getValue(spot)
-            val others = middles.filterKeys { it != spot }.values
-            fun clear(b: IntRect): Boolean = b.left >= scene.left + dims.margin && b.right <= scene.right - dims.margin &&
-                b.top >= scene.top + dims.margin && b.bottom <= ground && keepOff.none { it.overlaps(b) } && others.none { it.overlaps(b) } &&
-                placed.values.filterNotNull().none { p ->
-                    IntRect(p.bounds.left - dims.apart, p.bounds.top - dims.apart, p.bounds.right + dims.apart, p.bounds.bottom + dims.apart).overlaps(b)
-                }
-            // Its own thing is the one art a label may sit on (OVER), so only the others' middles are checked.
-            placed[spot] = candidates(spot, a).firstOrNull { clear(it.bounds) }
-        }
-        return placed
-    }
-
-    // Whichever order of placing them leaves the fewest out, then the fewest shortened, then the most on their preferred
-    // sides (the things are few: every order is tried, left to right first, so the answer is the same every time).
-    fun cost(p: Map<PlaceSpot, PlacedLabel?>): Int = p.entries.sumOf { (spot, l) ->
-        if (l == null) 1000 else 100 * (if (l.floating) 1 else 0) + 10 * texts(spot).indexOf(l.text) + labelSides(spot).indexOf(l.side)
-    }
-    val leftToRight = anchors.entries.sortedBy { it.value.left }.map { it.key }
-    return orders(leftToRight).map { pass(it) }.minBy(::cost).let { best -> anchors.keys.associateWith { best[it] } }
-}
-
-/** Every order of [items], the given one first. */
-private fun <T> orders(items: List<T>): List<List<T>> =
-    if (items.size <= 1) listOf(items) else items.flatMap { first -> orders(items - first).map { listOf(first) + it } }
+internal data class PlaceTarget(val natural: IntRect, val movable: Boolean, val blocks: Boolean = movable)
 
 /**
  * The tap targets for [slot] in [frame], by test tag, where the art puts them. Bert's ([bertX], his left edge in art px;
  * he walks) is never moved: the button may cover part of him and the rest of him is still his.
  */
-internal fun placeNaturals(frame: PlaceFrame, slot: BertSlot, bertX: Int, gate: Boolean): Map<String, PlaceTarget> = buildMap {
+internal fun placeNaturals(frame: PlaceFrame, slot: BertSlot, bertX: Int): Map<String, PlaceTarget> = buildMap {
     fun at(r: PlaceRect, pad: Int) = frame.px(r.x, r.y, r.w, r.h, pad)
-    put("place-board", PlaceTarget(at(BOARD, 6), true))
-    put("place-tag", PlaceTarget(at(CHALK, 6), true))
-    if (gate) put("place-gate", PlaceTarget(at(GATEWAY, 0), true))
+    val scene = frame.sceneRect
+    fun inScene(r: IntRect) = IntRect(maxOf(r.left, scene.left), maxOf(r.top, scene.top), minOf(r.right, scene.right), minOf(r.bottom, scene.bottom))
+    // The cottage and the blossom are big and stay put (the You button may cover a corner of the cottage; the rest of
+    // it still answers), but a moved target keeps off them. Out by day only: at night the window is the cottage's.
+    if (slot != BertSlot.BED) put(PlaceThing.COTTAGE.tag, PlaceTarget(inScene(at(COTTAGE, 0)), movable = false, blocks = true))
+    put(PlaceThing.BLOSSOM.tag, PlaceTarget(inScene(at(BLOSSOM, 0)), movable = false, blocks = true))
+    put(PlaceThing.BOARD.tag, PlaceTarget(at(BOARD, 7), true)) // 48 art px: 48dp where k == density
+    put(PlaceThing.CHALK.tag, PlaceTarget(at(CHALK, 6), true))
+    put(PlaceThing.GATE.tag, PlaceTarget(at(GATEWAY, 0), true))
     if (slot == BertSlot.BED) put("place-window", PlaceTarget(at(WINDOW, 8), true))
     if (slot.bertX != null) put("place-bert", PlaceTarget(at(PlaceRect(bertX + 4, 186, 74, PLACE_H - 186 - 12), 0), false))
 }
@@ -590,7 +510,7 @@ internal fun placeTargets(targets: Map<String, PlaceTarget>, overlay: IntRect, s
     for (tag in moving) {
         val n = targets.getValue(tag).natural
         // Everything a moved target must keep off: each other movable target where its art is and where it now is.
-        val blockers = targets.filter { (other, t) -> other != tag && t.movable }.keys.flatMap { listOf(targets.getValue(it).natural, finals.getValue(it)) }
+        val blockers = targets.filter { (other, t) -> other != tag && t.blocks }.keys.flatMap { listOf(targets.getValue(it).natural, finals.getValue(it)) }
         val needW = minOf(minTarget, n.width)
         val needH = minOf(minTarget, n.height)
         fun fits(c: IntRect) = c.left >= scene.left && c.top >= scene.top && c.right <= scene.right && c.bottom <= scene.bottom &&
@@ -623,13 +543,9 @@ internal fun placeTimeAt(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault(
 internal fun BertsPlace(
     now: Long,
     mood: String?,
-    priceUsd: Double?,
     newNotes: Int,
-    openBoard: () -> Unit,
-    openMarket: () -> Unit,
     modifier: Modifier = Modifier,
     meetBert: (() -> Unit)? = null,
-    openTrail: (() -> Unit)? = null,
     skyCovered: Boolean = false,
     overlay: androidx.compose.ui.unit.IntRect = androidx.compose.ui.unit.IntRect.Zero,
 ) {
@@ -642,12 +558,18 @@ internal fun BertsPlace(
     val visits = remember(today) { BertVisits(context.applicationContext).record(today) }
     val discovery = remember { PlaceDiscovery(context.applicationContext) }
     var firsts by remember(today) { mutableStateOf(discovery.record(today)) }
+    // The visit streak: counted by the app when it is opened, from any way in (BERTApp); the garden only shows it, on
+    // the chalkboard, and has Bert say his word on a new day.
+    val visit = remember(today) { discovery.streakOn(today) }
+    val streak = visit.streak
 
     var patUntil by remember { mutableLongStateOf(0L) }
     var pats by remember { mutableIntStateOf(0) }
     var lastPat by remember { mutableLongStateOf(0L) }
     var wokenUntil by remember { mutableLongStateOf(0L) }
     var said by remember { mutableStateOf<String?>(null) }
+    // How long a remark about a thing, or a milestone, stays in the bubble.
+    var saidUntil by remember { mutableLongStateOf(0L) }
     var tick by remember { mutableLongStateOf(0L) }
     // Where he is right now (his rounds and his walk home move him), which walk frame, which way, and the pat's hop.
     // The evening walk home happens once a day; coming back to Home afterwards finds him already at the gate.
@@ -684,49 +606,53 @@ internal fun BertsPlace(
             }
         }
     }
-    LaunchedEffect(patUntil, wokenUntil) {
-        val until = maxOf(patUntil, wokenUntil)
+    // A new day of a run: Bert's word on it, once that day, the first time Home is actually in front of someone (resumed:
+    // not behind the game, not in the background). It counts as said once it has been up for DAY_LINE_SEEN_MS, so a
+    // rotation or a quick switch away before then has him say it again, and after then never again that day. Not on the
+    // first open ever (the newcomer's ask for a pat comes first).
+    val gardenAway by androidx.compose.runtime.rememberUpdatedState(skyCovered)
+    LaunchedEffect(lifecycle, today) {
+        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.RESUMED) {
+            if (discovery.daySaidOn() == today) return@repeatOnLifecycle
+            val line = BertLines.dayLine(discovery.streakOn(today), today) ?: return@repeatOnLifecycle
+            // Not while the garden is scrolled away (Home keeps its scroll): he waits until someone can see him say it.
+            androidx.compose.runtime.snapshotFlow { gardenAway }.first { !it }
+            said = line; saidUntil = System.currentTimeMillis() + DAY_LINE_MS
+            delay(DAY_LINE_SEEN_MS)
+            discovery.daySaid(today)
+        }
+    }
+    LaunchedEffect(patUntil, wokenUntil, saidUntil) {
+        val until = maxOf(patUntil, wokenUntil, saidUntil)
         if (until == 0L) return@LaunchedEffect
         delay((until - System.currentTimeMillis()).coerceAtLeast(0))
         tick++
         said = null
     }
-    // The labels say what can be tapped (0.14, the owner's S25); a newcomer's endless glints next to them were clutter,
-    // so they went. What stays is one quiet twinkle pass whenever Home comes back into view: each spot's star swells
-    // once, left to right, and the garden rests. Never a loop; with animations off, nothing. Each spot's level (0 to 4)
-    // is packed into one state, read only when drawing, so a beat redraws the scene and never recomposes it; [twinkling]
-    // covers the whole pass, the half second before the first star included, and is read only by the tap targets'
-    // semantics, so it invalidates those, not the composition.
-    val spots = PlaceSpot.entries.filter { it != PlaceSpot.GATE || openTrail != null }
-    // Left to right, the order the stars take their turns in.
-    val order = spots.sortedBy { it.glintX }
-    var twinkles by remember { mutableIntStateOf(0) }
-    var twinkling by remember { mutableStateOf(false) }
-    LaunchedEffect(still, order, lifecycle) {
-        if (still) return@LaunchedEffect
-        lifecycle.repeatOnLifecycle(androidx.lifecycle.Lifecycle.State.STARTED) {
-            try {
-                twinkling = true
-                delay(TWINKLE_DELAY_MS)
-                for (beat in 0 until TWINKLE_BEATS) {
-                    twinkles = packGlints(order) { i -> glintLevel(beat - i * TWINKLE_STAGGER) }
-                    delay(GLINT_BEAT_MS)
-                }
-            } finally { twinkles = 0; twinkling = false }
-        }
-    }
-    // A spot being pressed, held a moment past the finger so a quick tap still shows (see go() at the tap targets).
-    var pressed by remember { mutableStateOf<PlaceSpot?>(null) }
-    val presses = remember { PlaceSpot.entries.associateWith { MutableInteractionSource() } }
+    // A thing being pressed, held a moment past the finger so a quick tap still shows (see remark() at the tap targets).
+    var pressed by remember { mutableStateOf<PlaceThing?>(null) }
+    val presses = remember { PlaceThing.entries.associateWith { MutableInteractionSource() } }
     LaunchedEffect(presses) {
-        for ((spot, source) in presses) launch {
+        for ((thing, source) in presses) launch {
             source.interactions.collectLatest { i ->
                 when (i) {
-                    is PressInteraction.Press -> pressed = spot
-                    is PressInteraction.Release, is PressInteraction.Cancel -> { delay(PRESS_HELD_MS); if (pressed == spot) pressed = null }
+                    is PressInteraction.Press -> pressed = thing
+                    is PressInteraction.Release, is PressInteraction.Cancel -> { delay(PRESS_HELD_MS); if (pressed == thing) pressed = null }
                 }
             }
         }
+    }
+    // A pat's heart: a small pixel heart that rises from him and fades, one art pixel a beat ([heartStep] 0 until
+    // HEART_STEPS; -1 when there is none), from [heartAt] (place art px, its bottom middle). With animations off it fades
+    // where it appears. Read only when drawing (and by Bert's target's semantics, for tests).
+    var heartStep by remember { mutableIntStateOf(-1) }
+    var heartAt by remember { mutableStateOf(IntOffset.Zero) }
+    var hearts by remember { mutableIntStateOf(0) }
+    LaunchedEffect(hearts) {
+        if (hearts == 0) return@LaunchedEffect
+        try {
+            for (step in 0 until HEART_STEPS) { heartStep = step; delay(HEART_STEP_MS) }
+        } finally { heartStep = -1 }
     }
     // Re-read the clock whenever a pat or a wake ends (tick), so the pose and the window come back on time.
     val clock = if (tick >= 0) System.currentTimeMillis() else 0L
@@ -758,11 +684,11 @@ internal fun BertsPlace(
         Color(bitmap.getPixel(BOARD_PAPER_X + WIDE_SHIFT, BOARD_PAPER_Y)) to Color(bitmap.getPixel(BOARD_PANEL_X + WIDE_SHIFT, BOARD_PANEL_Y))
     }
     // What he says when nobody is patting him: his line for the time of day, or for a newcomer, a hint.
-    val resting = BertLines.hint(slot, firsts, gate = openTrail != null) ?: BertLines.of(slot, today)
+    val resting = BertLines.hint(slot, firsts) ?: BertLines.of(slot, today)
     val line = said ?: resting
 
-    // The first pat ever (or, at night, the first knock on his window) ends his asking for one; once this reply has been
-    // said he moves on to the spots not yet found (BertLines.hint), and his own line comes back when they all have been.
+    // The first pat ever (or, at night, the first knock on his window) ends his asking for one: once this reply has been
+    // said, his own line comes back.
     fun greeted() { if (!firsts.patted) { discovery.patted(); firsts = firsts.copy(patted = true) } }
 
     fun pat() {
@@ -772,6 +698,12 @@ internal fun BertsPlace(
         greeted()
         pats = if (at - lastPat < 4_000) pats + 1 else 1
         lastPat = at
+        // A heart over his head, where his head is now (asleep in the sun, lower down and further along).
+        heartAt = if (slot == BertSlot.NAP) IntOffset(bertX + NAP_HEAD_X, PLACE_NAP_TOP + NAP_HEAD_TOP - 2)
+            else IntOffset(bertX + if (facingLeft) 83 - HEAD_X else HEAD_X, PLACE_FEET_TOP + HEAD_TOP - 2)
+        hearts++
+        // Lifetime pats, kept on the phone: a round number gets its own line, once ever.
+        BertLines.milestones[discovery.pat()]?.let { said = it; patUntil = at + 1_400; saidUntil = at + 3_200; return }
         if (slot == BertSlot.NAP) { said = BertLines.naps[(pats - 1) % BertLines.naps.size]; patUntil = at + 1_600; return }
         said = if (pats >= 5) BertLines.TOO_MANY else BertLines.pats[(pats - 1 + today.dayOfYear) % BertLines.pats.size]
         patUntil = at + 1_400
@@ -808,35 +740,21 @@ internal fun BertsPlace(
             }
             fun px(x: Int, y: Int, c: Color, w: Int = 1, h: Int = 1) = drawRect(c, androidx.compose.ui.geometry.Offset(((x - x0) * k).toFloat(),
                 (y * k).toFloat()), androidx.compose.ui.geometry.Size((w * k).toFloat(), (h * k).toFloat()))
-            // A pressed spot answers the finger: the slate and the board's face catch the light, the gate's pickets jump.
+            // A pressed thing answers the finger: the slate and the board's face catch the light, the gate's pickets jump.
             // Redrawn from the scene itself, so the press is in the same light as everything else.
             fun sceneAt(r: PlaceRect, dy: Int = 0, filter: ColorFilter? = null) = drawImage(scene, srcOffset = IntOffset(r.x + WIDE_SHIFT, r.y),
                 srcSize = IntSize(r.w, r.h), dstOffset = IntOffset((r.x - x0) * k, (r.y + dy) * k), dstSize = IntSize(r.w * k, r.h * k),
                 filterQuality = FilterQuality.None, colorFilter = filter)
             when (pressed) {
-                PlaceSpot.CHALK -> sceneAt(SLATE_FACE, filter = PRESS_LIGHT)
-                PlaceSpot.BOARD -> sceneAt(BOARD_FACE, filter = PRESS_LIGHT)
-                PlaceSpot.GATE -> sceneAt(PICKETS, dy = -2)
-                null -> {}
+                PlaceThing.CHALK -> sceneAt(SLATE_FACE, filter = PRESS_LIGHT)
+                PlaceThing.BOARD -> sceneAt(BOARD_FACE, filter = PRESS_LIGHT)
+                PlaceThing.GATE -> sceneAt(PICKETS, dy = -2)
+                else -> {}
             }
-            // The price, chalked on the slate in art pixels (in cents, as a shopkeeper would); a chalk paw when there
-            // is no price to give. Chalk is never perfectly even.
+            // 0.15: the chalkboard is Bert's own tally of the visit streak, "day" over the count (the price is on the slate
+            // under the garden). Chalk is never perfectly even, and not dimmed by the night beyond its own alpha.
             val chalk = Color(0xFFEDEBE4).copy(alpha = if (time.light) 0.9f else 0.55f)
-            val text = priceUsd?.let { chalkPrice(it) }
-            if (text != null) {
-                val width = ChalkFont.width(text)
-                var cx = SLATE.x + (SLATE.w - width) / 2
-                val cy = SLATE.y + (SLATE.h - ChalkFont.HEIGHT) / 2
-                for (ch in text) {
-                    val glyph = ChalkFont.glyph(ch)
-                    glyph.forEachIndexed { row, bits -> bits.forEachIndexed { col, on ->
-                        if (on == '#') px(cx + col, cy + row, chalk.copy(alpha = chalk.alpha * (if ((cx + col + row) % 5 == 0) 0.7f else 1f)))
-                    } }
-                    cx += glyph[0].length + 1
-                }
-            } else ChalkFont.PAW.forEachIndexed { row, bits -> bits.forEachIndexed { col, on ->
-                if (on == '#') px(SLATE.x + 12 + col, SLATE.y + 8 + row, chalk.copy(alpha = chalk.alpha * 0.7f))
-            } }
+            for (p in chalkboardTally(streak.days)) px(p.x, p.y, chalk.copy(alpha = chalk.alpha * (if ((p.x + p.y) % 5 == 0) 0.7f else 1f)))
             // News: a fresh note pinned over the old ones, a second one behind it when there's more than one. Its paper
             // is the board's own paper in this light, a shade brighter for being new; the pin is Bert's hat red.
             if (newNotes > 0) {
@@ -864,29 +782,6 @@ internal fun BertsPlace(
                 px(pin, NOTE_Y - 1, lit(PIN)); px(pin - 1, NOTE_Y, lit(PIN_SHINE)); px(pin, NOTE_Y, lit(PIN)); px(pin + 1, NOTE_Y, lit(PIN))
                 px(pin, NOTE_Y + 1, lit(PIN_SHADE))
             }
-            // Glints: a four-point star that swells and fades, once a spot when Home comes back; a pressed spot flashes
-            // at its peak.
-            for (spot in order) {
-                val level = if (pressed == spot) GLINT_PEAK else glintOf(twinkles, spot)
-                if (level == 0) continue
-                val a = if (time.light) 0.95f else 0.8f
-                val arm = Color(0xFFFFF6D8)
-                val (gx, gy) = spot.glintX to spot.glintY
-                fun ring(d: Int, alpha: Float) {
-                    val c = (if (d >= 3) GLINT_WARM else arm).copy(alpha = a * alpha)
-                    px(gx - d, gy, c); px(gx + d, gy, c); px(gx, gy - d, c); px(gx, gy + d, c)
-                }
-                fun corners(alpha: Float) {
-                    val c = GLINT_WARM.copy(alpha = a * alpha)
-                    px(gx - 1, gy - 1, c); px(gx + 1, gy - 1, c); px(gx - 1, gy + 1, c); px(gx + 1, gy + 1, c)
-                }
-                when (level) {
-                    1 -> { px(gx, gy, Color.White.copy(alpha = a * 0.8f)); ring(1, 0.35f) }
-                    2 -> { px(gx, gy, Color.White.copy(alpha = a)); ring(1, 1f); ring(2, 0.45f) }
-                    3 -> { px(gx, gy, Color.White.copy(alpha = a)); ring(1, 1f); ring(2, 1f); ring(3, 0.5f); corners(0.35f) }
-                    else -> { px(gx, gy, Color.White.copy(alpha = a)); ring(1, 1f); ring(2, 1f); ring(3, 0.6f); ring(4, 0.3f); corners(0.45f) }
-                }
-            }
             if (slot.bertX != null) {
                 val x = bertX
                 // A soft contact shadow, in pixels, so he stands on the grass rather than over it.
@@ -907,56 +802,67 @@ internal fun BertsPlace(
                     }
                 }
             }
+            // A pat's heart, on the scene's own grid: the hat's red, outlined in the scene's near-black.
+            val step = heartStep
+            if (step >= 0) {
+                val alpha = HEART_FADE[step]
+                val hx = heartAt.x - HEART[0].length / 2
+                val hy = heartAt.y - HEART.size + 1 - if (still) 0 else step
+                HEART.forEachIndexed { row, bits -> bits.forEachIndexed { col, c ->
+                    val colour = when (c) { 'o' -> HEART_OUTLINE; 'r' -> PIN; 's' -> PIN_SHINE; else -> null }
+                    // In his light by day; after dark a little warmer than the light alone would leave it, as the
+                    // board's pin is, or a dark red heart is lost against the blossom at dusk.
+                    if (colour != null) {
+                        val drawn = if (time.light) colour else lerp(time.lit(colour), colour, 0.3f)
+                        drawRect(drawn.copy(alpha = alpha), androidx.compose.ui.geometry.Offset(((hx + col - x0) * k).toFloat(), ((hy + row) * k).toFloat()),
+                            androidx.compose.ui.geometry.Size(k.toFloat(), k.toFloat()), colorFilter = if (time.light) time.filter else null)
+                    }
+                } }
+            }
             }
         }
 
-        // Tap targets, also the TalkBack nodes for what's in the picture.
+        // Tap targets. Bert and, at night, the window are buttons; the things are not (0.15: the garden is for playing
+        // with Bert, not a menu). A tap on a thing gets a word from Bert about it and goes nowhere. They are left out of
+        // TalkBack and the keyboard altogether: a remark about a chalkboard is no use by voice, and Market, the board and
+        // the trail are buttons just below the garden.
         // Where each target goes (placeTargets): where the art is, unless Home's floating You button covers it.
         val minTarget = with(density) { MIN_TARGET.roundToPx() }
-        val naturals = placeNaturals(frame, slot, bertX, gate = openTrail != null)
+        val naturals = placeNaturals(frame, slot, bertX)
         val finals = placeTargets(naturals, overlay, frame.sceneRect, minTarget)
         fun Modifier.at(tag: String): Modifier {
             val p = finals.getValue(tag)
             return this.offset(p.left.dp(), p.top.dp()).size(p.width.dp(), p.height.dp())
         }
-        // A spot is found for good the first time it is tapped (Bert stops hinting at it). The press is drawn in the picture (no ripple box over
-        // the pixels) and held a moment past the tap, so even a quick one is seen to land: Home stays in view under the
-        // board, crossfades out to Market and sits behind the trail's opening, all for longer than the hold.
-        fun found(spot: PlaceSpot) { firsts = discovery.tapped(spot, firsts) }
-        fun go(spot: PlaceSpot, open: () -> Unit) {
-            found(spot)
-            pressed = spot
-            open()
-            scope.launch { delay(PRESS_HELD_MS); if (pressed == spot) pressed = null }
+        // The press is drawn in the picture (no ripple box over the pixels) and held a moment past the tap, so even a
+        // quick one is seen to land. His remarks about each thing take turns, from a different one each day.
+        val remarked = remember { IntArray(PlaceThing.entries.size) }
+        // The chalkboard's first tap in a sitting has him read out his tally (the run and the best); then his remarks.
+        var toldRun by remember { mutableStateOf(false) }
+        // The noticeboard, while it has a fresh note: the first tap says where it is (under the garden).
+        var toldNews by remember(newNotes > 0) { mutableStateOf(false) }
+        fun remark(thing: PlaceThing) {
+            pressed = thing
+            scope.launch { delay(PRESS_HELD_MS); if (pressed == thing) pressed = null }
+            said = if (thing == PlaceThing.CHALK && !toldRun) { toldRun = true; BertLines.streakTold(streak) }
+                else if (thing == PlaceThing.BOARD && newNotes > 0 && !toldNews) { toldNews = true; BertLines.NEWS_BELOW }
+                else { val n = remarked[thing.ordinal]++; thing.remarks[(n + today.dayOfYear) % thing.remarks.size] }
+            saidUntil = System.currentTimeMillis() + 2_800
         }
-        // What each thing is called. Its label's pill leads with the label's word, as Voice Access matches what is said
-        // against what is shown ("tap Price", "tap Play", "tap News"); the thing itself does not, so the two are not one
-        // name twice (no "which one?" from Voice Access). TalkBack still stops on both, the thing and then its pill, as
-        // the pill has to answer to touch-exploration; the two read alike but not the same.
-        fun named(spot: PlaceSpot): String = when (spot) {
-            PlaceSpot.CHALK -> priceUsd?.let { "Chalkboard: BERT ${formatPrice(it)}" } ?: "Chalkboard"
-            PlaceSpot.GATE -> "The garden gate to The Lost Trail"
-            PlaceSpot.BOARD -> if (newNotes > 0) "Noticeboard, $newNotes new" else "Noticeboard: today\u2019s note from Berthalla"
+        // At night he is indoors asleep, so the things have nothing to say (the window is how you reach him).
+        // The cottage and the blossom first, so the smaller things on them, and Bert, take the taps where they meet.
+        // The chalkboard is also read, as plain text, day and night: its tally is the visit streak.
+        for (thing in listOf(PlaceThing.COTTAGE, PlaceThing.BLOSSOM, PlaceThing.BOARD, PlaceThing.GATE, PlaceThing.CHALK)) {
+            if (thing.tag !in finals || (slot.bertX == null && thing != PlaceThing.CHALK)) continue
+            Box(Modifier.at(thing.tag).testTag(thing.tag)
+                .clearAndSetSemantics {
+                    placePressed = pressed == thing
+                    if (thing == PlaceThing.BOARD) placeNews = newNotes > 0
+                    if (thing == PlaceThing.CHALK) { contentDescription = streakSpoken(streak); traversalIndex = 7f }
+                }
+                .focusProperties { canFocus = false }
+                .then(if (slot.bertX != null) Modifier.clickable(interactionSource = presses.getValue(thing), indication = null) { remark(thing) } else Modifier))
         }
-        fun labelled(spot: PlaceSpot): String = when (spot) {
-            PlaceSpot.CHALK -> priceUsd?.let { "Price: chalkboard, BERT ${formatPrice(it)}" } ?: "Price: chalkboard"
-            PlaceSpot.GATE -> "Play: the garden gate to The Lost Trail"
-            PlaceSpot.BOARD -> if (newNotes > 0) "News, $newNotes new: noticeboard" else "News: today\u2019s note from Berthalla"
-        }
-        val actions = mapOf(PlaceSpot.CHALK to "Open Market", PlaceSpot.GATE to "Go through the gate", PlaceSpot.BOARD to "Read the noticeboard")
-        // Reading order across the picture, left to right: the scene, each thing then its label, the window, Bert.
-        fun read(spot: PlaceSpot): Float = 1f + order.indexOf(spot)
-        fun Modifier.spot(spot: PlaceSpot, open: () -> Unit) = this
-            .clickable(interactionSource = presses.getValue(spot), indication = null, role = Role.Button, onClickLabel = actions.getValue(spot)) { go(spot, open) }
-            .semantics {
-                contentDescription = named(spot)
-                traversalIndex = read(spot)
-                placeTwinkle = twinkling
-                placePressed = pressed == spot
-            }
-        Box(Modifier.at("place-board").testTag("place-board").spot(PlaceSpot.BOARD, openBoard).semantics { placeNews = newNotes > 0 })
-        if (openTrail != null) Box(Modifier.at("place-gate").testTag("place-gate").spot(PlaceSpot.GATE, openTrail))
-        Box(Modifier.at("place-tag").testTag("place-tag").spot(PlaceSpot.CHALK, openMarket))
         if (slot == BertSlot.BED) Box(Modifier.at("place-window").testTag("place-window").clickable(role = Role.Button, onClickLabel = "Tap the window") {
             if (!woken) {
                 haptics.performHapticFeedback(HapticFeedbackType.SegmentTick)
@@ -968,101 +874,23 @@ internal fun BertsPlace(
         }.semantics { contentDescription = if (woken) "The cottage window, dark" else "The cottage window, lit"; traversalIndex = 8f })
         if (slot.bertX != null) {
             // Him, with a little room round his sprite. Declared after the things so he sits on top of them: when he stands
-            // in front of the gate or the chalkboard, a tap on him is a pat, not a trip through the gate.
+            // in front of the gate or the chalkboard, a tap on him is a pat, not a word about the gate.
             Box(Modifier.at("place-bert").testTag("place-bert").combinedClickable(role = Role.Button, onClickLabel = "Give Bert a pat",
                 onLongClickLabel = meetBert?.let { "Meet Bert" }, onLongClick = meetBert) { pat() }
                 .semantics { contentDescription = "Bert"; traversalIndex = 9f })
+            // For tests: whether a heart is up, on a node of its own, so Bert's node is not invalidated ten times a pat.
+            Box(Modifier.testTag("place-heart").semantics { placeHeart = heartStep >= 0 })
         }
-        // The labels, declared after Bert so that what you see is what you tap: a label drawn over him takes the taps on
-        // its tag (the pill; its tail and the space round it are his). A tap on a label is a tap on its thing (found,
-        // press and all), through a stock clickable, so cancels, fling-stops and slides off behave as anywhere else. To
-        // TalkBack a pill is its thing too (its name, a button, its action), so touching it to explore reads what it says
-        // and a double-tap does what it does; read right after its thing. Not a keyboard stop: the thing's target is.
-        val fontScale = density.fontScale
-        val baseStyle = androidx.compose.material3.LocalTextStyle.current
-        val labelStyle = remember(baseStyle, fontScale) {
-            baseStyle.copy(color = Cream, fontSize = (LABEL_SP * minOf(fontScale, LABEL_SCALE_MAX) / fontScale).sp,
-                lineHeight = (LABEL_SP * 1.2f * minOf(fontScale, LABEL_SCALE_MAX) / fontScale).sp,
-                fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
-        }
-        val measurer = androidx.compose.ui.text.rememberTextMeasurer()
-        val pad = remember(density) { with(density) { IntSize(LABEL_PAD_X.roundToPx(), LABEL_PAD_Y.roundToPx()) } }
-        val dims = remember(density) { with(density) { LabelDims(LABEL_TAIL.roundToPx(), LABEL_TAIL_HALF.roundToPx(), 2.dp.roundToPx(), 6.dp.roundToPx(), 6.dp.roundToPx()) } }
-        val labels = remember(frame, slot, newNotes, openTrail != null, overlay, finals["place-window"], labelStyle, dims) {
-            placeLabels(labelAnchors(frame, openTrail != null), { labelTexts(it, newNotes) },
-                { text -> measurer.measure(text, labelStyle, maxLines = 1).size.let { IntSize(it.width + 2 * pad.width, it.height + 2 * pad.height) } },
-                frame.sceneRect, labelGround(frame), labelKeepOff(frame, slot, finals["place-window"]) + overlay, dims)
-        }
-        val opens = mapOf(PlaceSpot.CHALK to openMarket, PlaceSpot.BOARD to openBoard) + (openTrail?.let { mapOf(PlaceSpot.GATE to it) } ?: emptyMap())
-        for ((spot, label) in labels) {
-            if (label == null) continue
-            val open = opens[spot] ?: continue
-            key(spot) {
-                PlaceLabelTag(label, labelStyle, dims) { it.dp() }
-                val pill = label.box
-                Box(Modifier.offset(pill.left.dp(), pill.top.dp()).size(pill.width.dp(), pill.height.dp())
-                    .testTag("label-${spot.key}").clearAndSetSemantics {
-                        placeLabelText = label.text
-                        contentDescription = labelled(spot)
-                        role = Role.Button
-                        onClick(actions.getValue(spot)) { go(spot, open); true }
-                        traversalIndex = read(spot) + 0.5f
-                    }
-                    .focusProperties { canFocus = false }
-                    .clickable(interactionSource = presses.getValue(spot), indication = null) { go(spot, open) })
-            }
-        }
-
     }
     }
     // The loam runs on into the page, and Bert's line sits in it as speech (BertSays.kt). At night he's indoors, so the
-    // bubble rises towards the lit window instead of to him.
+    // bubble rises towards the lit window instead of to him; once a knock has woken him (window dark) he is not dreaming.
     val earth = remember(scene) { Color(scene.asAndroidBitmap().getPixel(2, PLACE_H - 1)) }
-    BertSays(line, resting, time, earth, toWindow = slot.bertX == null,
+    // Everything he can say here, so the space under the scene is kept for the tallest and the page never jumps.
+    val reserve = remember(slot, streak, today) { BertLines.sayable(slot, streak, today) }
+    BertSays(line, resting, time, earth, from = when { slot.bertX != null -> BubbleFrom.GARDEN; woken -> BubbleFrom.AWAKE_INDOORS; else -> BubbleFrom.DREAM },
         anchor = slot.walk?.let { (it.first + it.last) / 2 + BERT_MID } ?: slot.bertX?.let { it + BERT_MID } ?: WINDOW_MID,
-        speaker = { if (slot.bertX == null) WINDOW_MID else bertX + BERT_MID })
-    }
-}
-
-// The labels: the You button's family (panel, cream ring, soft shadow), a size smaller. Their text grows with the phone's
-// text size up to LABEL_SCALE_MAX, past which there is no room in the picture for it.
-private const val LABEL_SP = 13f
-private const val LABEL_SCALE_MAX = 1.6f
-private val LABEL_PAD_X = 10.dp
-private val LABEL_PAD_Y = 5.dp
-private val LABEL_TAIL = 6.dp
-private val LABEL_TAIL_HALF = 5.dp
-private const val LABEL_GROUND = 294
-
-/**
- * One label, as drawn: its tag and tail as one shape (so the ring runs round both), the words in the tag, at [label]'s
- * place in the scene's box. Drawing only; its tap is a separate target over the tag.
- */
-@Composable
-private fun PlaceLabelTag(label: PlacedLabel, style: androidx.compose.ui.text.TextStyle, dims: LabelDims, dp: (Int) -> Dp) {
-    val b = label.bounds
-    val box = label.box
-    // Remembered: Home recomposes on every step of Bert's walk, and the tag's outline (a path union) need not be rebuilt.
-    val shape = remember(label, dims) { androidx.compose.foundation.shape.GenericShape { _, _ ->
-        val bx = (box.left - b.left).toFloat(); val by = (box.top - b.top).toFloat()
-        val w = box.width.toFloat(); val h = box.height.toFloat()
-        addRoundRect(androidx.compose.ui.geometry.RoundRect(bx, by, bx + w, by + h, androidx.compose.ui.geometry.CornerRadius(h / 2, h / 2)))
-        val tx = (label.tip.x - b.left).toFloat(); val ty = (label.tip.y - b.top).toFloat()
-        val half = dims.tailHalf.toFloat()
-        val tail = androidx.compose.ui.graphics.Path()
-        when (label.side) {
-            LabelSide.ABOVE -> { tail.moveTo(tx - half, by + h - 1); tail.lineTo(tx, ty); tail.lineTo(tx + half, by + h - 1) }
-            LabelSide.RIGHT -> { tail.moveTo(bx + 1, ty - half); tail.lineTo(tx, ty); tail.lineTo(bx + 1, ty + half) }
-            LabelSide.LEFT -> { tail.moveTo(bx + w - 1, ty - half); tail.lineTo(tx, ty); tail.lineTo(bx + w - 1, ty + half) }
-            LabelSide.OVER -> {}
-        }
-        if (label.side != LabelSide.OVER) { tail.close(); op(this, tail, androidx.compose.ui.graphics.PathOperation.Union) }
-    } }
-    Box(Modifier.offset(dp(b.left), dp(b.top)).size(dp(b.width), dp(b.height)).clearAndSetSemantics {}.shadow(4.dp, shape).background(PanelStrong, shape)
-        .border(1.5.dp, Cream, shape)) {
-        Box(Modifier.offset(dp(box.left - b.left), dp(box.top - b.top)).size(dp(box.width), dp(box.height)), contentAlignment = androidx.compose.ui.Alignment.Center) {
-            androidx.compose.material3.Text(label.text, style = style, maxLines = 1, softWrap = false, modifier = Modifier.clearAndSetSemantics {})
-        }
+        speaker = { if (slot.bertX == null) WINDOW_MID else bertX + BERT_MID }, reserve = reserve)
     }
 }
 
@@ -1071,37 +899,64 @@ private const val BERT_MID = 42
 /** The middle of the cottage window, which speaks for him at night. */
 private val WINDOW_MID = WINDOW.x + WINDOW.w / 2
 
-/** Whether a spot is in the one twinkle pass Home gives everyone when it comes back into view. */
-internal val PlaceTwinkle = androidx.compose.ui.semantics.SemanticsPropertyKey<Boolean>("PlaceTwinkle")
-private var androidx.compose.ui.semantics.SemanticsPropertyReceiver.placeTwinkle by PlaceTwinkle
-/** Whether a spot is showing its press. */
+/** Whether a pat's heart is in the picture (tests read it; TalkBack doesn't). */
+internal val PlaceHeart = androidx.compose.ui.semantics.SemanticsPropertyKey<Boolean>("PlaceHeart")
+private var androidx.compose.ui.semantics.SemanticsPropertyReceiver.placeHeart by PlaceHeart
+/** Whether a thing is showing its press. */
 internal val PlacePressed = androidx.compose.ui.semantics.SemanticsPropertyKey<Boolean>("PlacePressed")
 private var androidx.compose.ui.semantics.SemanticsPropertyReceiver.placePressed by PlacePressed
-/** What a scene label says (tests read it; TalkBack doesn't, the label being visual only). */
-internal val PlaceLabelText = androidx.compose.ui.semantics.SemanticsPropertyKey<String>("PlaceLabelText")
-private var androidx.compose.ui.semantics.SemanticsPropertyReceiver.placeLabelText by PlaceLabelText
 /** Whether the noticeboard has a fresh note pinned on it (unread news). */
 internal val PlaceNews = androidx.compose.ui.semantics.SemanticsPropertyKey<Boolean>("PlaceNews")
 private var androidx.compose.ui.semantics.SemanticsPropertyReceiver.placeNews by PlaceNews
 
-// The glint's swell and fade, one level per 100 ms beat: a dot, a cross, a star, the star at full stretch (held), and
-// back. The pass starts half a second after Home appears, each spot 0.4 s after the last, and is over about two
-// seconds later.
-private val GLINT_FLASH = intArrayOf(1, 2, 3, 4, 4, 3, 2, 1)
-private const val GLINT_PEAK = 4
-/** The star's outer reach is warmer than its core, like light off brass, so it holds against a pale sky too. */
-private val GLINT_WARM = Color(0xFFFFE08A)
-private const val GLINT_BEAT_MS = 100L
-private const val TWINKLE_STAGGER = 4
-private val TWINKLE_BEATS = GLINT_FLASH.size + 2 * TWINKLE_STAGGER
-private const val TWINKLE_DELAY_MS = 500L
-private fun glintLevel(beat: Int): Int = if (beat in GLINT_FLASH.indices) GLINT_FLASH[beat] else 0
-/** Every spot's glint level in one Int, three bits a spot by its ordinal; [level] is given each spot's turn in [order]. */
-private fun packGlints(order: List<PlaceSpot>, level: (Int) -> Int): Int =
-    order.withIndex().fold(0) { acc, (i, spot) -> acc or (level(i) shl (spot.ordinal * 3)) }
-private fun glintOf(packed: Int, spot: PlaceSpot): Int = packed shr (spot.ordinal * 3) and 7
+/**
+ * The chalkboard's tally for [days], as the art pixels its chalk covers (place art px): "day" on the top row and the
+ * count under it, each centred on the slate's face, in [ChalkFont]. Up to 999; past that, "999+".
+ */
+internal fun chalkboardTally(days: Int): List<IntOffset> = buildList {
+    fun row(text: String, top: Int) {
+        var x = SLATE_FACE.x + (SLATE_FACE.w - ChalkFont.width(text) + 1) / 2
+        for (ch in text) {
+            val glyph = ChalkFont.glyph(ch)
+            glyph.forEachIndexed { r, bits -> bits.forEachIndexed { c, on -> if (on == '#') add(IntOffset(x + c, top + r)) } }
+            x += glyph[0].length + 1
+        }
+    }
+    row("day", TALLY_TOP)
+    row(streakShown(days), TALLY_TOP + ChalkFont.HEIGHT + 2)
+}
+/** The tally's top row on the slate: the two rows sit in the middle of its dark face (rows 254 to 273). */
+private const val TALLY_TOP = 256
+/** The slate's face (art px), for the tally's tests. */
+internal val SLATE_FACE_RECT: IntRect get() = IntRect(SLATE_FACE.x, SLATE_FACE.y, SLATE_FACE.x + SLATE_FACE.w, SLATE_FACE.y + SLATE_FACE.h)
 
-/** A hand-made chalk font in art pixels: digits, point, cent and dollar signs, seven rows tall. */
+/** A pat's heart in art pixels: o the scene's outline, r the hat's red, s its shine. */
+private val HEART = listOf(
+    "..oo.oo..",
+    ".orrorro.",
+    "orsrrrrro",
+    "orrrrrrro",
+    ".orrrrro.",
+    "..orrro..",
+    "...oro...",
+    "....o....",
+)
+/** The scene's own outline, as on the gateposts and the board. */
+private val HEART_OUTLINE = Color(0xFF040506)
+/** It rises one art pixel a beat (none with animations off) and fades over the last few: just under a second in all. */
+private val HEART_FADE = floatArrayOf(1f, 1f, 1f, 1f, 1f, 1f, 0.8f, 0.6f, 0.4f, 0.2f)
+private val HEART_STEPS = HEART_FADE.size
+private const val HEART_STEP_MS = 90L
+/** How long Bert's word on a new day of a run stays before his own line comes back, and how long it must be up to count as said. */
+private const val DAY_LINE_MS = 6_000L
+private const val DAY_LINE_SEEN_MS = 2_000L
+/** The top of his hat in an 84 px standing frame (its middle across, facing right), and asleep in the nap frame. */
+private const val HEAD_X = 44
+private const val HEAD_TOP = 2
+private const val NAP_HEAD_X = 56
+private const val NAP_HEAD_TOP = 12
+
+/** A hand-made chalk font in art pixels, seven rows tall: digits, a point, "day" and "+", and a paw. */
 internal object ChalkFont {
     const val HEIGHT = 7
     private val glyphs = mapOf(
@@ -1116,20 +971,17 @@ internal object ChalkFont {
         '8' to listOf(".##.", "#..#", "#..#", ".##.", "#..#", "#..#", ".##."),
         '9' to listOf(".##.", "#..#", "#..#", ".###", "...#", "...#", ".##."),
         '.' to listOf(".", ".", ".", ".", ".", ".", "#"),
-        '\u00a2' to listOf("..#.", ".###", "#.#.", "#.#.", "#.#.", ".###", "..#."),
-        '$' to listOf(".#.", "###", "#..", "###", "..#", "###", ".#."),
+        // 0.15, the tally's word and overflow: the digits' height and stroke; "a" and "y" sit on the x-height.
+        'd' to listOf("...#", "...#", ".###", "#..#", "#..#", "#..#", ".###"),
+        'a' to listOf("....", "....", ".##.", "...#", ".###", "#..#", ".###"),
+        'y' to listOf("....", "....", "#..#", "#..#", ".###", "...#", ".##."),
+        '+' to listOf("...", "...", ".#.", "###", ".#.", "...", "..."),
     )
+    /** A paw print, chalked on the garden widget's slate (BERTPlaceWidget). */
     val PAW = listOf("#...#", ".....", ".#.#.", "#####", ".###.")
     fun glyph(c: Char): List<String> = glyphs[c] ?: glyphs.getValue('.')
     fun width(text: String): Int = text.sumOf { glyph(it)[0].length + 1 } - 1
 }
-
-/** BERT under a dollar is chalked in cents ("1.54¢"); from a dollar up, in dollars ("$1.23"). */
-internal fun chalkPrice(usd: Double): String = if (usd < 1.0) {
-    val cents = usd * 100
-    (if (cents < 0.1) String.format(java.util.Locale.US, "%.3f", cents) else if (cents < 10) String.format(java.util.Locale.US, "%.2f", cents)
-    else String.format(java.util.Locale.US, "%.1f", cents)) + "\u00a2"
-} else String.format(java.util.Locale.US, "$%.2f", usd)
 
 private fun sceneDescription(slot: BertSlot, woken: Boolean): String = when (slot) {
     BertSlot.GATE -> "Morning in Bert’s garden. Bert is out by the gate."

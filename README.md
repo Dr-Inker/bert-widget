@@ -2,7 +2,7 @@
 
 A native BERT app: Bert's garden on Home, an offline platform game, caption cards, market tools, personal holdings, phone themes and home-screen widgets.
 
-Home opens onto **Bert's garden** at the phone's time of day (since 0.12): Bert keeps a routine by the clock, a pat slips his hat, the price is chalked on a board, Berthalla's notes are pinned to a noticeboard and the gate leads to the game. See [the concept](docs/CONCEPT-0.12-BERTS-PLACE.md). Home / Play / Create / Tools (since 0.13) also bring the Flappy Bert tournament, ecosystem links, a local caption-card creator and private saved collection, and app colours, widgets and wallpapers under Tools › Style. Play opens **Super Bert World: The Lost Trail** inside the app: six worlds, touch controls, pause and saved lantern checkpoints, playable offline. See [the mobile integration](docs/MOBILE-GAME-2026-09-09.md) and [session state](docs/NEXT-SESSION.md).
+Home opens onto **Bert's garden** at the phone's time of day (since 0.12): Bert keeps a routine by the clock, a pat slips his hat and pops a heart, the things in the garden get a word from him, and his chalkboard counts the days in a row the app was opened (0.15). Under the garden the price is chalked on a slate and Berthalla's latest note is pinned up on paper; the game is on the Play tab and the "through the gate" card. See [the concept](docs/CONCEPT-0.12-BERTS-PLACE.md). Home / Play / Create / Tools (since 0.13) also bring the Flappy Bert tournament, ecosystem links, a local caption-card creator and private saved collection, and app colours, widgets and wallpapers under Tools › Style. Play opens **Super Bert World: The Lost Trail** inside the app: six worlds, touch controls, pause and saved lantern checkpoints, playable offline. See [the mobile integration](docs/MOBILE-GAME-2026-09-09.md) and [session state](docs/NEXT-SESSION.md).
 
 A separately installable **BERT Preview** can be built with `tools/check-android-preview.sh`. See [the visual review](docs/evidence/2026-09-08/review.html) and [device acceptance journeys](docs/DEVICE-REVIEW.md). This preview is local and debug-signed.
 
@@ -41,7 +41,7 @@ Configuration is available through `PORT`, `UPSTREAM_TIMEOUT_MS`, `FRESH_TTL_MS`
 
 The Android companion app and Jetpack Glance widget provide:
 
-- Bert's garden on Home: six times of day, his routine, the pat, the chalked price and the noticeboard (0.12)
+- Bert's garden on Home: six times of day, his routine, the pat, his remarks and the daily streak on his chalkboard (0.12, 0.15); the price on a slate and the latest note on paper under it (0.15)
 - The BERT brand kit as the app's look (BERT Violet, Outfit, the gradient wordmark), with the original Berthalla
   Navy as an alternative (0.11); Bert's lines in Gochi Hand
 - My Bert: show the Bert NFT you hold from a pasted public address, never a wallet connection (0.10)
@@ -51,8 +51,8 @@ The Android companion app and Jetpack Glance widget provide:
 - Price history for 1H, 6H, 24H, 1W, 1M and 1Y, with a CoinMarketCap link beside the DEX Screener one (0.14). 1Y reaches back about 361 days: GeckoTerminal's free API refuses anything older than about 183 days as a starting point, which also rules out an all-time chart
 - Optional, locally stored BERT holdings in a dedicated position panel
 - Four home-screen widgets: Bert's garden, Bert's day, BERT price (Compact 2×2) and BERT market desk (4×2)
-- A Theme Studio with four phone-wallpaper packs and matching widget palettes (BERT Violet, Mayor Purple, Woofhub
-  Night, Berthalla Nights)
+- A Theme Studio with five phone-wallpaper packs and matching widget palettes (BERT Violet, BERT Navy, Mayor Purple,
+  Woofhub Night, Berthalla Nights)
 
 Each theme pack includes distinct Home and Lock Screen artwork plus a matching widget palette. The Compact widget still fills its lower panel with a genuine price sparkline assembled from validated observations stored on the device. It displays a collecting-history state until two distinct samples exist, retains at most 24 hours and 192 samples, and never invents missing market data. The widget remains informational only: it does not hold keys, connect a wallet, transmit local history or holdings, or execute trades. The signed APK supports Android 8.0 and newer.
 
@@ -75,7 +75,7 @@ The native Android companion app and Jetpack Glance widget live in [`android/`](
 - Quote API: <https://berthalla.io/widget/api/quote>
 - Health endpoint: `GET /healthz` on the private service
 - Android package: `global.bert.widget`
-- Current Android version: `0.12.0` (`versionCode` 27)
+- Current Android version: `0.14.2` (`versionCode` 34)
 - Minimum Android: 8.0 / API 26
 
 Production runs the Node service on loopback behind nginx. The checked-in unit and nginx fragments are in [`deploy/`](./deploy); see [`DEPLOYMENT.md`](./DEPLOYMENT.md) for the release and recovery runbook.

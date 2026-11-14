@@ -6,6 +6,9 @@ import android.graphics.Canvas
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -51,7 +54,7 @@ class BertSaysTest {
             CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, fontScale)) {
                 BERTTheme {
                     Column(Modifier.fillMaxSize().background(Navy)) {
-                        BertsPlace(now, "content", 0.0154, newNotes = 0, openBoard = {}, openMarket = {}, openTrail = {})
+                        BertsPlace(now, "content", newNotes = 0)
                     }
                 }
             }
@@ -65,8 +68,6 @@ class BertSaysTest {
     }
 
     private fun said(): String = compose.onNodeWithTag("place-line").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString()
-    /** The spots a newcomer has still to find (Bert hints at them); none once the first days are over. */
-    private fun untried(): Set<PlaceSpot> = PlaceDiscovery(compose.activity).record(today).let { if (it.showingRound) PlaceSpot.entries.toSet() - it.tapped else emptySet() }
 
     @Test fun theLineIsBertSpeaking() {
         regular()
@@ -89,10 +90,9 @@ class BertSaysTest {
         compose.mainClock.advanceTimeBy(100)
         assertTrue(said() in BertLines.pats)
         compose.mainClock.autoAdvance = true
-        // Once the reply has been said he never asks for the pat again: he moves on to the spots (see
-        // HomeAffordanceTest for the walk through them), and his own line comes back once each has been found.
+        // Once the reply has been said he never asks for the pat again: his own line comes back.
         compose.waitUntil(5_000) { said() != "pat me. i permit it." && said() !in BertLines.pats }
-        assertEquals(PlaceSpot.GATE.hint, said())
+        assertEquals(BertLines.of(BertSlot.ROUNDS, today), said())
         val firsts = PlaceDiscovery(compose.activity).record(today)
         assertTrue(firsts.patted)
     }
@@ -102,9 +102,7 @@ class BertSaysTest {
         BertVisits(compose.activity).record(today.minusDays(3))
         place(10)
         compose.onNodeWithTag("place-line").assertTextEquals(BertLines.of(BertSlot.ROUNDS, today))
-        assertEquals("someone who has been before has nothing left to find", emptySet<PlaceSpot>(), untried())
-        val firsts = PlaceDiscovery(compose.activity).record(today)
-        assertTrue(firsts.patted); assertEquals(PlaceSpot.entries.toSet(), firsts.tapped)
+        assertTrue("someone who has been before is not asked for a pat", PlaceDiscovery(compose.activity).record(today).patted)
     }
 
     @Test fun homeOpenedOnAnEarlierDayAlsoCountsAsBeenBefore() {
@@ -115,7 +113,6 @@ class BertSaysTest {
         BERTHomeVisits(compose.activity).recordOpen(today)
         place(10)
         compose.onNodeWithTag("place-line").assertTextEquals(BertLines.of(BertSlot.ROUNDS, today))
-        assertEquals(emptySet<PlaceSpot>(), untried())
     }
 
     @Test fun aFreshInstallIsStillShownRoundOnItsFirstDay() {
@@ -124,10 +121,9 @@ class BertSaysTest {
         BertVisits(compose.activity).record(today)
         place(10)
         compose.onNodeWithTag("place-line").assertTextEquals("pat me. i permit it.")
-        assertEquals(PlaceSpot.entries.toSet(), untried())
         // And the seeding only ever happens on the first record: day two of a fresh install is still a newcomer's.
         val firsts = PlaceDiscovery(compose.activity).record(today.plusDays(1))
-        assertFalse(firsts.patted); assertTrue(BertLines.hint(BertSlot.ROUNDS, firsts, gate = true) != null)
+        assertFalse(firsts.patted); assertTrue(BertLines.hint(BertSlot.ROUNDS, firsts) != null)
     }
 
     @Test fun aFirstOpenStraightIntoMarketStillGetsShownRoundTheNextDay() {
@@ -137,9 +133,7 @@ class BertSaysTest {
         BERTHomeVisits(compose.activity).recordOpen(today)
         place(10)
         compose.onNodeWithTag("place-line").assertTextEquals("pat me. i permit it.")
-        assertEquals(PlaceSpot.entries.toSet(), untried())
-        val firsts = PlaceDiscovery(compose.activity).record(today)
-        assertFalse(firsts.patted); assertTrue(firsts.tapped.isEmpty())
+        assertFalse(PlaceDiscovery(compose.activity).record(today).patted)
     }
 
     @Test fun atNightTheWindowKnockEndsTheHintLikeAPat() {
@@ -150,62 +144,256 @@ class BertSaysTest {
         compose.mainClock.advanceTimeBy(100)
         compose.onNodeWithTag("place-line").assertTextEquals(BertLines.WOKEN)
         compose.mainClock.autoAdvance = true
-        // Back to sleep, he does not ask for the knock again: he moves on to the spots still to find.
+        // Back to sleep, he does not ask for the knock again: his own line.
         compose.waitUntil(5_000) { said() != BertLines.WOKEN }
-        assertEquals(PlaceSpot.GATE.hint, said())
+        assertEquals(BertLines.of(BertSlot.BED, today), said())
         assertTrue(PlaceDiscovery(compose.activity).record(today).patted)
     }
 
-    @Test fun hintsTakeTurnsAndOnlyForTheFirstDays() {
-        val fresh = PlaceFirsts(1, false, emptySet())
-        assertEquals("pat me. i permit it.", BertLines.hint(BertSlot.ROUNDS, fresh, gate = true))
-        assertEquals("asleep. pats still accepted.", BertLines.hint(BertSlot.NAP, fresh, gate = true))
+    @Test fun heAsksForAPatOnlyUntilPattedAndOnlyForTheFirstDays() {
+        val fresh = PlaceFirsts(1, false)
+        assertEquals("pat me. i permit it.", BertLines.hint(BertSlot.ROUNDS, fresh))
+        assertEquals("asleep. pats still accepted.", BertLines.hint(BertSlot.NAP, fresh))
         // At night he's indoors: no pat to give, so the window.
-        assertEquals("tap the window. i’m a light sleeper.", BertLines.hint(BertSlot.BED, fresh, gate = true))
-        // On later days the hints walk the spots not yet found.
-        assertEquals(PlaceSpot.GATE.hint, BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = 2), gate = true))
-        assertEquals(PlaceSpot.BOARD.hint, BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = 2, tapped = setOf(PlaceSpot.GATE, PlaceSpot.CHALK)), gate = true))
-        assertEquals(PlaceSpot.CHALK.hint, BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = 2), gate = false))
-        assertTrue(BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = FIRST_DAYS), gate = true) != null)
-        assertEquals(null, BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = FIRST_DAYS + 1), gate = true))
-        // Once patted, the next spot not yet tried, whatever the day; with all found, nothing (his own line).
-        val patted = fresh.copy(patted = true)
-        assertEquals(PlaceSpot.GATE.hint, BertLines.hint(BertSlot.ROUNDS, patted, gate = true))
-        assertEquals(PlaceSpot.CHALK.hint, BertLines.hint(BertSlot.BED, patted, gate = false))
-        assertEquals(PlaceSpot.BOARD.hint, BertLines.hint(BertSlot.ROUNDS, patted.copy(days = 3, tapped = setOf(PlaceSpot.GATE, PlaceSpot.CHALK)), gate = true))
-        assertEquals(null, BertLines.hint(BertSlot.ROUNDS, patted.copy(tapped = PlaceSpot.entries.toSet()), gate = true))
+        assertEquals("tap the window. i’m a light sleeper.", BertLines.hint(BertSlot.BED, fresh))
+        assertEquals("pat me. i permit it.", BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = FIRST_DAYS)))
+        assertEquals(null, BertLines.hint(BertSlot.ROUNDS, fresh.copy(days = FIRST_DAYS + 1)))
+        // Once patted, nothing to ask: his own line.
+        for (slot in BertSlot.entries) assertEquals(null, BertLines.hint(slot, fresh.copy(patted = true)))
         // None of them leans on lore: no hat, no hoodie, no mayor.
-        for (h in PlaceSpot.entries.map { it.hint } + BertSlot.entries.mapNotNull { BertLines.hint(it, fresh, gate = true) })
+        for (h in BertSlot.entries.mapNotNull { BertLines.hint(it, fresh) })
             for (lore in listOf("hat", "hoodie", "mayor")) assertFalse("$h: $lore", Regex("\\b$lore\\b").containsMatchIn(h))
     }
 
-    @Test fun eachSpotIsFoundForGoodOnceTapped() {
-        place(10)
-        assertEquals(PlaceSpot.entries.toSet(), untried())
-        compose.onNodeWithTag("place-board").performClick()
-        compose.waitForIdle()
-        assertEquals(setOf(PlaceSpot.GATE, PlaceSpot.CHALK), untried())
-        // Kept: the next visit finds the board already known.
-        assertEquals(setOf(PlaceSpot.BOARD), PlaceDiscovery(compose.activity).record(today).tapped)
+    /**
+     * Lifetime pats, kept in bert_place on the phone: counted one by one across sittings, and each milestone (10, 50,
+     * 100, 500, 1000) is reached exactly once.
+     */
+    @Test fun patsAreCountedForGoodAndEachMilestoneComesOnce() {
+        val fired = mutableListOf<Int>()
+        repeat(600) { PlaceDiscovery(compose.activity).pat().let { n -> if (BertLines.milestones[n] != null) fired += n } }
+        // A new sitting reads the same count.
+        assertEquals(600, PlaceDiscovery(compose.activity).pats)
+        repeat(600) { PlaceDiscovery(compose.activity).pat().let { n -> if (BertLines.milestones[n] != null) fired += n } }
+        assertEquals(listOf(10, 50, 100, 500, 1000), fired)
+        assertEquals(1200, PlaceDiscovery(compose.activity).pats)
+        // Kept with the rest of the place, and never sent anywhere: a plain int in bert_place.
+        assertEquals(1200, compose.activity.getSharedPreferences("bert_place", android.content.Context.MODE_PRIVATE).getInt("pats_ever", -1))
+    }
+
+    /** His words about the things: lowercase and dry, nothing to buy or sell, no price but his own chalk. */
+    @Test fun hisRemarksAreInHisVoice() {
+        val all = PlaceThing.entries.flatMap { it.remarks } + BertLines.milestones.values
+        assertEquals("every remark is his own", all.size, all.toSet().size)
+        for (r in all) {
+            assertEquals("$r: lowercase", r.lowercase(), r)
+            assertFalse("$r: no exclamation", '!' in r)
+            assertFalse("$r: no dollars or cents", '\$' in r || '\u00a2' in r)
+            for (word in listOf("price", "buy", "sell", "token", "coin", "invest", "moon", "pump", "money", "ai", "bot", "mascot"))
+                assertFalse("$r: $word", Regex("\\b$word\\b").containsMatchIn(r))
+        }
+        for (thing in PlaceThing.entries) assertTrue("${thing.tag}: two or three lines", thing.remarks.size in 2..3)
     }
 
     @Test fun theShowingRoundStopsAfterTheFirstDaysAnyway() {
         val discovery = PlaceDiscovery(compose.activity)
         for (d in FIRST_DAYS downTo 1) discovery.record(today.minusDays(d.toLong()))
         place(10)
-        assertEquals("still shown round on day ${FIRST_DAYS + 1}", emptySet<PlaceSpot>(), untried())
+        assertFalse("still shown round on day ${FIRST_DAYS + 1}", discovery.record(today).showingRound)
         compose.onNodeWithTag("place-line").assertTextEquals(BertLines.of(BertSlot.ROUNDS, today))
         // Days are counted once each: coming back later today doesn't count again.
         assertEquals(FIRST_DAYS + 1, discovery.record(today).days)
     }
 
-    @Test fun everyLineFitsAtLargeText() {
-        var line by mutableStateOf(BertLines.every.first())
+    /** Home keeps its scroll: with the garden scrolled away he does not spend the day's word; he says it once it is back in view. */
+    @Test fun theDaysWordWaitsUntilTheGardenIsInView() {
+        regular()
+        val discovery = PlaceDiscovery(compose.activity)
+        for (d in 6 downTo 0) discovery.visit(today.minusDays(d.toLong()))
+        val away = androidx.compose.runtime.mutableStateOf(true)
+        val now = at(10)
+        compose.mainClock.autoAdvance = false
+        compose.setContent { BERTTheme { Column(Modifier.fillMaxSize().background(Navy)) { BertsPlace(now, "content", newNotes = 0, skyCovered = away.value) } } }
+        compose.mainClock.advanceTimeBy(7_000)
+        compose.waitForIdle()
+        assertEquals("his own line while nobody can see him", BertLines.of(BertSlot.ROUNDS, today), said())
+        assertEquals("and the day's word is not spent", null, discovery.daySaidOn())
+        compose.runOnIdle { away.value = false }
+        compose.mainClock.advanceTimeBy(300)
+        compose.waitForIdle()
+        assertEquals(BertLines.streakDays.getValue(7), said())
+        compose.mainClock.advanceTimeBy(7_000)
+        compose.waitForIdle()
+        assertEquals(today, discovery.daySaidOn())
+        compose.mainClock.autoAdvance = true
+    }
+
+    /**
+     * A run of six days before today, and the app opened today (counted by the app, not by the garden): day seven. Home
+     * on screen has Bert say so; once it has been up long enough to be read it counts as said, and his own line comes back.
+     */
+    @Test fun theFirstHomeOnANewDayGetsBertsWordOnIt() {
+        regular()
+        val discovery = PlaceDiscovery(compose.activity)
+        for (d in 6 downTo 0) discovery.visit(today.minusDays(d.toLong()))
+        compose.mainClock.autoAdvance = false
+        place(10)
+        compose.mainClock.advanceTimeByFrame()
+        compose.waitForIdle()
+        assertEquals(BertLines.streakDays.getValue(7), said())
+        assertEquals("not said until it has been up a moment", null, discovery.daySaidOn())
+        compose.mainClock.advanceTimeBy(7_000)
+        compose.waitForIdle()
+        assertEquals(today, discovery.daySaidOn())
+        assertEquals(BertLines.of(BertSlot.ROUNDS, today), said())
+        compose.mainClock.autoAdvance = true
+        // The garden counts nothing itself: the stored run is the app's.
+        assertEquals(VisitStreak(7, 7, today), discovery.streak())
+    }
+
+    /** Sent away before the line was read: he says it again on coming back, and then it counts. */
+    @Test fun aLineCutShortIsSaidAgain() {
+        regular()
+        val discovery = PlaceDiscovery(compose.activity)
+        for (d in 2 downTo 0) discovery.visit(today.minusDays(d.toLong()))
+        compose.mainClock.autoAdvance = false
+        place(10)
+        compose.mainClock.advanceTimeBy(500)
+        assertEquals(BertLines.streakDays.getValue(3), said())
+        // Away before it was read (the screen off, another app; a rotation stops Home the same way).
+        compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.CREATED)
+        compose.mainClock.advanceTimeBy(500)
+        assertEquals("not counted as said", null, discovery.daySaidOn())
+        compose.mainClock.advanceTimeBy(7_000)
+        compose.activityRule.scenario.moveToState(androidx.lifecycle.Lifecycle.State.RESUMED)
+        compose.mainClock.advanceTimeByFrame()
+        compose.waitForIdle()
+        assertEquals("said again on coming back", BertLines.streakDays.getValue(3), said())
+        compose.mainClock.advanceTimeBy(3_000)
+        assertEquals(today, discovery.daySaidOn())
+        compose.mainClock.autoAdvance = true
+    }
+
+    @Test fun aRunThatStartsAgainIsWelcomed() {
+        regular()
+        PlaceDiscovery(compose.activity).apply { visit(today.minusDays(9)); visit(today.minusDays(8)); visit(today.minusDays(3)) }
+        place(10)
+        compose.waitForIdle()
+        assertTrue(said(), said() in BertLines.streakBack)
+        assertEquals(VisitStreak(1, 2, today), PlaceDiscovery(compose.activity).streakOn(today).streak)
+    }
+
+    /** The very first open: the newcomer's ask for a pat, not a word about day one. */
+    @Test fun theFirstOpenEverIsTheNewcomersHint() {
+        PlaceDiscovery(compose.activity).visit(today)
+        place(10)
+        compose.waitForIdle()
+        assertEquals("pat me. i permit it.", said())
+        assertEquals(StreakStep(VisitStreak(1, 1, today), StreakChange.FIRST), PlaceDiscovery(compose.activity).streakOn(today))
+    }
+
+    /** An install from before 0.15 has a day count but no streak and no paw prints this month: it starts at one. */
+    @Test fun anOlderInstallStartsItsRunAtOne() {
+        val discovery = PlaceDiscovery(compose.activity)
+        for (d in 40 downTo 1) discovery.record(today.minusDays(d.toLong()))
+        assertEquals(null, discovery.streak())
+        assertEquals(VisitStreak(1, 1, today), discovery.visit(today).streak)
+    }
+
+    /** An upgrader whose paw prints show days in a row ending yesterday starts on that run, today counted in. */
+    @Test fun anUpgraderWithPawPrintsKeepsTheirRun() {
+        val day = LocalDate.of(2026, 11, 14)
+        BertVisits(compose.activity).apply { for (d in listOf(3, 10, 11, 12, 13)) record(day.withDayOfMonth(d)) }
+        val step = PlaceDiscovery(compose.activity).visit(day)
+        assertEquals(StreakStep(VisitStreak(5, 5, day), StreakChange.FIRST), step)
+        assertEquals(VisitStreak(5, 5, day), PlaceDiscovery(compose.activity).streak())
+        // And it goes on from there.
+        assertEquals(VisitStreak(6, 6, day.plusDays(1)), PlaceDiscovery(compose.activity).visit(day.plusDays(1)).streak)
+    }
+
+    /** The newcomer day count no longer freezes when the clock was set forward and comes back. */
+    @Test fun theNewcomerDaysGoOnAfterAClockSetForward() {
+        val discovery = PlaceDiscovery(compose.activity)
+        discovery.record(today.minusDays(2))
+        assertEquals(2, discovery.record(today.plusDays(30)).days)
+        assertEquals("back to today: nothing counted, nothing lost", 2, discovery.record(today).days)
+        assertEquals("the next day counts again", 3, discovery.record(today.plusDays(1)).days)
+    }
+
+    private fun bubble(line: () -> String, font: () -> Float, reserve: List<String>) {
         compose.setContent {
-            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, 1.3f)) {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, font())) {
                 BERTTheme {
                     Column(Modifier.fillMaxSize().background(Navy)) {
-                        BertSays(line, line, PlaceTime.DAY, androidx.compose.ui.graphics.Color(0xFF704A26), toWindow = false, anchor = 82, speaker = { 82 })
+                        BertSays(line(), BertLines.of(BertSlot.ROUNDS, today), PlaceTime.DAY, androidx.compose.ui.graphics.Color(0xFF704A26),
+                            from = BubbleFrom.GARDEN, anchor = 82, speaker = { 82 }, reserve = reserve)
+                        androidx.compose.foundation.layout.Box(Modifier.fillMaxWidth().height(10.dp).testTag("below"))
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * S3: whatever he says, the page under his bubble (the slate, the note) stays where it is: the bubble's space is kept
+     * for the tallest thing he can say, at every text size. Every line he can say by day, one after another, at 1.0, 1.3
+     * and 2.0.
+     */
+    private val LONGER_THAN_HIS = "the hedge, the gate, the board, the lawn and the cottage have all been told, twice, and the daisies after them."
+    private fun nothingUnderTheBubbleMoves() {
+        var line by mutableStateOf(BertLines.of(BertSlot.ROUNDS, today))
+        var font by mutableStateOf(1f)
+        // With one line longer than any of his, so the check still goes red if the reserve stops working (LONGER_THAN_HIS
+        // moves the page without it: withoutTheReserveALongLineMovesThePage).
+        val reserve = BertLines.sayable(BertSlot.ROUNDS, VisitStreak(998, 999, today), today) + LONGER_THAN_HIS
+        bubble({ line }, { font }, reserve)
+        for (f in listOf(1f, 1.3f, 2f)) {
+            compose.runOnIdle { font = f; line = BertLines.of(BertSlot.ROUNDS, today) }
+            compose.waitForIdle()
+            val rest = compose.onNodeWithTag("below").getUnclippedBoundsInRoot().top
+            for (each in reserve) {
+                compose.runOnIdle { line = each }
+                compose.waitForIdle()
+                assertEquals("\"$each\" at x$f moved the page", rest, compose.onNodeWithTag("below").getUnclippedBoundsInRoot().top)
+            }
+        }
+    }
+
+    @Test fun nothingUnderTheBubbleMovesAt360() = nothingUnderTheBubbleMoves()
+    @Test @Config(qualifiers = "w320dp-h640dp-xxhdpi") fun nothingUnderTheBubbleMovesAt320() = nothingUnderTheBubbleMoves()
+    @Test @Config(qualifiers = "w412dp-h915dp-420dpi") fun nothingUnderTheBubbleMovesAt412() = nothingUnderTheBubbleMoves()
+
+    /**
+     * The check above can fail: without the reserve, a line longer than the resting one is taller than the space the
+     * resting line keeps, and the page moves. (His own lines are short enough that the fade's height absorbs nearly all
+     * of them, so this uses one longer than anything he says.)
+     */
+    @Test @Config(qualifiers = "w412dp-h915dp-420dpi") fun withoutTheReserveALongLineMovesThePage() = withoutTheReserve()
+    private fun withoutTheReserve() {
+        var line by mutableStateOf(BertLines.of(BertSlot.ROUNDS, today))
+        var font by mutableStateOf(1f)
+        bubble({ line }, { font }, emptyList())
+        val moved = mutableListOf<String>()
+        for (f in listOf(1f, 1.3f, 2f)) {
+            compose.runOnIdle { font = f; line = BertLines.of(BertSlot.ROUNDS, today) }
+            compose.waitForIdle()
+            val rest = compose.onNodeWithTag("below").getUnclippedBoundsInRoot().top
+            for (each in listOf(LONGER_THAN_HIS)) {
+                compose.runOnIdle { line = each }
+                compose.waitForIdle()
+                if (compose.onNodeWithTag("below").getUnclippedBoundsInRoot().top != rest) moved += "x$f \"$each\""
+            }
+        }
+        assertTrue("a long line did not move the page without the reserve", moved.isNotEmpty())
+    }
+
+    private fun everyLineFits(font: Float, maxLines: Int) {
+        var line by mutableStateOf(BertLines.every.first())
+        compose.setContent {
+            CompositionLocalProvider(LocalDensity provides Density(LocalDensity.current.density, font)) {
+                BERTTheme {
+                    Column(Modifier.fillMaxSize().background(Navy)) {
+                        BertSays(line, line, PlaceTime.DAY, androidx.compose.ui.graphics.Color(0xFF704A26), from = BubbleFrom.GARDEN, anchor = 82, speaker = { 82 })
                     }
                 }
             }
@@ -217,30 +405,34 @@ class BertSaysTest {
             compose.onNodeWithText(each, useUnmergedTree = true).performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layout) }
             val result = layout.single()
             // MultiParagraph.width is the offered width, not the wrapped one, so check each line's own extent instead.
-            for (n in 0 until result.lineCount) assertTrue("\"$each\" line $n is clipped",
+            for (n in 0 until result.lineCount) assertTrue("\"$each\" line $n is clipped at x$font",
                 result.getLineLeft(n) >= -0.5f && result.getLineRight(n) <= result.size.width + 0.5f && result.getLineBottom(n) <= result.size.height + 0.5f)
-            assertTrue("\"$each\" takes ${result.lineCount} lines", result.lineCount <= 3)
+            assertTrue("\"$each\" takes ${result.lineCount} lines at x$font", result.lineCount <= maxLines)
             val words = compose.onNodeWithText(each, useUnmergedTree = true).getUnclippedBoundsInRoot()
-            assertTrue("\"$each\" runs off the page", words.left >= 16.dp && words.right <= root.right - 16.dp)
+            assertTrue("\"$each\" runs off the page at x$font", words.left >= 16.dp && words.right <= root.right - 16.dp)
         }
     }
+
+    @Test fun everyLineFitsAtLargeText() = everyLineFits(1.3f, 3)
+    @Test @Config(qualifiers = "w320dp-h640dp-xxhdpi") fun everyLineFitsAtLargeTextAt320() = everyLineFits(1.3f, 3)
+    @Test @Config(qualifiers = "w320dp-h640dp-xxhdpi") fun everyLineFitsAtTheLargestTextAt320() = everyLineFits(2f, 4)
 
     @Test fun theBubbleIsBuiltOnceUntilItsShapeChanges() {
         val cache = BubbleCache()
         val day = BubbleTone.of(PlaceTime.DAY)
-        val first = cache.get(80, 20, 30, toWindow = false, tone = day)
+        val first = cache.get(80, 20, 30, from = BubbleFrom.GARDEN, tone = day)
         // Drawn again with nothing changed (another frame, a glint elsewhere): the same bitmap, not a new one.
-        assertTrue(first === cache.get(80, 20, 30, toWindow = false, tone = BubbleTone.of(PlaceTime.DAY)))
+        assertTrue(first === cache.get(80, 20, 30, from = BubbleFrom.GARDEN, tone = BubbleTone.of(PlaceTime.DAY)))
         // Bert takes a step: the tail moves, so the picture is new.
-        val stepped = cache.get(80, 20, 32, toWindow = false, tone = day)
+        val stepped = cache.get(80, 20, 32, from = BubbleFrom.GARDEN, tone = day)
         assertFalse(stepped === first)
         // Past the corner the tail is clamped, so further steps draw the same bubble.
-        val clamped = cache.get(80, 20, 200, toWindow = false, tone = day)
-        assertTrue(clamped === cache.get(80, 20, 240, toWindow = false, tone = day))
+        val clamped = cache.get(80, 20, 200, from = BubbleFrom.GARDEN, tone = day)
+        assertTrue(clamped === cache.get(80, 20, 240, from = BubbleFrom.GARDEN, tone = day))
         // The light changing, the words resizing it, or night's puffs each make a new one.
-        assertFalse(clamped === cache.get(80, 20, 240, toWindow = false, tone = BubbleTone.of(PlaceTime.DUSK)))
-        assertFalse(cache.get(80, 20, 240, toWindow = false, tone = day) === cache.get(80, 26, 240, toWindow = false, tone = day))
-        assertFalse(cache.get(80, 26, 240, toWindow = false, tone = day) === cache.get(80, 26, 240, toWindow = true, tone = day))
+        assertFalse(clamped === cache.get(80, 20, 240, from = BubbleFrom.GARDEN, tone = BubbleTone.of(PlaceTime.DUSK)))
+        assertFalse(cache.get(80, 20, 240, from = BubbleFrom.GARDEN, tone = day) === cache.get(80, 26, 240, from = BubbleFrom.GARDEN, tone = day))
+        assertFalse(cache.get(80, 26, 240, from = BubbleFrom.GARDEN, tone = day) === cache.get(80, 26, 240, from = BubbleFrom.DREAM, tone = day))
     }
 
     @Test fun theTailKeepsTheSpaceForTheTallerLine() {
@@ -250,7 +442,7 @@ class BertSaysTest {
             BERTTheme {
                 Column(Modifier.fillMaxSize().background(Navy)) {
                     BertSays(line, "rounds. every post, every corner, every smell that matters.", PlaceTime.DAY,
-                        androidx.compose.ui.graphics.Color(0xFF704A26), toWindow = false, anchor = 82, speaker = { 82 })
+                        androidx.compose.ui.graphics.Color(0xFF704A26), from = BubbleFrom.GARDEN, anchor = 82, speaker = { 82 })
                 }
             }
         }
@@ -270,7 +462,7 @@ class BertSaysTest {
 
 /**
  * Home with the bubble, at the times of day and widths that matter, for review by eye: the join, the bubble against
- * each light, and the page underneath. Review fixtures only.
+ * each light, and the page underneath. Review fixtures only: build.gradle.kts keeps them out of the gate, -Pshots runs them.
  */
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [35], application = Application::class, qualifiers = "w360dp-h800dp-xxhdpi")

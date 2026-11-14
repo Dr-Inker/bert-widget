@@ -1,6 +1,227 @@
 # Next session — BERT app
 
-## START HERE (memo 30 October 2026): 0.14.0 rc2 staged at `30847cb` (website `c118bcb`); owed: owner "run it", Play upload, GitHub squash, platformer ff
+## START HERE (memo 14 November 2026, evening): 0.15.0 is LIVE on berthalla.io; Play upload and the community note are the owner's
+
+**Live.** The owner tried the preview ("just downloaded it and its pretty good") and then said "Run it and push".
+0.15.0 (35), built from `e135215` (gate PASS, 490 tests), is on berthalla.io: site `c4ceb5b`, APK `6fe4c8b2…` under
+both names, `release.json` 0.15.0, `check-page.cjs public` passes. The AAB (`9ce41d4b…`), mapping, six screenshots and
+`LISTING-0.15.0.md` are on the PC in `Android Builds\BERT-Play\`. GitHub `main` has the squash. Record:
+`docs/evidence/2026-11-14/release-0.15.0/README.md`. Rollback: `git -C /opt/berthalla reset --hard e023e2d`, then
+`scripts/deploy_website_vultr.sh`.
+
+**Owed by the owner.** The Play upload of 0.15.0 (first since 0.12.0; "What's new" is in the record). One note to the
+community: 0.14.0 installs have no update check. Whether the 12 November critique goes in the public repository (it
+is kept out: `/opt/bert-widget-qa/private/CRITIQUE-2026-11-12.md`). A contact email for the privacy page and Play.
+
+**Not done by anyone.** A device check with adb: TalkBack, One UI widget cells, large text. The last small fix round
+(`e135215`) has the gate and its tests behind it and no further reviewer.
+
+**Next, same direction.** A purpose-drawn themed (monochrome) icon; the garden backgrounds redrawn on Bert's pixel
+grid; Tools and Alerts panels in slate and paper; tap-the-lawn-and-he-walks, if it can be made solid.
+
+What follows is the day's working record, kept for the detail.
+
+**State before 0.15.** The website served **0.14.2 (34)** (live 14 Nov, site `e023e2d`). The owner is **skipping 0.14.2 on Play and
+in the community** and waiting for 0.15: the next Play upload and the next announcement are 0.15.0. 0.14.0 installs
+have no update check, so they need telling once when 0.15 ships.
+
+**0.15.0 (35)**, branch `v015`, worktree `/opt/bert-widget-v015` (same commits on `v015-quiet`,
+`/opt/bert-widget-v015-quiet`, which holds the build outputs), on 0.14.2 (`d0cd0ec`). Two rounds, both the owner's:
+
+*Round 1, "slate and paper"* (owner: "is that the best you can do?", then "happy for you to take the lead" on mockups
+`/opt/bert-widget-qa/look-0.15/home.png`, `widgets.png`). Rule of the look: numbers are chalked on slate; Bert's words
+are on paper in his hand.
+- **Home** (`SlateAndPaper.kt`): under the garden, the price on a framed chalk slate (opens Market) and Berthalla's
+  note pinned on paper (opens the board), on the scene's pixel grid, lit by the time of day.
+- **Bert's day widget** (`widget/BertNote.kt`): a paper note, pixel Bert acting the mood at whole-number scale, all
+  words drawn as bitmaps with content descriptions, the event on a small slate. No photo, no theme-pack colours.
+- **Not in:** the themed (monochrome) launcher icon; built and taken out (a hat with an eye, not Bert).
+
+*Round 2, the garden is for Bert* (owner: "is it still worth having the clickable things in the garden now?", "I'd
+like the garden area more to be a Bert tapping area", "a daily app opening streak", then "sounds good" to the plan).
+- **Navigation left the garden.** No label pills, no glints; the chalkboard, gate and noticeboard open nothing.
+  Market is the slate, the board is the note, the game is the Play tab and the "through the gate" card.
+- **Bert is what you tap.** A pat pops a pixel heart; tapping the chalkboard, gate, noticeboard, cottage or blossom
+  gets a remark; lifetime pats are counted on the phone with lines at 10/50/100/500/1000. Tap-the-lawn-and-he-walks
+  was left out (it fought the rounds and evening-walk logic).
+- **Daily streak** (`VisitStreak.kt`): days in a row the app was opened, any way in (counted in `BERTApp` on STARTED
+  and when the date turns); a missed day restarts at 1, the best is kept; a clock set forward re-anchors; upgraders
+  are seeded from this month's paw prints. Shown as "day N" chalked on the garden's chalkboard, **which no longer
+  shows the price** (lead's call: a lawn sign floated at the wrong scale; the owner has seen the picture and was told
+  the price moved). Bert says a day line once, on the first Home of the day; lines at 3/7/14/30/50/100/200/365; a kind
+  one after a gap. No notifications, nothing sent. The You page shows the run.
+- Reviews (Opus, xhigh, fresh context), both rounds: round 1, 0 must-fix; round 2, 1 must-fix (the streak counted Home
+  shown, not app opens) and 9 should-fix, all applied in `4264899`; the lead then found and fixed an overnight-in-Recents
+  miss (`b1db359`). A fresh verifier on the fix round: 0 must-fix, 4 should-fix, applied in `6e71e0b` (a clock put
+  right keeps the run via an anchor day; a day in the game counts; the day's word waits for the garden to be in view;
+  the You page says "Opening streak: …" because paw prints count garden days and the run counts app opens).
+  `6e71e0b` itself was written and tested by the lead and has not had another reviewer.
+- Gate `tools/check-mobile-game.sh` PASS at `6e71e0b`: 488 unit tests, 0 failures, lint, debug build, Lost Trail
+  check. Log `/opt/bert-widget-qa/look-0.15/gate-6e71e0b.log` (exit file beside it).
+- Preview: `/opt/bert-widget-qa/preview-0.14/bert-0.15.0-preview-6e71e0b.apk` (sha256 `dda78ab1…71e46`, Preview key,
+  `check-preview-apk.py` exit 0), on the PC in `C:\Users\Sjpch\BERT-Preview\` and sent to the owner's phone. Renders:
+  `/opt/bert-widget-qa/look-0.15/home-renders-quiet/`. The S25 was not on adb.
+
+**Next.**
+1. Owner's look at the preview. Things only a phone shows: the widget on One UI (cell sizes, corner clipping,
+   TalkBack), the slate and note under a real status bar, large text.
+2. Then the release recipe, as `docs/evidence/2026-11-14/release-0.14.2/` did it: new `release-0.15.0/` (`stage.py`
+   with VERSION 0.15.0, CODE 35, PREVIOUS 0.14.2; `check-apk.py` must drop the "On the board: " string and the
+   `bert_widget_portrait`/`banner`/`glow` drawables and look for the note instead), store screenshots and
+   `docs/play/LISTING.md` (line 20 and README lines 5 and 44 still say the price is chalked on the garden board and
+   the gate leads to the game), website copy and screens (the site still says theme packs have "matching widget
+   colours": Bert's day no longer changes with them), one new bullet on the website privacy page under what stays on
+   the phone ("The days you've opened the app (Bert's paw prints and visit streak) and how many times you've patted
+   Bert."), deploy with `scripts/deploy_website_vultr.sh` (dry run first), AAB and
+   mapping to the PC Play folder.
+3. The GitHub squash: done with the release; the 12 November critique is kept out of the public repository.
+
+**Known and left.** Home A puts the Lost Trail picture below the fold. A post that starts with a very long word or
+a link falls to the widget's last rung. At 2x1 sizes pixel Bert is small. The widget's slate is a smooth rounded
+shape, not pixel art like Home's. At 320 dp wide "day N" on the chalkboard is too small to read (his line and
+TalkBack carry it). At text size 2.0 the bubble keeps one spare line of room under it. The You page's run is not
+refreshed if the page is left open across midnight. The streak and pat count do not travel to a new phone (no backup, by design). The home-screen
+garden widget's chalkboard still chalks a paw, not the streak. `home-slate-mybert` crashes the shots JVM
+("Class not found: java/nio/DoubleBuffer"); the gate does not run shots. Later, same direction: garden backgrounds
+redrawn on Bert's pixel grid; Tools and Alerts panels in slate and paper.
+
+## START HERE (memo 13 November 2026): harsh critique done; 0.14.2 built and gated on `v0141`; nothing is live
+
+The owner asked for a harsh critique of the app (12 Nov). It is the 12 November critique (kept out of the public repository): four critics (product,
+art, code and tests, security and privacy), each claim checked by a sceptic; 39 claims, 10 confirmed, 28 corrected,
+0 wrong. The owner's reply: **leave the woofhub.com and bert.global links and their "official" labels alone**,
+**the Moonlight art is fine**, and take the lead on the rest.
+
+Done (nothing is live, nothing pushed):
+- **0.14.2 (34)** on `v0141`, worktree `/opt/bert-widget-v0141`, 13 commits `5108e50`..`4bf8db9` on `3191f75`.
+  - Style opens with the home-screen widgets; Home's checklist step lands on them; Back from a screen that You
+    opened returns to You.
+  - Home: a plain price line with its freshness that opens Market; the note's first line on the board row; offline
+    is told apart from "no post"; Meet Bert says BERT is a community coin on Solana; the Price and Play labels keep
+    off Bert's whole sprite.
+  - Market: 24H uses the quote's own figure, so the header and the chart agree; a short history says what it covers.
+  - Widgets: the Market widget fits at 240x120 with large text; Bert's day keeps the post at small sizes; a
+    "Show my holdings on the Market widget" switch (on by default); widgets are pushed when the app leaves the
+    screen, not every minute.
+  - Engineering: the open app's data lives in a ViewModel (rotation keeps it and fetches nothing); the background
+    worker, its schedule and the real widget render are tested; a dispatch read in the app is not announced again;
+    tests that could not fail now can; the capture-only tests run only with `-Pshots`.
+  - The caption card is set in Outfit. An install from the website reads `berthalla.io/widget/release.json` at most
+    once a day and says "BERT x.y.z is out" (Home row, About line); a Play install never asks and shows nothing.
+  - The Lost Trail picture is drawn at whole pixels and fills the column: `trailFit` picks the window (gate through
+    volcano on a 1080 px phone; the castle is in only where it fits whole).
+  - Play kit: six screenshots in `docs/play/screenshots/` (new `0-widgets.png` first), cut between sections;
+    `LISTING.md` is current for 0.14.2, says BERT is a crypto token, and leaves "processed ephemerally" unticked.
+  - Review: one independent whole-diff review (Opus, xhigh): 0 must-fix, 5 should-fix, all fixed (`955e026`..`2fda133`).
+  - Gate `tools/check-mobile-game.sh` PASS at `4bf8db9`: Node 15/15, 416 unit tests (0 failures), lint, debug build,
+    Lost Trail browser check on bundle `92365c59…`. Log: `/opt/bert-widget-qa/release-0.14.2/gate-4bf8db9.log`.
+  - Preview for the S25: `/opt/bert-widget-qa/preview-0.14/bert-0.14.2-preview-4bf8db9.apk` (sha256 `e1936998…`,
+    re-signed with the Preview key `5c1f4ef8…`, `check-preview-apk.py` PASS). Not installed, not on the PC.
+- **Website** in `/opt/bert-widget-site-release` (the live site moved to the Vultr server on 6 Nov; this host's SSH
+  to it was refused for the agent, so the deploy is the owner's):
+  - `site-0.14.0-fixes` at `05f172b`: the 4 Nov fixes rebased onto `ce53baf`, plus the privacy page naming Berthalla
+    as the maker and dropping the "collects nothing from anyone" contradiction (effective 13 Nov). Suite 959/39.
+  - `site-0.14.2-privacy` on top: one line in the privacy page's fetch table for the once-a-day update check.
+    Deploy it with 0.14.2, not before.
+
+**Update 14 November 2026:** the owner confirmed the agent has access to the Vultr server. `site-0.14.0-fixes` is
+live: `/opt/berthalla` fast-forwarded to `05f172b`, `scripts/deploy_website_vultr.sh` dry-run then real (4 files,
+nothing deleted); live bytes match the repo and https://berthalla.io/app/privacy/ is styled with no console errors.
+Item 1 below is done. The 0.14.2 preview is on the PC in `C:\Users\Sjpch\BERT-Preview\` (sha256 matches); the S25
+was not attached. The PC's Play folder is `C:\Users\Sjpch\Android Builds\BERT-Play`.
+
+**0.14.2 (34) is LIVE (14 November):** APK `dc360b7d…` on berthalla.io, website `e023e2d`, Play bundle on the PC.
+Record: `docs/evidence/2026-11-14/release-0.14.2/README.md`. Owed: the owner's Play upload, a community note (0.14.0
+has no update check), and the GitHub squash (held then; done with 0.15.0). The
+"Owed" list below is kept for the record; items 1 to 3 are done.
+
+**Next: 0.15, "slate and paper".** The owner asked "is that the best you can do?", saw two mockup sheets
+(`/opt/bert-widget-qa/look-0.15/home.png`, `widgets.png`) and handed over the lead. Direction: numbers are chalked
+on slate, Bert's words are on paper in his handwriting. Home's price line and board row become a slate and a pinned
+note; the Bert's day widget becomes a paper note where pixel Bert acts the mood; plus the night puffs fix and a
+themed launcher icon. Later, same direction: garden backgrounds on Bert's pixel grid, and Tools/Alerts.
+
+Owed, in order:
+1. Owner: deploy the site fixes: `git -C /opt/berthalla merge --ff-only site-0.14.0-fixes`, then
+   `scripts/deploy_website_vultr.sh --dry-run`, then without the flag. Check https://berthalla.io/app/privacy/ is styled.
+2. Owner: S25 check of the 0.14.2 preview. Look at: Style opens on the widgets; Home's price line and board row;
+   the Lost Trail picture on Home and Play (gate through volcano, no castle on a 1080 px phone: say if the castle
+   matters more than the size); Market 24H header against the chart; the Market widget with the holdings switch off;
+   rotate the phone on Market (no reload).
+3. Then the release recipe for 0.14.2 (as 0.14.0's: `docs/evidence/2026-10-30/release-0.14.0/`), stacking the site
+   release branch on `site-0.14.2-privacy`. The update notice only reaches 0.14.2 and later; 0.14.0 installs have
+   no check, so they need telling once in the community.
+4. Owner: Play upload of 0.14.2 (34) with the six screenshots; it replaces the never-uploaded 0.13.0 to 0.14.1.
+5. Owner decisions still open: a contact email and developer identity for the privacy page and Play (none is
+   invented); tournament entry terms next to the prize pool; the 4 Nov items (nginx header de-dup script).
+
+Left out of 0.14.2 on purpose (see the critique for each): the adaptive icon's monochrome layer (needs art); garden
+backgrounds re-drawn on the sprites' 1 px grid (art task); a feedback route other than GitHub; a first-run widget
+card on Home and merging Play into Home; filtering URLs out of dispatch text; `FLAG_SECURE` on Holdings; the store
+shot template; device-to-device transfer rules. Label exceptions where Bert is physically in the way are listed in
+`2a63010`'s tests.
+
+## START HERE (memo 4 November 2026): critique answered; site fixes staged; 0.14.1 built on `v0141`
+
+Antigravity's review of 0.14.0 (`docs/CRITIQUE-2026-11-04.md`) is answered in `docs/CRITIQUE-2026-11-04-RESPONSE.md`:
+118 claims, 29 confirmed, 74 partly, 12 wrong, 3 need the phone. Per-claim verdicts are in
+`/opt/bert-widget-qa/critique-2026-11-04/verdicts.json` (private). Two must-not-do items from it: never
+`git merge -s ours origin/main` (it would publish 167 unscrubbed commits on the next push), and don't replace My Bert's
+`getAssetBatch` (it works on the public RPC; checked live 4 Nov).
+
+Done (nothing is live yet):
+- **Website fixes** on `/opt/bert-widget-site-release`, branch `site-0.14.0-fixes` at `37ef768` (from live `f9c4aa7`).
+  - `/app/privacy/` now loads its styles: the inline `<style>` was blocked by the CSP's `style-src 'self'`, so the live
+    page renders unstyled. It moves to `privacy.css`, and the crash-report wording is fixed (effective 4 Nov).
+  - `/app/` copy: freshness is named for the three data widgets; alerts and the My Bert wallet lookup are disclosed.
+  - `release.json` is fetched with `cache: 'no-cache'`, the `widget.js` key is bumped, and the hero preload is fixed.
+  - Checks: website suite 959 passed / 39 skipped; `check-page` staged passes at 1440/768/390/320; the privacy page,
+    served with the live CSP, has 0 CSP errors and is styled.
+- **Play kit** on `v014` at `1a06ad8`.
+  - `LISTING.md` is current for 0.14.0. Data safety's top-level answer is now Yes (My Bert's wallet address).
+  - Screenshots are regenerated with their caption bands, as RGB.
+  - `PlayStoreScreenshotsTest`'s shared `@Before` no longer wipes the framed set.
+- **nginx header de-duplication**, owner-run: `/opt/bert-widget-qa/critique-2026-11-04/nginx-header-dedup.sh`. It
+  removes the 4 duplicate `audit-security-headers-only.conf` includes from the widget locations. It backs up, runs
+  `nginx -t` with auto-restore, reloads, and re-curls. Dry-run on a copy: exactly those 4 lines.
+- **0.14.1 (33)** on branch `v0141`, worktree `/opt/bert-widget-v0141`: `e7e1709` + review fixes `3d0eca8` + test fix `b62a18d`.
+  - Changes: Market chart above buys/sells; Red `#FF7583`; World bar track and in-progress colour; Match my Bert card
+    grows with large text; noticeboard target 48 art px; "Play a world" ticks on a started run (not on opening);
+    Forget also clears shared card copies; alert settings save with `apply()`.
+  - The Lost Trail is pinned to platformer `c594245` (branch `reduced-motion-flicker`, gate PASS, record `4c519d1`):
+    steady invulnerability, no jitter, under reduced motion.
+  - New tests fail on 0.14.0 and pass on 0.14.1 (contrast chip, chart order, game tick, Forget).
+  - One independent review (Opus): 2 should-fix items, both fixed in `3d0eca8`.
+  - Gate `tools/check-mobile-game.sh` PASS at `b62a18d`: Node 15/15, 371 unit tests (0 failures), lint, debug build,
+    Lost Trail browser check on bundle `92365c59…`. Log: `/opt/bert-widget-qa/release-0.14.1/gate-b62a18d.log`.
+  - Preview for the S25: `/opt/bert-widget-qa/preview-0.14/bert-0.14.1-preview-b62a18d.apk` (sha256 `8c4f5faf…`,
+    re-signed with the Preview key `5c1f4ef8…`, `check-preview-apk.py` PASS). Not yet installed.
+
+Owed, in order:
+1. Owner: "run it" for the site, `git -C /opt/berthalla merge --ff-only site-0.14.0-fixes`. `/opt/berthalla` sits on
+   `agent/widget-landing-v035` at `f9c4aa7` with unrelated uncommitted bot files; the ff touches only `website/`.
+   Then load https://berthalla.io/app/privacy/ and check it is styled. Rollback: `git -C /opt/berthalla reset --hard f9c4aa7`
+   (only after checking that nothing else has landed since).
+2. Owner: run `nginx-header-dedup.sh`.
+3. Owner: Play upload of 0.14.0 (32) to a **closed** track, with the new screenshots from `docs/play/screenshots/`
+   (they need copying to the PC's `BERT-Play\`). Answer Data safety per `LISTING.md`.
+4. Owner decisions (response § C): Data safety "processed ephemerally" (recommend unticked; reverses 15 Oct); contact
+   email; store attribution line; whether the tournament is free to enter (a "Free to enter" line on the card); garden
+   taste items.
+5. 0.14.1: S25 check of the preview, then the release recipe. Check on the phone: Market chart above the fold; Style ›
+   Match my Bert card at 1x and 2x font (accent bar at the foot); World bar on Home and Play in both schemes; Lost
+   Trail with "Remove animations" on (does the WebView report reduced motion?). Then staging, the owner's word, and
+   the Play upload as the next version after 0.14.0. At release, ff platformer `fair-jumps` to `reduced-motion-flicker`.
+
+## START HERE (memo 30 October 2026, evening): 0.14.0 LIVE; owed: the owner's Play upload
+
+0.14.0 (32) is live on berthalla.io (`/opt/berthalla` `c118bcb`, APK `fee68fca…`); GitHub `main` = `5e0d36d`; the
+platformer's `fair-jumps` is at `a70ac67`. `bert-0.14.0.aab` and `mapping-0.14.0.txt` are on the PC's `BERT-Play\` for
+the owner to upload, with the "What's new" text in `docs/evidence/2026-10-30/release-0.14.0/README.md`. Not checked on
+the device: TalkBack and Voice Access, and the night dream puffs. The S25 last had preview `47934bb` (same look as the
+release); `bert-0.14.0-preview-30847cb.apk` is on the PC in `BERT-Preview\` for when the phone is back on adb.
+
+## (memo 30 October 2026, kept for the record): 0.14.0 rc2 staged at `30847cb` (website `c118bcb`); owed: owner "run it", Play upload, GitHub squash, platformer ff
 
 0.14.0 (32) rc2 is `v014` at `30847cb`: the 29 Oct build below plus `v014-afford` (Home labels: a You pill and
 Price ›, Play ›, News on the scene; the owner approved them on the S25). It supersedes 0.13.2 (never published) and

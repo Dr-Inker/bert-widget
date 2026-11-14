@@ -1,56 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Picker preview and first frame: the same shape as the live Bert widget (portrait left, words right). -->
+<!-- First frame of Bert's day, until the note is drawn: the same paper, pixel Bert and a line saying the note is coming. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#0C0712"
+    android:background="@drawable/bert_note_paper"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:padding="12dp"
-    >
+    android:paddingStart="14dp"
+    android:paddingTop="10dp"
+    android:paddingEnd="14dp"
+    android:paddingBottom="14dp">
 
     <ImageView
-        android:layout_width="84dp"
-        android:layout_height="match_parent"
-        android:contentDescription="Bert"
-        android:scaleType="centerCrop"
-        android:src="@drawable/bert_widget_portrait" />
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:importantForAccessibility="no"
+        android:scaleType="fitCenter"
+        android:src="@drawable/bert_note_loading_bert" />
 
-    <LinearLayout
+    <TextView
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="10dp"
         android:layout_weight="1"
-        android:orientation="vertical">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="BERT"
-            android:textColor="#FFFFFF"
-            android:textSize="15sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:text="Bert’s latest update and mood."
-            android:textColor="#FFFFFF"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="6dp"
-            android:background="#EABFFF"
-            android:paddingStart="7dp"
-            android:paddingTop="2dp"
-            android:paddingEnd="7dp"
-            android:paddingBottom="2dp"
-            android:text="MOOD · TOURNAMENT"
-            android:textColor="#150C1F"
-            android:textSize="10sp"
-            android:textStyle="bold" />
-    </LinearLayout>
+        android:text="A note from Bert is on its way."
+        android:textColor="@color/note_ink"
+        android:textSize="15sp" />
 </LinearLayout>

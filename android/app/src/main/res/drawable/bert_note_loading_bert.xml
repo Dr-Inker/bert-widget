@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pixel Bert for the Bert's day widget's first frame: hard-edged, never smoothed. -->
+<bitmap xmlns:android="http://schemas.android.com/apk/res/android"
+    android:antialias="false"
+    android:filter="false"
+    android:gravity="fill"
+    android:src="@drawable/bert_f10" />

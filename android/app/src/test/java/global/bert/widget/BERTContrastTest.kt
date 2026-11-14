@@ -41,6 +41,7 @@ class BERTContrastTest {
             }
             check("app $id market negative change, 17sp bold", Red, Panel)
             check("app $id holdings loss, 18sp bold", Red, PanelStrong, minimum = 3.0)
+            check("app $id market change chip, 14sp bold", Red, PanelStrong) // small text on the strong card
             check("app $id action button text", OnAction, Orange)
             if (scheme.brandType) for ((surface, background) in listOf("canvas" to Navy, "card" to Panel, "strong card" to PanelStrong)) {
                 // The kit's glass button: white text over violet at 20%, on whatever surface holds it.
@@ -57,6 +58,27 @@ class BERTContrastTest {
             }
         } finally {
             BERTColors.scheme = BERTScheme.DEFAULT
+        }
+        // 0.15 slate and paper on Home: scene materials, the same in both schemes, lit for each time of day. Every chalk
+        // on the slate (and on the faint smudges of old chalk it may cross), every ink on the paper.
+        for (time in PlaceTime.entries) {
+            val slate = SlateTone.of(time)
+            // Under a finger or keyboard focus the slate is lit (LIT_GAIN, LIT_LIFT) and the chalk is not.
+            fun lit(c: Color) = Color((c.red * LIT_GAIN + LIT_LIFT / 255f).coerceAtMost(1f), (c.green * LIT_GAIN + LIT_LIFT / 255f).coerceAtMost(1f),
+                (c.blue * LIT_GAIN + LIT_LIFT / 255f).coerceAtMost(1f))
+            for (ground in listOf("slate" to slate.slate, "smudge" to slate.smudge, "lit slate" to lit(slate.slate), "lit smudge" to lit(slate.smudge))) {
+                for ((name, ink) in listOf("chalk" to slate.chalk, "soft chalk" to slate.chalkSoft, "change up" to slate.green,
+                    "change down" to slate.red, "delayed" to slate.yellow)) {
+                    check("home slate ${time.name.lowercase()} ${ground.first} / $name", ink, ground.second)
+                }
+            }
+            val paper = PaperTone.of(time)
+            // And while a finger holds it, when the paper dips (PAPER_DIP).
+            val held = paper.paper.fill.let { Color(it.red * PAPER_DIP, it.green * PAPER_DIP, it.blue * PAPER_DIP) }
+            for ((name, ink) in listOf("note" to paper.paper.ink, "eyebrow, 11sp" to paper.eyebrow, "link" to paper.link)) {
+                check("home note ${time.name.lowercase()} / $name", ink, paper.paper.fill)
+                check("home note ${time.name.lowercase()} held / $name", ink, held)
+            }
         }
         // WidgetPalette uses these theme colors directly; negative 24h change is 12sp bold.
         for (theme in BERTThemePack.entries) {

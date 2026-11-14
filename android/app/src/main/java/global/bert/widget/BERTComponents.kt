@@ -74,7 +74,7 @@ internal val OnAction: Color get() = BERTColors.scheme.onAction
 internal val AccentText: Color get() = BERTColors.scheme.accentText
 internal val Selected: Color get() = BERTColors.scheme.selected
 internal val Green = Color(0xFF45E09A)
-internal val Red = Color(0xFFFF6B7A)
+internal val Red = Color(0xFFFF7583) // 4.65:1 on Navy PanelStrong (was #FF6B7A, 4.37:1); same as the widgets
 internal val Amber = Color(0xFFFFC857)
 
 /**

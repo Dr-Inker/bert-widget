@@ -188,10 +188,12 @@ class YouScreenTest {
             window.left >= scene.left && window.right <= scene.right)
         fun Rect.meets(o: Rect) = left < o.right && right > o.left && top < o.bottom && bottom > o.top
         val w = Rect(window.left.value, window.top.value, window.right.value, window.bottom.value)
-        for (tag in listOf("you-button", "place-gate", "place-tag", "place-board")) {
-            val o = compose.onNodeWithTag(tag).getUnclippedBoundsInRoot()
-            assertFalse("the window's target $window overlaps $tag $o", w.meets(Rect(o.left.value, o.top.value, o.right.value, o.bottom.value)))
-        }
+        // (At night the garden's things have no targets of their own, Bert being indoors; any there are must not meet it.)
+        for (tag in listOf("you-button", "place-gate", "place-tag", "place-board", "place-cottage", "place-blossom"))
+            for (i in compose.onAllNodesWithTag(tag).fetchSemanticsNodes().indices) {
+                val o = compose.onAllNodesWithTag(tag)[i].getUnclippedBoundsInRoot()
+                assertFalse("the window's target $window overlaps $tag $o", w.meets(Rect(o.left.value, o.top.value, o.right.value, o.bottom.value)))
+            }
         compose.onNodeWithTag("place-window").performClick()
         compose.onNodeWithTag("place-window").assertContentDescriptionContains("dark", substring = true)
     }
@@ -324,10 +326,11 @@ class YouScreenTest {
     }
 
     /**
-     * TalkBack's real reading order on Home (as Compose hands it to Android): the picture is read where it sits, its
-     * things before Bert's bubble and the page below it, and each label's pill straight after its thing.
+     * TalkBack's real reading order on Home (as Compose hands it to Android): the picture is read where it sits, the
+     * chalkboard's streak tally and Bert before his bubble and the page below it. The other things are not stops at all
+     * (0.15: a tap on one is only a word from Bert; what they used to open is under the garden).
      */
-    @Test fun talkBackReadsThePictureInPlaceEachPillAfterItsThing() {
+    @Test fun talkBackReadsThePictureInPlace() {
         val accessibility = compose.activity.getSystemService(AccessibilityManager::class.java)
         shadowOf(accessibility).setEnabled(true)
         shadowOf(accessibility).setTouchExplorationEnabled(true)
@@ -341,15 +344,45 @@ class YouScreenTest {
         fun readAfter(id: Int): Int? = provider.createAccessibilityNodeInfo(id)?.extras?.getInt(TRAVERSAL_BEFORE, -1)?.takeIf { it != -1 }
         val read = generateSequence(compose.onNodeWithTag("you-button").fetchSemanticsNode().id, ::readAfter).take(1_000).toList()
         fun at(tag: String): Int = read.indexOf(compose.onNodeWithTag(tag).fetchSemanticsNode().id).also { assertTrue("$tag is never read: $read", it >= 0) }
-        val things = listOf("place-tag" to "label-chalk", "place-gate" to "label-gate", "place-board" to "label-board")
-        for ((thing, pill) in things) assertEquals("$pill is read straight after $thing", at(thing) + 1, at(pill))
+        val scene = at("berts-place")
+        val bert = at("place-bert")
         val bubble = at("place-line")
         val page = read.indexOf(compose.onNodeWithText("@bertcoincto", substring = true).fetchSemanticsNode().id)
         assertTrue("the page's links are read", page >= 0)
-        for ((thing, pill) in things) {
-            assertTrue("$thing is read before Bert's bubble ($bubble): ${at(thing)}", at(thing) < bubble)
-            assertTrue("$pill is read before the page below ($page): ${at(pill)}", at(pill) < page)
-        }
+        assertTrue("scene $scene, Bert $bert, bubble $bubble, page $page", scene < bert && bert < bubble && bubble < page)
+        // The chalkboard's tally is read as text, between the scene and Bert; the other things are not stops at all.
+        val tally = at("place-tag")
+        assertTrue("scene $scene, tally $tally, Bert $bert", scene < tally && tally < bert)
+        for (tag in listOf("place-gate", "place-board", "place-cottage", "place-blossom"))
+            assertFalse("$tag is a stop", compose.onNodeWithTag(tag).fetchSemanticsNode().id in read)
+    }
+
+    /**
+     * 0.15: the slate and the note took the place of the price line and the board row, and are read where those were:
+     * after Bert's bubble, the price before the note, both before the page's links. One stop each, not a stop per word.
+     */
+    @Test fun talkBackReadsTheSlateThenTheNoteUnderTheBubble() {
+        val accessibility = compose.activity.getSystemService(AccessibilityManager::class.java)
+        shadowOf(accessibility).setEnabled(true)
+        shadowOf(accessibility).setTouchExplorationEnabled(true)
+        shadowOf(accessibility).setEnabledAccessibilityServiceList(listOf(android.accessibilityservice.AccessibilityServiceInfo().apply {
+            feedbackType = android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_SPOKEN
+        }))
+        app(10)
+        compose.waitForIdle()
+        fun views(view: View): Sequence<View> = sequenceOf(view) + ((view as? ViewGroup)?.let { group -> (0 until group.childCount).asSequence().flatMap { views(group.getChildAt(it)) } } ?: emptySequence())
+        val provider = requireNotNull(views(compose.activity.window.decorView).first { it.javaClass.simpleName == "AndroidComposeView" }.accessibilityNodeProvider)
+        fun readAfter(id: Int): Int? = provider.createAccessibilityNodeInfo(id)?.extras?.getInt(TRAVERSAL_BEFORE, -1)?.takeIf { it != -1 }
+        val read = generateSequence(compose.onNodeWithTag("you-button").fetchSemanticsNode().id, ::readAfter).take(1_000).toList()
+        fun at(id: Int, what: String): Int = read.indexOf(id).also { assertTrue("$what is never read: $read", it >= 0) }
+        val bubble = at(compose.onNodeWithTag("place-line").fetchSemanticsNode().id, "Bert's bubble")
+        val slate = at(compose.onNodeWithTag("home-price").fetchSemanticsNode().id, "the slate")
+        val note = at(compose.onNodeWithTag("board-row").fetchSemanticsNode().id, "the note")
+        val links = at(compose.onNodeWithText("@bertcoincto", substring = true).fetchSemanticsNode().id, "the official links")
+        assertTrue("bubble $bubble, slate $slate, note $note, links $links", bubble < slate && slate == note - 1 && note < links)
+        // The chalk and the paper's words are not stops of their own: each object is read as one.
+        for (tag in listOf("slate-status", "note-body")) // no quote in this app(): the slate says so
+            assertFalse("$tag is a stop of its own", compose.onNodeWithTag(tag, useUnmergedTree = true).fetchSemanticsNode().id in read)
     }
 
     @Test fun theButtonGoesWithTheSkyWhenHomeScrolls() {
@@ -360,19 +393,56 @@ class YouScreenTest {
         compose.onNodeWithTag("you-button").assertDoesNotExist()
     }
 
-    /** A swipe that starts on a scene label scrolls Home, as anywhere else on the page; it is not a tap on the label. */
-    @Test fun aSwipeThatStartsOnALabelScrollsHome() {
+    /** A swipe that starts on the pinned note scrolls Home, as anywhere else on the page; it is not a tap on it. */
+    @Test fun aSwipeThatStartsOnTheNoteScrollsHome() {
         app(12)
         val before = compose.onNodeWithTag("berts-place").getUnclippedBoundsInRoot().top
-        compose.onNodeWithTag("label-board").performTouchInput { swipeUp(startY = centerY, endY = centerY - 600f) }
+        compose.onNodeWithTag("board-row").performTouchInput { swipeUp(startY = centerY, endY = centerY - 600f) }
         compose.waitForIdle()
         val after = compose.onNodeWithTag("berts-place").getUnclippedBoundsInRoot().top
         assertTrue("Home did not scroll: $before -> $after", after < before - 50.dp)
         compose.onNodeWithTag("noticeboard").assertDoesNotExist()
     }
 
-    /** A tap on a label while Home is still flinging stops the fling, as a tap anywhere on a moving page does; it opens nothing. */
-    @Test fun aTapThatStopsAFlingOpensNoLabel() {
+    /** A swipe that starts in the garden (the blossom, the cottage) scrolls Home: it is neither a pat nor a word from Bert. */
+    private fun aSwipeFromTheGardenScrollsHome(tag: String) {
+        app(12)
+        compose.waitForIdle()
+        fun said() = compose.onNodeWithTag("place-line").fetchSemanticsNode().config[SemanticsProperties.Text].joinToString()
+        val line = said()
+        val before = compose.onNodeWithTag("berts-place").getUnclippedBoundsInRoot().top
+        compose.onNodeWithTag(tag).performTouchInput { swipe(Offset(width * 0.3f, height * 0.3f), Offset(width * 0.3f, height * 0.3f - 600f), durationMillis = 300) }
+        compose.waitForIdle()
+        val after = compose.onNodeWithTag("berts-place").getUnclippedBoundsInRoot().top
+        assertTrue("Home did not scroll: $before -> $after", after < before - 50.dp)
+        assertEquals("a swipe made Bert speak", line, said())
+        assertEquals("a swipe patted Bert", 0, PlaceDiscovery(compose.activity).pats)
+    }
+
+    @Test fun aSwipeThatStartsOnTheBlossomScrollsHome() = aSwipeFromTheGardenScrollsHome("place-blossom")
+    @Test fun aSwipeThatStartsOnTheCottageScrollsHome() = aSwipeFromTheGardenScrollsHome("place-cottage")
+
+    /** The You page's run: "day 1" on a first day, the best only when it is more; a run already broken reads as day one. */
+    @Test fun yourRunReadsPlainly() {
+        val today = LocalDate.now()
+        assertEquals("Opening streak: day 1", youStreak(VisitStreak(1, 1, today)))
+        assertEquals("Opening streak: day 1 \u00b7 best 5", youStreak(VisitStreak(1, 5, today)))
+        assertEquals("Opening streak: 5 days in a row", youStreak(VisitStreak(5, 5, today)))
+        assertEquals("Opening streak: 3 days in a row \u00b7 best 4", youStreak(VisitStreak(3, 4, today)))
+        // Stored three days ago at day 6: shown as it stands today, without saving anything.
+        val prefs = compose.activity.getSharedPreferences("bert_place", android.content.Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+        PlaceDiscovery(compose.activity).apply { for (d in 8 downTo 3) visit(today.minusDays(d.toLong())) }
+        val before = prefs.all.toMap()
+        compose.setContent {
+            BERTTheme { YouScreen(androidx.compose.ui.Modifier, holdingsSet = false, close = {}, openStyle = {}, openHoldings = {}, openSaved = {}) }
+        }
+        compose.onNodeWithTag("you-streak").assertTextEquals("Opening streak: day 1 \u00b7 best 6")
+        assertEquals("reading must not write", before, prefs.all.toMap())
+    }
+
+    /** A tap on the pinned note while Home is still flinging stops the fling, as a tap anywhere on a moving page does; it opens nothing. */
+    @Test fun aTapThatStopsAFlingOpensNothing() {
         app(12)
         compose.mainClock.autoAdvance = false
         // A short, fast flick from the page below the scene: the scene barely moves before the fling carries on.
@@ -381,7 +451,7 @@ class YouScreenTest {
         val a = tops[2]
         val b = tops[3]
         assertTrue("the page should still be flinging: $a -> $b", b < a)
-        compose.onNodeWithTag("label-board").assertExists().performTouchInput { click(center) }
+        compose.onNodeWithTag("board-row").assertExists().performTouchInput { click(center) }
         compose.mainClock.advanceTimeBy(1_000)
         compose.onNodeWithTag("noticeboard").assertDoesNotExist()
         // And the tap stopped it.
@@ -498,14 +568,14 @@ class YouScreenTest {
 
     @Test fun theNoticeboardUsesTheNameAndOtherwiseStaysAsItWas() {
         app()
-        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithTag("board-row").performScrollTo().performClick()
         compose.onNodeWithText("on the board").assertExists()
         compose.onNodeWithTag("noticeboard-close").performScrollTo().performClick()
         compose.waitForIdle()
         openYou()
         compose.onNodeWithTag("you-name").performTextInput("Sam")
         compose.onNodeWithText("Back").performClick()
-        compose.onNodeWithTag("place-board").performClick()
+        compose.onNodeWithTag("board-row").performScrollTo().performClick()
         compose.onNodeWithText("on the board for Sam").assertExists()
     }
 
@@ -542,6 +612,42 @@ class YouScreenTest {
         assertEquals(BERTLink.DRAW.url, draw.dataString)
     }
 
+    private fun pressBack() = compose.runOnIdle { compose.activity.onBackPressedDispatcher.onBackPressed() }
+
+    /** Style, Holdings and Your cards open from You; Back comes back to You, and Back from You then goes Home. */
+    @Test fun backFromAScreenYouOpenedReturnsToYou() {
+        app()
+        for ((card, landed) in listOf("Style" to "A little BERT. Everywhere.", "Holdings" to "BERT amount", "Your cards" to "Your collection")) {
+            openYou()
+            compose.onNodeWithText(card).performScrollTo().performClick()
+            compose.waitUntil(5_000) { compose.onAllNodesWithText(landed).fetchSemanticsNodes().isNotEmpty() }
+            compose.onAllNodesWithText("What should Bert call you?").assertCountEquals(0)
+            pressBack()
+            compose.onNodeWithText("What should Bert call you?").assertIsDisplayed()
+            pressBack()
+            compose.onNodeWithTag("you-button").assertIsDisplayed()
+            compose.onAllNodesWithText(landed).assertCountEquals(0)
+        }
+    }
+
+    /** Only while the person stays where You sent them: once they choose a tab in the bottom bar, Back goes Home as usual. */
+    @Test fun backAfterChoosingATabGoesHomeAsBefore() {
+        app()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("Style", useUnmergedTree = true).performClick()
+        compose.onNodeWithText("A little BERT. Everywhere.").assertExists()
+        pressBack()
+        compose.onNodeWithTag("you-button").assertIsDisplayed()
+
+        openYou()
+        compose.onNodeWithText("Style").performScrollTo().performClick()
+        compose.onNodeWithText("A little BERT. Everywhere.").assertExists()
+        compose.onNodeWithText("Tools", useUnmergedTree = true).performClick()
+        pressBack()
+        compose.onNodeWithTag("you-button").assertIsDisplayed()
+        compose.onAllNodesWithText("What should Bert call you?").assertCountEquals(0)
+    }
+
     @Test fun lookingAtYourVisitsIsNotAVisit() {
         val prefs = compose.activity.getSharedPreferences("bert_place", android.content.Context.MODE_PRIVATE)
         prefs.edit().clear().apply()
@@ -558,6 +664,20 @@ class YouScreenTest {
         assertEquals(setOf(1, 2), BertVisits(compose.activity).thisMonth(today))
         // Another month's days are not this month's.
         assertEquals(emptySet<Int>(), BertVisits(compose.activity).thisMonth(today.minusMonths(1)))
+    }
+
+    /** 0.15: the garden marker's run under the visits, read without counting a visit. */
+    @Test fun yourVisitsSayTheRunAndTheBest() {
+        val prefs = compose.activity.getSharedPreferences("bert_place", android.content.Context.MODE_PRIVATE)
+        prefs.edit().clear().apply()
+        val today = LocalDate.now()
+        PlaceDiscovery(compose.activity).apply { for (d in 9 downTo 6) visit(today.minusDays(d.toLong())); for (d in 2 downTo 0) visit(today.minusDays(d.toLong())) }
+        val before = prefs.all.toMap()
+        compose.setContent {
+            BERTTheme { YouScreen(androidx.compose.ui.Modifier, holdingsSet = false, close = {}, openStyle = {}, openHoldings = {}, openSaved = {}) }
+        }
+        compose.onNodeWithTag("you-streak").assertTextEquals("Opening streak: 3 days in a row \u00b7 best 4")
+        assertEquals("reading must not write", before, prefs.all.toMap())
     }
 
     @Test fun noVisitsYetSaysSo() {
@@ -632,6 +752,8 @@ class YouScreenTest {
         const val TRAVERSAL_AFTER = "android.view.accessibility.extra.EXTRA_DATA_TEST_TRAVERSALAFTER_VAL"
     }
 
+    // Review renders of the You button on Home's sky: they assert nothing beyond it being shown, so build.gradle.kts keeps
+    // them out of the gate and -Pshots runs them (critique 2026-11-12 ENG-2).
     @Test fun homeTopWithTheButtonByDay() = homeTop(10, "day")
     @Test fun homeTopWithTheButtonAtGoldenHour() = homeTop(16, "golden")
     @Test fun homeTopWithTheButtonAtDusk() = homeTop(19, "dusk")

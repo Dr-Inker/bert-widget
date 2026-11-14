@@ -73,22 +73,27 @@ open class BERTWidget : GlanceAppWidget() {
             // Data is read inside the composition, keyed on a revision that updateAllBERTWidgets bumps. Values read
             // before provideContent would stay frozen while Glance keeps a session alive between updates.
             val revision = currentState(REVISION) ?: 0
-            val data = remember(revision) { WidgetData.load(context) }
+            val size = LocalSize.current
+            // The chart is a 600x180 bitmap: made only for the layout that draws it (critique 2026-11-12 ENG-4).
+            val chart = drawsSparkline(size)
+            val data = remember(revision, chart) { WidgetData.load(context, sparkline = chart) }
             val quote = data.quote
-            val holdings = data.holdings
             val sparkline = data.sparkline
             val palette = data.palette
+            val fontScale = LocalContext.current.resources.configuration.fontScale
             CompositionLocalProvider(LocalWidgetPalette provides palette) {
-                val size = LocalSize.current
-                val market = size.width >= 240.dp
+                val market = size.width >= MARKET_MIN_WIDTH
                 Box(
                     modifier = GlanceModifier.fillMaxSize()
                         .background(ColorProvider(palette.background))
                         .clickable(actionStartActivity<MainActivity>(entryParameters(BERTEntry.MARKET))),
                 ) {
                     // Sizes below are pinned by BERTWidgetRenderTest, which renders every text at launcher sizes.
-                    if (market) MarketWidgetContent(quote, holdings, spacious = size.height >= 200.dp, roomy = size.height >= 165.dp, narrow = size.width < 290.dp)
-                    else CompactWidgetContent(quote, sparkline, narrow = size.width < 150.dp, short = size.height < 140.dp)
+                    if (market) {
+                        val narrow = size.width < 290.dp
+                        MarketWidgetContent(quote, data.holdings, showPosition = data.showPosition,
+                            layout = marketLayout(size.height.value, fontScale, narrow), narrow = narrow, largeText = fontScale > LARGE_TEXT)
+                    } else CompactWidgetContent(quote, sparkline, narrow = size.width < 150.dp, short = size.height < COMPACT_CHART_MIN_HEIGHT)
                 }
             }
         }
@@ -150,9 +155,47 @@ private fun CompactWidgetContent(quote: BERTQuote?, sparkline: android.graphics.
     }
 }
 
+/** Market widget layouts, richest first; [marketLayout] picks the richest one a size holds at the phone's text size. */
+internal enum class MarketLayout { SPACIOUS, ROOMY, SLIM, MINIMAL }
+
+/** From this text size up the widget shortens and drops secondary text instead of letting it wrap or clip. */
+private const val LARGE_TEXT = 1.15f
+private val MARKET_MIN_WIDTH = 240.dp
+private val COMPACT_CHART_MIN_HEIGHT = 140.dp
+
+/** Vertical padding of a boxed metric: tighter at large text, so the 3x2 cell keeps its source line. */
+private fun metricPadding(largeText: Boolean) = if (largeText) 4f else 7f
+
+/**
+ * Glance cannot measure, so the layout comes from estimated heights in dp: each text line takes about 1.33em (Roboto
+ * with font padding), sp scaled by [fontScale]. At default text the thresholds stay 200dp and 165dp as before; at large
+ * text a size gets the richest layout whose lines all fit, down to MINIMAL (price, change and position, no metrics).
+ */
+internal fun marketLayout(heightDp: Float, fontScale: Float, narrow: Boolean): MarketLayout {
+    val em = 1.33f * fontScale
+    val head = 24f + 3f
+    val priceRow = em * ((if (narrow) 22f else 25f) + 12f)
+    val metrics = em * (FRESHNESS_SP + 12f)
+    val boxed = 2 * metricPadding(fontScale > LARGE_TEXT) + em * (FRESHNESS_SP + 14f)
+    val footer = em * FRESHNESS_SP
+    val spacious = 2 * 12f + 30f + 8f + em * (30f + 14f) + 10f + 14f + em * (FRESHNESS_SP + 14f) + footer
+    val roomy = 2 * 6f + head + priceRow + boxed + 6f + footer
+    val slim = 2 * 6f + head + priceRow + metrics
+    return when {
+        heightDp >= maxOf(200f, spacious) -> MarketLayout.SPACIOUS
+        heightDp >= maxOf(165f, roomy) -> MarketLayout.ROOMY
+        heightDp >= slim -> MarketLayout.SLIM
+        else -> MarketLayout.MINIMAL
+    }
+}
+
+/** Only the compact widget at its taller sizes draws the price chart; the market layout and a short compact one never do. */
+internal fun drawsSparkline(size: androidx.compose.ui.unit.DpSize) = size.width < MARKET_MIN_WIDTH && size.height >= COMPACT_CHART_MIN_HEIGHT
+
 @Composable
-private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: Boolean, roomy: Boolean, narrow: Boolean) {
+private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, showPosition: Boolean, layout: MarketLayout, narrow: Boolean, largeText: Boolean) {
     val palette = LocalWidgetPalette.current
+    val spacious = layout == MarketLayout.SPACIOUS
     Row(modifier = GlanceModifier.fillMaxSize().padding(vertical = if (spacious) 12.dp else 6.dp, horizontal = 8.dp)) {
         Spacer(GlanceModifier.width(3.dp).fillMaxHeight().background(ColorProvider(palette.accent)))
         Spacer(GlanceModifier.width(11.dp))
@@ -163,6 +206,10 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
                 UnavailableWidgetContent(compact = false)
                 return@Column
             }
+            // With no room for the metrics, the price sits in the middle rather than above an empty band.
+            if (layout == MarketLayout.MINIMAL) Spacer(GlanceModifier.defaultWeight())
+            // At large text on the narrow sizes the position tile takes only the room its words need.
+            val compactTile = narrow && largeText
             Row(modifier = GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(modifier = GlanceModifier.defaultWeight()) {
                     Text(
@@ -171,37 +218,49 @@ private fun MarketWidgetContent(quote: BERTQuote?, holdings: Double?, spacious: 
                     )
                     Text(
                         "${trendArrow(quote.change24hPct)} ${formatPercent(quote.change24hPct)} · 24H",
+                        maxLines = 1,
                         style = TextStyle(color = ColorProvider(changeColor(quote)), fontSize = if (spacious) 14.sp else 12.sp, fontWeight = FontWeight.Bold),
                     )
                 }
-                Spacer(GlanceModifier.width(if (narrow) 8.dp else 12.dp))
-                HoldingsCapsule(quote, holdings, spacious, roomy, narrow)
+                // "Show my holdings on the Market widget" off: the market figures alone (critique 2026-11-12 PRIV-1).
+                if (showPosition) {
+                    Spacer(GlanceModifier.width(if (compactTile) 6.dp else if (narrow) 8.dp else 12.dp))
+                    HoldingsCapsule(quote, holdings, layout, narrow, compactTile, largeText)
+                }
             }
-            if (spacious) {
-                Spacer(GlanceModifier.height(10.dp))
-                Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight(), panel = true)
-                    Spacer(GlanceModifier.width(8.dp))
-                    WidgetMetric("24H VOLUME", quote.volume24hUsd, GlanceModifier.defaultWeight(), panel = true)
-                    Spacer(GlanceModifier.width(8.dp))
-                    WidgetMetric("LIQUIDITY", quote.liquidityUsd, GlanceModifier.defaultWeight(), panel = true)
-                }
-                Spacer(GlanceModifier.defaultWeight())
-                MarketFooter(quote)
-            } else {
-                Spacer(GlanceModifier.defaultWeight())
-                // Between the slim and spacious layouts, boxed metrics and the source line fill what would be a gap.
-                Row(modifier = GlanceModifier.fillMaxWidth()) {
-                    WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight(), panel = roomy)
-                    if (roomy) Spacer(GlanceModifier.width(6.dp))
-                    WidgetMetric("24H VOLUME", quote.volume24hUsd, GlanceModifier.defaultWeight(), panel = roomy)
-                    if (roomy) Spacer(GlanceModifier.width(6.dp))
-                    WidgetMetric("LIQUIDITY", quote.liquidityUsd, GlanceModifier.defaultWeight(), panel = roomy)
-                }
-                if (roomy) {
-                    Spacer(GlanceModifier.height(6.dp))
+            val pad = metricPadding(largeText).dp
+            when (layout) {
+                MarketLayout.SPACIOUS -> {
+                    Spacer(GlanceModifier.height(10.dp))
+                    Row(modifier = GlanceModifier.fillMaxWidth()) {
+                        WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight(), panel = true, padV = pad)
+                        Spacer(GlanceModifier.width(8.dp))
+                        WidgetMetric("24H VOLUME", quote.volume24hUsd, GlanceModifier.defaultWeight(), panel = true, padV = pad)
+                        Spacer(GlanceModifier.width(8.dp))
+                        WidgetMetric("LIQUIDITY", quote.liquidityUsd, GlanceModifier.defaultWeight(), panel = true, padV = pad)
+                    }
+                    Spacer(GlanceModifier.defaultWeight())
                     MarketFooter(quote)
                 }
+                MarketLayout.ROOMY, MarketLayout.SLIM -> {
+                    val roomy = layout == MarketLayout.ROOMY
+                    // At large text the boxes keep a narrower inner margin, so "MARKET CAP" stays on one line.
+                    val padH = if (largeText) 6.dp else 10.dp
+                    Spacer(GlanceModifier.defaultWeight())
+                    // Between the slim and spacious layouts, boxed metrics and the source line fill what would be a gap.
+                    Row(modifier = GlanceModifier.fillMaxWidth()) {
+                        WidgetMetric("MARKET CAP", quote.marketCapUsd, GlanceModifier.defaultWeight(), panel = roomy, padV = pad, padH = padH)
+                        if (roomy) Spacer(GlanceModifier.width(6.dp))
+                        WidgetMetric("24H VOLUME", quote.volume24hUsd, GlanceModifier.defaultWeight(), panel = roomy, padV = pad, padH = padH)
+                        if (roomy) Spacer(GlanceModifier.width(6.dp))
+                        WidgetMetric("LIQUIDITY", quote.liquidityUsd, GlanceModifier.defaultWeight(), panel = roomy, padV = pad, padH = padH)
+                    }
+                    if (roomy) {
+                        Spacer(GlanceModifier.height(6.dp))
+                        MarketFooter(quote)
+                    }
+                }
+                MarketLayout.MINIMAL -> Spacer(GlanceModifier.defaultWeight())
             }
         }
     }
@@ -239,20 +298,25 @@ private fun WidgetHeader(compact: Boolean, quote: BERTQuote?, spacious: Boolean 
 }
 
 @Composable
-private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, spacious: Boolean, roomy: Boolean, narrow: Boolean) {
+private fun HoldingsCapsule(quote: BERTQuote, holdings: Double?, layout: MarketLayout, narrow: Boolean, compactTile: Boolean, largeText: Boolean) {
     val palette = LocalWidgetPalette.current
+    val spacious = layout == MarketLayout.SPACIOUS
+    // A compact tile wraps its words: a shorter label, the value, and no token count (the app shows it).
+    val width = if (compactTile) GlanceModifier else GlanceModifier.width(if (spacious) 154.dp else if (narrow) 108.dp else 142.dp)
     Column(
-        modifier = GlanceModifier.width(if (spacious) 154.dp else if (narrow) 108.dp else 142.dp)
+        modifier = width
             .background(ColorProvider(palette.panel))
-            .padding(horizontal = if (spacious) 14.dp else if (narrow) 8.dp else 11.dp, vertical = if (spacious) 10.dp else if (roomy) 6.dp else 3.dp),
+            .padding(horizontal = if (compactTile) 6.dp else if (spacious) 14.dp else if (narrow) 8.dp else 11.dp,
+                vertical = if (spacious) 10.dp else if (layout == MarketLayout.ROOMY && !largeText) 6.dp else 3.dp),
     ) {
-        Text("YOUR POSITION", style = eyebrowStyle(color = palette.text))
+        Text(if (compactTile) "HOLDINGS" else "YOUR POSITION", maxLines = 1, style = eyebrowStyle(color = palette.text))
         Text(
-            if (holdings == null) "SET HOLDINGS" else formatHoldingsUsd(holdings * quote.priceUsd),
+            if (holdings == null) (if (compactTile) "NOT SET" else "SET HOLDINGS") else formatHoldingsUsd(holdings * quote.priceUsd),
+            maxLines = 1,
             style = TextStyle(color = ColorProvider(if (holdings == null) Amber else palette.text), fontSize = if (spacious) 15.sp else 12.sp, fontWeight = FontWeight.Bold),
         )
-        if (holdings != null) {
-            Text("${formatTokenAmount(holdings)} BERT", style = eyebrowStyle())
+        if (holdings != null && !compactTile) {
+            Text("${formatTokenAmount(holdings)} BERT", maxLines = 1, style = eyebrowStyle())
         }
     }
 }
@@ -269,9 +333,10 @@ private fun UnavailableWidgetContent(compact: Boolean) {
 }
 
 @Composable
-private fun WidgetMetric(label: String, value: Double?, modifier: GlanceModifier = GlanceModifier, panel: Boolean = false) {
+private fun WidgetMetric(label: String, value: Double?, modifier: GlanceModifier = GlanceModifier, panel: Boolean = false,
+                         padV: androidx.compose.ui.unit.Dp = 7.dp, padH: androidx.compose.ui.unit.Dp = 10.dp) {
     val palette = LocalWidgetPalette.current
-    Column(modifier = if (panel) modifier.background(ColorProvider(palette.panel)).padding(horizontal = 10.dp, vertical = 7.dp) else modifier) {
+    Column(modifier = if (panel) modifier.background(ColorProvider(palette.panel)).padding(horizontal = padH, vertical = padV) else modifier) {
         Text(label, style = eyebrowStyle())
         Text(formatCompactUsd(value), style = TextStyle(color = ColorProvider(palette.text), fontSize = if (panel) 14.sp else 12.sp, fontWeight = FontWeight.Bold))
     }
@@ -319,7 +384,7 @@ private fun freshnessLabel(quote: BERTQuote, narrow: Boolean = false): String {
 private fun eyebrowStyle(color: Color? = null) =
     TextStyle(color = ColorProvider(color ?: LocalWidgetPalette.current.muted), fontSize = FRESHNESS_SP.sp, fontWeight = FontWeight.Medium)
 
-private data class WidgetPalette(
+internal data class WidgetPalette(
     val background: Color,
     val panel: Color,
     val text: Color,
@@ -358,14 +423,20 @@ abstract class BERTWidgetReceiverBase : GlanceAppWidgetReceiver() {
     }
 }
 
-private class WidgetData(val quote: BERTQuote?, val holdings: Double?, val sparkline: android.graphics.Bitmap?, val palette: WidgetPalette) {
+internal class WidgetData private constructor(
+    val quote: BERTQuote?, val holdings: Double?, val showPosition: Boolean, val sparkline: android.graphics.Bitmap?, val palette: WidgetPalette,
+) {
     companion object {
-        fun load(context: Context): WidgetData {
+        /** [sparkline] false skips the chart's bitmap (and the history read behind it) for a layout that never draws it. */
+        fun load(context: Context, sparkline: Boolean): WidgetData {
             val quote = BERTQuoteRepository(context).load()
-            val history = BERTPriceHistory.combine(BERTMarketHistoryRepository(context).load(), BERTPriceHistory(context).load())
-            // The chart takes its colour from the same 24h change the widget prints next to it.
-            val sparkline = BERTSparkline.render(history, rising = quote?.change24hPct?.let { it >= 0 })
-            return WidgetData(quote, BERTHoldingsStore(context).load(), sparkline, WidgetPalette.from(BERTThemeStore(context).loadPalette()))
+            val chart = if (!sparkline) null else {
+                val history = BERTPriceHistory.combine(BERTMarketHistoryRepository(context).load(), BERTPriceHistory(context).load())
+                // The chart takes its colour from the same 24h change the widget prints next to it.
+                BERTSparkline.render(history, rising = quote?.change24hPct?.let { it >= 0 })
+            }
+            val store = BERTHoldingsStore(context)
+            return WidgetData(quote, store.load(), store.showOnWidget, chart, WidgetPalette.from(BERTThemeStore(context).loadPalette()))
         }
     }
 }

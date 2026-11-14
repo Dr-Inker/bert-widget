@@ -59,13 +59,16 @@ internal fun movementColor(change: Double?): Color = when {
     else -> Red
 }
 
+/** A quote is delayed when the last refresh failed or it is older than BERTQuote.STALE_AFTER_MILLIS: Market and Home both say so. */
+internal fun quoteDelayed(state: QuoteState.Available, now: Long): Boolean = state.updateDelayed || state.quote.isStaleAt(now)
+
+/** "Delayed · Updated 42m ago" for a delayed quote (in amber), else "Updated 2m ago". */
+internal fun quoteFreshness(state: QuoteState.Available, now: Long): String =
+    "${if (quoteDelayed(state, now)) "Delayed · " else ""}${formatAge(state.quote.observedAtEpochMillis, now)}"
+
 @Composable
 internal fun QuoteFreshness(state: QuoteState.Available, now: Long) {
-    val delayed = state.updateDelayed || state.quote.isStaleAt(now)
-    Text(
-        "${if (delayed) "Delayed · " else ""}${formatAge(state.quote.observedAtEpochMillis, now)}",
-        color = if (delayed) Amber else Muted, fontSize = 12.sp,
-    )
+    Text(quoteFreshness(state, now), color = if (quoteDelayed(state, now)) Amber else Muted, fontSize = 12.sp)
 }
 
 @Composable
@@ -85,8 +88,9 @@ internal fun MarketScreen(state: QuoteState, history: List<BERTPriceSample>, now
                     if (state.updateDelayed) Text("Couldn’t refresh. Showing the last saved quote.", color = Amber, fontSize = 13.sp)
                 }
             }
+            // The chart and its range pills first, so they sit above the fold; buys and sells follow.
+            PriceHistoryPanel(history, now, quote.pairAddress, quote.change24hPct)
             if (quote.hasActivity) ActivityCard(quote)
-            PriceHistoryPanel(history, now, quote.pairAddress)
             // Stacked rows keep labels and figures readable on narrow screens and at large font sizes.
             Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
                 Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -310,8 +314,12 @@ private fun Modifier.bleed(by: Dp) = layout { measurable, constraints ->
     layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
 }
 
+/**
+ * The chart card. [dayChangePct] is the quote's own 24-hour change, the one the price card shows: on 24H, when the prices
+ * cover the day, the chart's change line uses it too, so the screen never prints two different "past 24 hours" changes.
+ */
 @Composable
-private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: String?) {
+private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: String?, dayChangePct: Double?) {
     var window by rememberSaveable { mutableStateOf(BERTChartWindow.DAY) }
     val context = LocalContext.current
     val rangeRepository = LocalBERTRangeHistory.current ?: remember { BERTRangeHistoryRepository(context.applicationContext) }
@@ -380,7 +388,6 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: S
     // the default zone when the system's changes, and this reads it on every tick of the app's clock (every 15 s), so the
     // times and dates follow a trip across zones without Market having to be left and opened again.
     val zone = TimeZone.getDefault().id
-    val clock = remember(zone) { SimpleDateFormat("HH:mm", Locale.getDefault()) }
     val dates = remember(window, zone) { rangeDateFormat(window) }
     val localDates = remember(window, zone) { rangeDateFormat(window, zone = TimeZone.getDefault()) }
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
@@ -388,16 +395,29 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: S
             SectionLabel("PRICE HISTORY")
             RangePills(window) { if (it != window) { failures.remove(it); window = it } }
             val longEmpty = window.isLongRange && shown == null
-            // Prices enough to draw a chart, and its figures.
+            // Some prices to show, and whether they join up into a line worth drawing rather than loose dots.
             val charted = !longEmpty && samples.size >= 2
-            val change = if (charted) window.changePct(samples) else null
-            // A range whose older prices could not be had starts at its first price and says from when.
+            val drawn = charted && window.hasLine(samples)
+            // A range whose prices start late (older ones refused, or a short history) starts at its first price and says so.
             val late = charted && window.startsLate(samples, now)
             val origin = window.originEpochMillis(samples, now)
-            val startLabel = formatWindowStart(window, origin, late, dates)
+            val startLabel = formatWindowStart(window, origin, late, dates, now)
+            // A day the prices cover reads as the quote's 24-hour change, the same figure as the price card; any other range,
+            // or a day the prices only partly cover, is first price to last on this chart.
+            val change = when {
+                !drawn -> null
+                window == BERTChartWindow.DAY && !late && dayChangePct != null -> dayChangePct
+                else -> window.changePct(samples)
+            }
+            // What the chart covers, in words: "over the past 24 hours", "over the last 3 hours", "since 1 Oct 2024".
+            val coverage = when {
+                late && window.isLongRange -> "since $startLabel"
+                late -> "over ${formatLastSpan(now - origin)}"
+                else -> "over the past ${windowName(window)}"
+            }
             // The amber note under a long range's chart, when what it shows is not everything that was asked for.
             val note = when {
-                !charted || !window.isLongRange -> null
+                !drawn || !window.isLongRange -> null
                 failed != null -> "Couldn’t refresh. Showing the last saved prices."
                 shown?.complete == false && late -> "Couldn’t load the older prices. Showing what arrived."
                 else -> null
@@ -409,9 +429,10 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: S
                 longEmpty && failed == null -> RangeStatus(AnnotatedString("Loading prices…"), 20.sp, bold = true)
                 longEmpty && failed != null -> RangeStatus(AnnotatedString(failedMessage(window, failed.failure)), 16.sp, bold = true, lineHeight = 22.sp)
                 !charted -> RangeStatus(AnnotatedString("No recent prices yet"), 20.sp, bold = true)
-                // Same colours as the quote's own changes; the figure is first price to last on this chart.
+                !drawn -> RangeStatus(AnnotatedString("Not enough price history yet"), 20.sp, bold = true, lineHeight = 26.sp)
+                // Same colours as the quote's own changes.
                 change != null -> RangeStatus(buildAnnotatedString {
-                    withStyle(SpanStyle(color = Muted, fontSize = 13.sp)) { append(if (late) "Change since $startLabel " else "Change over the past ${windowName(window)} ") }
+                    withStyle(SpanStyle(color = Muted, fontSize = 13.sp)) { append("Change $coverage ") }
                     withStyle(SpanStyle(color = movementColor(change), fontWeight = FontWeight.Bold)) { append(formatPercent(change)) }
                 }, 15.sp, bold = false)
                 else -> RangeStatus(AnnotatedString(""), 15.sp, bold = false)
@@ -443,13 +464,17 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: S
                 longEmpty && failed == null -> Text("The first look at a long range can take a few seconds.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
                 longEmpty -> TextButton(onClick = { failures.remove(window) }, contentPadding = PaddingValues(horizontal = 0.dp)) { Text("Try again", color = AccentText) }
                 !charted -> Text("The chart fills in as soon as BERT can reach the market.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
+                // A few prices far apart would be loose dots, which read as a broken chart rather than a price history.
+                !drawn -> Text("The chart fills in as more prices arrive.", color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
                 else -> {
                     val low = samples.minOf { it.priceUsd }
                     val high = samples.maxOf { it.priceUsd }
-                    val lineColor = movementColor(samples.last().priceUsd - samples.first().priceUsd)
+                    // The line takes the colour of the change printed above it, so the two never tell different stories.
+                    val lineColor = movementColor(change ?: (samples.last().priceUsd - samples.first().priceUsd))
                     val span = (now - origin).coerceAtLeast(1)
                     val gapLimit = window.maxJoinGapMillis
-                    val scope = if (late) "since $startLabel" else "over the selected ${window.label} window"
+                    val joined = window.joined(samples)
+                    val scope = if (late) coverage else "over the selected ${window.label} window"
                     val summary = "${samples.size} prices $scope. Low ${formatPrice(low)}, high ${formatPrice(high)}. Gaps over ${formatGapLimit(gapLimit)} are not connected."
                     Canvas(Modifier.fillMaxWidth().height(150.dp).semantics { contentDescription = summary }) {
                         val inset = 6.dp.toPx()
@@ -462,13 +487,8 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: S
                             val y = inset + fraction * (size.height - 2 * inset)
                             drawLine(Muted.copy(alpha = 0.15f), Offset(inset, y), Offset(size.width - inset, y), 1.dp.toPx())
                         }
-                        val joined = BooleanArray(samples.size)
-                        samples.zipWithNext().forEachIndexed { index, (a, b) ->
-                            if (b.observedAtEpochMillis - a.observedAtEpochMillis <= gapLimit) {
-                                drawLine(lineColor, point(a), point(b), 2.dp.toPx(), cap = StrokeCap.Round)
-                                joined[index] = true
-                                joined[index + 1] = true
-                            }
+                        samples.zipWithNext().forEach { (a, b) ->
+                            if (b.observedAtEpochMillis - a.observedAtEpochMillis <= gapLimit) drawLine(lineColor, point(a), point(b), 2.dp.toPx(), cap = StrokeCap.Round)
                         }
                         // Dots only where a line cannot show the price: isolated samples and the latest one.
                         samples.forEachIndexed { index, sample ->
@@ -481,7 +501,7 @@ private fun PriceHistoryPanel(history: List<BERTPriceSample>, now: Long, pool: S
                         Text("Now", color = Muted, fontSize = 12.sp)
                     }
                     Text("Low ${formatPrice(low)} · high ${formatPrice(high)}", color = Cream, fontSize = 12.sp)
-                    Text("${samples.size} prices · ${spanOfSamples(window, samples, shown, clock, dates, localDates)}", color = Muted, fontSize = 12.sp)
+                    Text("${samples.size} prices · ${spanOfSamples(window, samples, shown, dates, localDates)}", color = Muted, fontSize = 12.sp)
                     // Hidden from TalkBack: the status line above already says it, so swiping through would hear it twice.
                     if (note != null) Text(note, color = Amber, fontSize = 12.sp, modifier = Modifier.semantics { hideFromAccessibility() })
                 }
@@ -505,11 +525,11 @@ private fun windowName(window: BERTChartWindow) = when (window) {
 }
 
 /** Local clock times for the day-sized windows; for the long ones, dates as [formatRangeSpan] gives them (see [rangeDateZone]). */
-private fun spanOfSamples(window: BERTChartWindow, samples: List<BERTPriceSample>, copy: BERTRangeHistory?, clock: SimpleDateFormat,
+private fun spanOfSamples(window: BERTChartWindow, samples: List<BERTPriceSample>, copy: BERTRangeHistory?,
                           dates: SimpleDateFormat, localDates: SimpleDateFormat): String {
     val first = samples.first().observedAtEpochMillis
     val last = samples.last().observedAtEpochMillis
     // A saved copy's last price sits at the moment it was fetched (see BERTRangeHistoryRepository.parse), not on a candle.
     return if (window.isLongRange) formatRangeSpan(first, last, last == copy?.fetchedAtEpochMillis, dates, localDates)
-        else "${clock.format(Date(first))}–${clock.format(Date(last))}"
+        else formatClockSpan(first, last)
 }

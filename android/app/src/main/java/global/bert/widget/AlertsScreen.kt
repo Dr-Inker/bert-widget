@@ -131,8 +131,9 @@ internal fun AlertsScreen(quote: QuoteState, store: BERTAlertStore? = null) {
     Text("Alerts never include your holdings. Price checks use the same public market data as the rest of the app.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
 }
 
+/** A titled switch with a line under it; Alerts and Holdings use it. */
 @Composable
-private fun AlertSwitch(title: String, description: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+internal fun AlertSwitch(title: String, description: String, checked: Boolean, onChange: (Boolean) -> Unit) {
     Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(title, color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)

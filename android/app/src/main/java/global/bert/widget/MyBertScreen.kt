@@ -249,7 +249,7 @@ internal fun MyBertScreen(modifier: Modifier, close: () -> Unit, repository: MyB
                 }
                 TextButton(onClick = ::forget, colors = ButtonDefaults.textButtonColors(contentColor = Red)) { Text("Forget this address") }
             }
-            Text("Forgetting deletes the address, the list and every Bert picture from this phone.", color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
+            Text("Forgetting deletes the address, the list and every Bert picture from this phone. Cards you saved stay.", color = Muted, fontSize = 12.sp, lineHeight = 17.sp)
         }
     }
 }

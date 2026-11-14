@@ -62,11 +62,26 @@ class AccessibilityAuditTest {
             }
         }
         val findings = mutableListOf<String>()
+        // The screen's page scroller (not a sideways row of tabs), if it has anywhere to go.
+        val page = SemanticsMatcher("scrolls vertically") { node ->
+            node.config.getOrNull(SemanticsProperties.VerticalScrollAxisRange)?.let { it.maxValue() > 0f } == true
+        }
+        fun position() = compose.onAllNodes(page).fetchSemanticsNodes().firstOrNull()
+            ?.config?.get(SemanticsProperties.VerticalScrollAxisRange)?.let { it.value() to it.maxValue() }
+        // Down to the end of the page, judging each viewport. A swipe that does not move the page is a failure, not a
+        // shrug: otherwise the controls below it would never be judged (critique 2026-11-12 ENG-8).
         fun scrollThrough(screen: String) {
             findings += audit(screen)
-            repeat(6) { i ->
-                runCatching { compose.onAllNodes(hasScrollAction()).onFirst().performTouchInput { swipeUp() } }
-                findings += audit("$screen (scrolled ${i + 1})")
+            var swipes = 0
+            while (true) {
+                val (at, end) = position() ?: return
+                if (at >= end) return
+                if (++swipes > 30) { findings += "$screen: still not at the end after 30 swipes"; return }
+                compose.onAllNodes(page).onFirst().performTouchInput { swipeUp() }
+                compose.waitForIdle()
+                val moved = position()?.first ?: at
+                if (moved <= at) { findings += "$screen: a swipe did not scroll (stuck at $at of $end)"; return }
+                findings += audit("$screen (scrolled $swipes)")
             }
         }
         // The You button sits on Home's sky, so it is judged at the top of Home, and the page behind it is scrolled through.

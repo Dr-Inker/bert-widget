@@ -26,6 +26,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import global.bert.widget.data.BERTAlertStore
+import global.bert.widget.data.LostTrailProgress
 import global.bert.widget.work.BERTRefreshWorker
 import java.time.Instant
 import java.time.ZoneOffset
@@ -40,9 +41,6 @@ internal object BERTOnboarding {
     private const val PLAYED_GAME = "played_lost_trail"
     private const val HIDDEN = "getting_started_hidden"
 
-    fun markPlayedGame(context: Context) =
-        context.getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE).edit().putBoolean(PLAYED_GAME, true).apply()
-
     fun hide(context: Context) =
         context.getSharedPreferences(ONBOARDING_PREFS, Context.MODE_PRIVATE).edit().putBoolean(HIDDEN, true).apply()
 
@@ -51,7 +49,8 @@ internal object BERTOnboarding {
         return GettingStarted(
             hidden = prefs.getBoolean(HIDDEN, false),
             widget = BERTRefreshWorker.hasPlacedWidgets(context),
-            game = prefs.getBoolean(PLAYED_GAME, false),
+            // Started a run or cleared a world; the old flag (set on merely opening the game before 0.14.1) still counts.
+            game = LostTrailProgress.load(context)?.started == true || prefs.getBoolean(PLAYED_GAME, false),
             card = CaptionLibrary(context).hasAny(),
             alert = BERTAlertStore(context).settings().anyEnabled,
         )

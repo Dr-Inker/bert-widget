@@ -83,12 +83,14 @@ class MarketRangesUiTest {
         }
     }
 
-    private fun quote(pairAddress: String?) = QuoteState.Available(BERTQuote(
+    private fun quote(pairAddress: String?, activity: Boolean = false) = QuoteState.Available(BERTQuote(
         0.0150, 3.0, 123_456_789.0, 2_345_678.0, 345_678.0, "fresh", now - 60_000, "dexscreener", "raydium",
         "https://dexscreener.com/solana/${pool.lowercase()}", pairAddress = pairAddress,
+        change1hPct = if (activity) 1.2 else null, buys24h = if (activity) 40 else null, sells24h = if (activity) 30 else null,
     ))
 
-    private fun history() = listOf(300L to 0.0145, 120L to 0.0148, 40L to 0.0149, 1L to 0.0150).map { (m, p) -> BERTPriceSample(now - m * 60_000, p) }
+    /** A whole day of 5-minute prices, as GeckoTerminal's history gives them, climbing steadily from 0.0145 to 0.0150. */
+    private fun history() = (288 downTo 0).map { k -> BERTPriceSample(now - k * 300_000L, 0.0145 + 0.0005 * (288 - k) / 288.0) }
 
     /** The app's clock, which ticks every 15 s in the app; a test moves it by hand. */
     private var appNow by mutableLongStateOf(now)
@@ -96,7 +98,7 @@ class MarketRangesUiTest {
     /** The pool the quote names; a test can change it while the screen is up, as a fresh quote arriving would. */
     private var quotePool by mutableStateOf<String?>(pool)
 
-    private fun market(http: BERTHttp, fontScale: Float = 1f, pairAddress: String? = pool, base: String = "https://gecko.test/api/v2") {
+    private fun market(http: BERTHttp, fontScale: Float = 1f, pairAddress: String? = pool, base: String = "https://gecko.test/api/v2", activity: Boolean = false) {
         quotePool = pairAddress
         compose.setContent {
             CompositionLocalProvider(
@@ -105,7 +107,7 @@ class MarketRangesUiTest {
             ) {
                 BERTTheme {
                     var position by remember { mutableStateOf(BERTPosition()) }
-                    BERTApp(quote(quotePool), ActivityState.Unavailable, history(), position, appNow, false, false, {}, {}, { position = it })
+                    BERTApp(quote(quotePool, activity), ActivityState.Unavailable, history(), position, appNow, false, false, {}, {}, { position = it })
                 }
             }
         }
@@ -200,9 +202,10 @@ class MarketRangesUiTest {
         }
         // The 5-minute ranges keep their own wording and 30-minute rule.
         choose("24H")
-        compose.onNodeWithContentDescription("4 prices over the selected 24H window. Low $0.0145, high $0.015. Gaps over 30 minutes are not connected.").assertExists()
+        compose.onNodeWithContentDescription("289 prices over the selected 24H window. Low $0.0145, high $0.015. Gaps over 30 minutes are not connected.").assertExists()
         compose.onNodeWithText("24h ago").assertExists()
-        compose.onNode(hasText("Change over the past 24 hours", substring = true)).assertExists()
+        // The day's change is the quote's own +3.00%, the figure the price card shows, not this chart's first to last (+3.45%).
+        compose.onNodeWithText("Change over the past 24 hours +3.00%").assertExists()
         // Its prices move every minute, so its change line is not a live region: it would talk all the time.
         assertFalse(compose.onNode(hasText("Change over the past 24 hours", substring = true)).fetchSemanticsNode().config.contains(SemanticsProperties.LiveRegion))
     }
@@ -555,6 +558,14 @@ class MarketRangesUiTest {
         compose.waitUntil(10_000) { compose.onAllNodesWithText("Couldn’t refresh. Showing the last saved prices.").fetchSemanticsNodes().isNotEmpty() }
         assertEquals(1, http.requested.size)
         compose.onNodeWithText("1 week ago").assertExists()
+    }
+
+    @Test fun theChartAndItsRangesComeBeforeBuysAndSells() {
+        market(FakeGecko(), activity = true)
+        // positionInRoot is unclipped: below the fold the activity card's clipped bounds would read as zero.
+        val range = pill("1W").fetchSemanticsNode().positionInRoot.y
+        val activity = compose.onNodeWithText("ACTIVITY", substring = true, ignoreCase = true, useUnmergedTree = true).fetchSemanticsNode().positionInRoot.y
+        assertTrue("the range pills ($range) sit above the activity card ($activity), so the chart is above the fold", range < activity)
     }
 
     @Test fun coinMarketCapIsTheMainMarketLinkAndDexScreenerStaysSecondary() {

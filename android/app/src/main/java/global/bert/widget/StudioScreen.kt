@@ -178,7 +178,7 @@ internal fun ThemeStudio() {
                     "Android may crop artwork slightly to fit your display. Wallpaper changes stay on your device.",
                     color = Muted,
                     fontSize = 12.sp,
-                    lineHeight = 14.sp,
+                    lineHeight = 17.sp,
                 )
             }
         }
@@ -199,12 +199,14 @@ private fun MatchMyBertCard(chosen: global.bert.widget.data.ChosenBert, selected
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Card(
-            modifier = Modifier.width(156.dp).height(300.dp).then(if (selected) Modifier.shadow(12.dp, RoundedCornerShape(22.dp)) else Modifier),
+            modifier = Modifier.width(156.dp).heightIn(min = 300.dp).then(if (selected) Modifier.shadow(12.dp, RoundedCornerShape(22.dp)) else Modifier),
             shape = RoundedCornerShape(22.dp),
             colors = CardDefaults.cardColors(containerColor = Color(palette.backgroundArgb)),
             border = BorderStroke(if (selected) 3.dp else 1.dp, if (selected) Color(palette.accentArgb) else Color.White.copy(alpha = 0.12f)),
         ) {
-            Column(Modifier.fillMaxSize().padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            // The minimum sits on the column: in the horizontally scrolling row the card's own minimum does not reach it,
+            // and the accent bar would float above the card's foot.
+            Column(Modifier.fillMaxWidth().heightIn(min = 300.dp).padding(12.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Box(Modifier.fillMaxWidth().aspectRatio(1f).clip(RoundedCornerShape(14.dp)).background(Color(palette.panelArgb))) {
                     picture?.let { Image(it, "${chosen.bert.name} on its matching colours", Modifier.fillMaxSize(), contentScale = ContentScale.Crop) }
                 }
@@ -303,7 +305,7 @@ private fun pinWidget(context: Context, receiver: Class<*>) {
 
 /**
  * The app's own colours: BERT Violet from the official brand kit (the default), or Berthalla Navy, the app's original
- * look. Widgets and wallpapers keep their own palette below.
+ * look. Widgets and wallpapers keep their own palette, chosen in Phone themes below.
  */
 @Composable
 internal fun AppColours() {

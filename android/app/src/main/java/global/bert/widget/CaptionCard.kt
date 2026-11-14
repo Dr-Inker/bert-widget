@@ -90,16 +90,27 @@ internal fun cardFooter(format: CardFormat): RectF = when (format) {
     CardFormat.STORY -> RectF(0f, format.height - 220f, format.width.toFloat(), format.height - 150f)
 }
 
+/**
+ * The card's two faces: [bold] for the caption and its label, [medium] for the address in the foot band. The card is
+ * the one thing that leaves the app, so it is set in the app's own bundled Outfit, not the phone's system font
+ * (critique 2026-11-12 ART-5). Glyphs Outfit lacks (emoji, other scripts) fall back to the system's, as in the app.
+ */
+internal class CardType(val bold: Typeface, val medium: Typeface) {
+    companion object {
+        fun of(context: Context) = CardType(context.resources.getFont(R.font.outfit_bold), context.resources.getFont(R.font.outfit_medium))
+    }
+}
+
 /** Space kept between the bottom of the caption area and the foot band. */
 private const val FOOTER_GAP = 24f
 
-private fun drawFooter(context: Context, canvas: Canvas, band: RectF, color: Int) {
+private fun drawFooter(context: Context, canvas: Canvas, band: RectF, color: Int, face: Typeface) {
     val mark = requireNotNull(BitmapFactory.decodeResource(context.resources, R.drawable.bert_wordmark, BitmapFactory.Options().apply { inScaled = false })) { "Wordmark unavailable" }
     try {
         val markHeight = band.height() * 0.5f
         val markWidth = markHeight * mark.width / mark.height
         val address = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-            this.color = color; textSize = markHeight * 0.78f; typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL); letterSpacing = 0.02f
+            this.color = color; textSize = markHeight * 0.78f; typeface = face; letterSpacing = 0.02f
         }
         val gap = markHeight * 0.6f
         val left = band.centerX() - (markWidth + gap + address.measureText(CARD_FOOTER_ADDRESS)) / 2f
@@ -124,10 +135,11 @@ internal fun artCrop(art: CardArt, sourceWidth: Int, sourceHeight: Int, aspect: 
 }
 
 // Preview and export use the same raster so wrapping, font size and crop remain identical.
-internal fun renderCaption(context: Context, caption: String, palette: Int, style: CardStyle = CardStyle()): RenderedCaption =
-    renderCaptionWithBounds(context, caption, palette, style).first
+internal fun renderCaption(context: Context, caption: String, palette: Int, style: CardStyle = CardStyle(), type: CardType = CardType.of(context)): RenderedCaption =
+    renderCaptionWithBounds(context, caption, palette, style, type).first
 
-internal fun renderCaptionWithBounds(context: Context, caption: String, palette: Int, style: CardStyle = CardStyle()): Pair<RenderedCaption, CardBounds> {
+internal fun renderCaptionWithBounds(context: Context, caption: String, palette: Int, style: CardStyle = CardStyle(),
+                                     type: CardType = CardType.of(context)): Pair<RenderedCaption, CardBounds> {
     val backgrounds = intArrayOf(0xFF071A2F.toInt(), 0xFFFFF5DF.toInt(), 0xFFE3CEFF.toInt())
     val p = palette.coerceIn(backgrounds.indices)
     val foreground = if (p == 0) 0xFFFFF5DF.toInt() else 0xFF071A2F.toInt()
@@ -137,7 +149,7 @@ internal fun renderCaptionWithBounds(context: Context, caption: String, palette:
     canvas.drawColor(backgrounds[p])
     val art = loadArt(context, style.art)
     val artPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { isFilterBitmap = !style.art.pixelArt }
-    val bold = Typeface.create("sans-serif", Typeface.BOLD)
+    val bold = type.bold
     val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply { typeface = bold }
     fun fit(maxWidth: Int, maxHeight: Int, start: Float): StaticLayout {
         fun layout(size: Float): StaticLayout {
@@ -197,7 +209,7 @@ internal fun renderCaptionWithBounds(context: Context, caption: String, palette:
             drawn = RectF(70f, textTop, 70f + text.width, textTop + text.height)
         }
         // A quiet signature on the card's own background: the wordmark and the address, in the caption colour at reduced strength.
-        drawFooter(context, canvas, footer, (foreground and 0x00FFFFFF) or (0xB3 shl 24))
+        drawFooter(context, canvas, footer, (foreground and 0x00FFFFFF) or (0xB3 shl 24), type.medium)
     } finally {
         art.recycle()
     }

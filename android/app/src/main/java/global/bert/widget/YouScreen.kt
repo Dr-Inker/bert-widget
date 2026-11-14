@@ -65,11 +65,32 @@ internal fun YouAvatar(size: Dp, picture: ImageBitmap?, modifier: Modifier = Mod
     Box(modifier.size(size).clip(CircleShape).background(PanelStrong)) {
         if (picture != null) Image(picture, null, Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
         else Canvas(Modifier.fillMaxSize()) {
-            // The head, hat and collar of the 84 px still, scaled up as hard-edged pixels like everything in the garden.
-            drawImage(pixelBert, srcOffset = IntOffset(PIXEL_HEAD_X, PIXEL_HEAD_Y), srcSize = IntSize(PIXEL_HEAD, PIXEL_HEAD),
-                dstSize = IntSize(this.size.width.toInt(), this.size.height.toInt()), filterQuality = FilterQuality.None)
+            // The head, hat and collar of the 84 px still, scaled up as hard-edged pixels like everything in the garden:
+            // whole device pixels per art pixel (pixelFit), centred, any remainder cropped, so its pixels are even
+            // at every density, not only where the button happens to be a multiple of the art (ART-2).
+            val fit = pixelFit(minOf(this.size.width, this.size.height).toInt(), PIXEL_HEAD)
+            // What does not fit is cropped from the back of his hat and the coat below his chin, never his face or the
+            // hat's crown: he faces right, so the left and the bottom go first.
+            val crop = PIXEL_HEAD - fit.shown
+            drawImage(pixelBert, srcOffset = IntOffset(PIXEL_HEAD_X + crop, PIXEL_HEAD_Y), srcSize = IntSize(fit.shown, fit.shown),
+                dstOffset = IntOffset(((this.size.width - fit.size) / 2).toInt(), ((this.size.height - fit.size) / 2).toInt()),
+                dstSize = IntSize(fit.size, fit.size), filterQuality = FilterQuality.None)
         }
     }
+}
+
+/**
+ * Pixel art drawn hard-edged into a box [boxPx] device px across, from [sourcePx] art pixels: [k] whole device px per art
+ * pixel (the whole number nearest to fitting it exactly), and the [shown] art pixels that fit at that size (the caller
+ * crops the rest). It is drawn [size] px across, centred, so every art pixel is the same k x k block on any phone.
+ */
+internal data class PixelFit(val k: Int, val shown: Int) {
+    val size: Int get() = shown * k
+}
+
+internal fun pixelFit(boxPx: Int, sourcePx: Int): PixelFit {
+    val k = maxOf(1, kotlin.math.floor(boxPx.toFloat() / sourcePx + 0.5f).toInt()) // halves round up: fill rather than ring
+    return PixelFit(k, (boxPx / k).coerceIn(1, sourcePx))
 }
 
 // Where the head sits in bert_f10.png (84 x 84): a square that holds the hat brim, the face and the top of the coat.
@@ -214,6 +235,8 @@ private fun replacement(previous: TextFieldValue, new: String): Triple<String, S
 private fun VisitsCard() {
     val context = LocalContext.current
     val days = remember { BertVisits(context.applicationContext).thisMonth(LocalDate.now()).sorted() }
+    // The run on the garden chalkboard, as it stands today, read without counting anything (0.15).
+    val streak = remember { PlaceDiscovery(context.applicationContext).let { d -> d.streak()?.let { d.streakOn(LocalDate.now()).streak } } }
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(18.dp), border = BorderStroke(1.dp, Cream.copy(alpha = 0.1f)),
         modifier = Modifier.testTag("you-visits")) {
         Row(Modifier.fillMaxWidth().padding(18.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
@@ -225,6 +248,7 @@ private fun VisitsCard() {
                     1 -> "You’ve come round 1 day this month"
                     else -> "You’ve come round ${days.size} days this month"
                 }, color = Muted, fontSize = 14.sp, lineHeight = 21.sp)
+                streak?.let { Text(youStreak(it), color = Muted, fontSize = 14.sp, lineHeight = 21.sp, modifier = Modifier.testTag("you-streak")) }
                 // One print per day, a little uneven like the ones in the garden. The words above say it all for TalkBack.
                 if (days.isNotEmpty()) FlowRow(Modifier.padding(top = 6.dp).clearAndSetSemantics { }, horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -234,6 +258,14 @@ private fun VisitsCard() {
         }
     }
 }
+
+/**
+ * The run under the visits. It is named for what it counts: the paw prints above are days Bert's garden was visited,
+ * this is days the app was opened any way in (a widget, an alert), so the two can differ. "day 1" on the first day of a
+ * run, else "N days in a row"; the best only when it is more.
+ */
+internal fun youStreak(s: VisitStreak): String =
+    "Opening streak: " + (if (s.days == 1) "day 1" else "${s.days} days in a row") + (if (s.best > s.days) " \u00b7 best ${s.best}" else "")
 
 /** One paw print in a 5 x 5 pixel grid: three toes over a pad, the same shape Home presses into the soil. */
 @Composable

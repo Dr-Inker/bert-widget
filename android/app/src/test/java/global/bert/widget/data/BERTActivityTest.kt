@@ -25,11 +25,34 @@ class BERTActivityTest {
         assertEquals(EventPhase.OPEN, activity.event.phaseAt(now, false))
     }
 
-    @Test fun `missing fractional coerced and future source timestamps fail closed`() {
-        listOf("null", "-1", "0", "1788888601.5", "\"1788888601\"", "1788888662").forEach { invalid ->
+    // Critique 2026-11-12 ENG-6: the feed is regenerated every five minutes from the server's clock, so a phone a few
+    // minutes slow sees updated_at in its future. Up to ten minutes ahead is read (as "now"); further ahead fails closed.
+    @Test fun `missing fractional coerced and far future source timestamps fail closed`() {
+        listOf("null", "-1", "0", "1788888601.5", "\"1788888601\"", "1788889202").forEach { invalid ->
             assertTrue(invalid, runCatching { BERTActivity.parse(fixture.replace("1788888601", invalid), now) }.isFailure)
         }
         assertTrue(runCatching { BERTActivity.parse("{}", now) }.isFailure)
+    }
+
+    @Test fun `a phone clock up to ten minutes slow still reads the feed, as fresh`() {
+        for (ahead in listOf(61, 300, 600)) {
+            val activity = BERTActivity.parse(fixture.replace("1788888601", "${1_788_888_601 + ahead}"), now)
+            assertEquals("$ahead s ahead is read as now", now, activity.updatedAtEpochMillis)
+            assertFalse("$ahead s ahead", activity.isStaleAt(now))
+            assertEquals("A test dispatch from Bert.", activity.dispatch)
+        }
+    }
+
+    // Critique 2026-11-12 SEC-2: the dispatch is untrusted text, shown on Home and sent as a notification. Like player
+    // names, it loses bidirectional control characters, which can make text read in a different order than it is.
+    @Test fun `the dispatch is stripped of bidirectional control characters before it is shown or sent`() {
+        val activity = BERTActivity.parse("""{"updated_at":1788888601,
+            "latest_post":"gm from \u202Eevil\u202C \u2066Bert\u2069\u200F\u200E.\nwoof"}""", now)
+        assertEquals("gm from evil Bert.\nwoof", activity.dispatch)
+        val (notices, _) = BERTAlertRules.evaluate(AlertSettings(dispatch = true), AlertMemory(lastDispatch = "older"), null, activity, now)
+        assertEquals("gm from evil Bert.\nwoof", notices.single().text)
+        // Nothing left but the controls is no dispatch at all.
+        assertNull(BERTActivity.parse("""{"updated_at":1788888601,"mood":"smug","latest_post":"\u202E\u202C"}""", now).dispatch)
     }
 
     @Test fun `malformed optional event preserves the dispatch`() {
@@ -103,5 +126,19 @@ class BERTActivityTest {
         assertEquals("Fixture tournament", activity.event!!.name)
         assertTrue(activity.event.standings.isEmpty())
         assertNull(activity.event.pool)
+    }
+
+    // UX-4 (critique 12 November): a feed that loaded with nothing in it is a quiet day; a feed that could not be
+    // fetched, with nothing saved, is the connection. Only a saved feed is shown as a (delayed) note.
+    @Test fun `an empty feed is told apart from an unreachable one`() {
+        val empty = runCatching { BERTActivity.parse("""{"updated_at":1788888601}""", now) }.exceptionOrNull()
+        assertTrue("an empty feed: $empty", empty is EmptyActivityException)
+        assertEquals(ActivityState.Empty, ActivityState.afterFailure(empty!!, saved = null))
+        assertEquals(ActivityState.Unavailable, ActivityState.afterFailure(java.io.IOException("offline"), saved = null))
+        // A bad timestamp is not an empty feed.
+        val bad = runCatching { BERTActivity.parse("""{"updated_at":"soon","mood":"smug"}""", now) }.exceptionOrNull()!!
+        assertEquals(ActivityState.Unavailable, ActivityState.afterFailure(bad, saved = null))
+        val saved = BERTActivity.parse(fixture, now)
+        for (error in listOf(empty, java.io.IOException("offline"))) assertEquals(ActivityState.Available(saved, updateDelayed = true), ActivityState.afterFailure(error, saved))
     }
 }

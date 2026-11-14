@@ -1,6 +1,14 @@
 # BERT v0.14.0: speech bubble, You page, Home labels, real bark, longer charts
 
-**STAGED, not live (30 October 2026): rc2, from `30847cb`.** That is `v014` with `v014-afford` merged (last commit
+**LIVE 30 October 2026** (owner: "run it"): `/opt/berthalla` fast-forwarded `253c2c0` → `c118bcb`; `check-page.cjs
+public` passes (1440/768/390/320, no overflow, 6 downloads, 0.14.0). Both `bert-widget-0.14.0.apk` and the unversioned
+`bert-widget.apk` (a Cloudflare MISS this time) serve `fee68fca…`; live `release.json` says 0.14.0 (32). The AAB and
+mapping are on the PC's `BERT-Play\` (hashes re-checked there: `b420efb8…`, `187723ef…`). GitHub `main` = `5e0d36d`
+(squashed onto `0ebbd95`, scrub scan clean). Platformer `fair-jumps` fast-forwarded `d3c70db` → `a70ac67`. Rollback:
+`git -C /opt/berthalla reset --hard 253c2c0`. Owed: the owner uploads `bert-0.14.0.aab` to Play with the "What's new"
+text below.
+
+Staged earlier the same day: rc2, from `30847cb`.** That is `v014` with `v014-afford` merged (last commit
 `770a3d1`). The website is staged at `c118bcb`. rc2 is built on the staged, never-published 0.13.2 (`1d78ed9`).
 **0.14.0 supersedes 0.13.2:** 0.13.2 never goes live and never goes to Play. **rc1** (`fe58cfd`, before the Home labels;
 APK `58bf9670…`) is **superseded**. Its files and logs are kept in `/opt/bert-widget-qa/release-0.14.0/rc1/`.
@@ -11,7 +19,7 @@ APK `58bf9670…`) is **superseded**. Its files and logs are kept in `/opt/bert-
   range history and the labels.
 - **Play bundle:** SHA-256 `b420efb84950b5960cc0b607d2acd3d5c2d29ae853447300afcdd58a040f87df` (10,809,297 bytes), with
   `mapping-0.14.0.txt` (`187723ef…`). All are in `/opt/bert-widget-qa/release-0.14.0/staged/` with `release.json`.
-  **Not** copied to the PC's `BERT-Play\`.
+  Copied to the PC's `BERT-Play\` at go-live.
 - **Preview for the S25:** `/opt/bert-widget-qa/preview-0.14/bert-0.14.0-preview-30847cb.apk`, SHA-256
   `184e761913f599200a4516fcdb85053d9a7c26a9e76a24edc608ae25d2603841`. It is `global.bert.widget.preview` 0.14.0-preview
   (32), built from `30847cb` with `assemblePreview` and re-signed with `apksigner` using

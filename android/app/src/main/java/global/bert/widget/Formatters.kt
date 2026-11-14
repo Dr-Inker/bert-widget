@@ -102,13 +102,28 @@ fun rangeDateFormat(window: BERTChartWindow, locale: Locale = Locale.getDefault(
 fun formatRangeSpan(firstEpochMillis: Long, lastEpochMillis: Long, lastIsFetch: Boolean, dates: SimpleDateFormat, localDates: SimpleDateFormat): String =
     "${dates.format(Date(firstEpochMillis))}–${(if (lastIsFetch) localDates else dates).format(Date(lastEpochMillis))}"
 
+/** Whole minutes under two hours, else whole hours, both rounded down so a label never claims more than the prices cover. */
+private fun coveredSpan(millis: Long): Pair<Long, String> {
+    val minutes = (millis / 60_000L).coerceAtLeast(1)
+    return if (minutes < 120) minutes to "minute" else minutes / 60 to "hour"
+}
+
+/** "the last 3 hours", "the last 95 minutes": how far back a short chart's prices reach, for "Change over the last 3 hours". */
+fun formatLastSpan(millis: Long): String {
+    val (count, unit) = coveredSpan(millis)
+    return if (count == 1L) "the last $unit" else "the last $count ${unit}s"
+}
+
 /**
  * The chart's left-edge label. The short windows read as elapsed hours and the long ones as a plain span, unless the
- * prices start late (a year whose older half was refused), when it is the date of the first price, from [dates]: the
- * range's own calendar, the same one the span under the chart starts on.
+ * prices start late. A long range that starts late (a year whose older half was refused) names the date of its first
+ * price, from [dates]: the range's own calendar, the same one the span under the chart starts on. A short one (three
+ * hours of history on 24H) names how long before [nowEpochMillis] its first price is: "3h ago", "40m ago".
  */
 fun formatWindowStart(window: BERTChartWindow, originEpochMillis: Long, startsLate: Boolean = false,
-                      dates: SimpleDateFormat = rangeDateFormat(window)): String = when {
+                      dates: SimpleDateFormat = rangeDateFormat(window),
+                      nowEpochMillis: Long = originEpochMillis + window.durationMillis): String = when {
+    startsLate && !window.isLongRange -> coveredSpan(nowEpochMillis - originEpochMillis).let { (count, unit) -> "$count${unit.first()} ago" }
     startsLate -> dates.format(Date(originEpochMillis))
     window == BERTChartWindow.WEEK -> "1 week ago"
     window == BERTChartWindow.MONTH -> "1 month ago"
@@ -124,4 +139,15 @@ fun formatGapLimit(millis: Long): String {
         millis < 48 * 3_600_000L -> "${plain(millis / 3_600_000.0)} hours"
         else -> "${plain(millis / 86_400_000.0)} days"
     }
+}
+
+/**
+ * The clock times a short chart's prices run between, in this phone's zone: "08:08–09:08". A span that crosses midnight
+ * names each end's day, "Sun 09:18–Mon 09:08", so a 24-hour chart does not read as if time ran backwards.
+ */
+internal fun formatClockSpan(firstEpochMillis: Long, lastEpochMillis: Long, locale: Locale = Locale.getDefault()): String {
+    val day = SimpleDateFormat("yyyyMMdd", Locale.ROOT)
+    val sameDay = day.format(Date(firstEpochMillis)) == day.format(Date(lastEpochMillis))
+    val clock = SimpleDateFormat(if (sameDay) "HH:mm" else "EEE HH:mm", locale)
+    return "${clock.format(Date(firstEpochMillis))}–${clock.format(Date(lastEpochMillis))}"
 }

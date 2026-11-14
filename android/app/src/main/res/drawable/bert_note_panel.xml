@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The wide note's left panel, where pixel Bert stands: the paper's shade, with the same lower edge one step darker. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android" android:autoMirrored="true">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/note_shade_edge" />
+            <corners android:topLeftRadius="@dimen/note_radius" android:bottomLeftRadius="@dimen/note_radius"
+                android:topRightRadius="0dp" android:bottomRightRadius="0dp" />
+        </shape>
+    </item>
+    <item android:bottom="@dimen/note_lip">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/note_shade" />
+            <corners android:topLeftRadius="@dimen/note_radius" android:bottomLeftRadius="@dimen/note_radius"
+                android:topRightRadius="0dp" android:bottomRightRadius="0dp" />
+        </shape>
+    </item>
+</layer-list>

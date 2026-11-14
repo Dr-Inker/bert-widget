@@ -160,23 +160,27 @@ class BERTAlertStore(context: Context) {
             if (settings.bigMovePct == null) remove("big_move") else putInt("big_move", settings.bigMovePct)
             // A new threshold (or switching on) starts unannounced; the 6-hour cooldown clock is kept.
             if (settings.bigMovePct != old.bigMovePct) putInt("big_move_side", 0)
-        }.commit()
+        }.apply() // called from the UI; the in-memory map updates at once, so the worker sees it
     }
 
     /**
      * Saves what a check announced only if the settings it judged are still current. A level or threshold saved
      * mid-check re-arms itself in [save]; writing the old check's memory over it would undo that.
+     *
+     * The dispatch is compare-and-set against [read], the memory the check started from: if the open app marked a newer
+     * dispatch seen in the meantime ([markDispatchSeen]), that one stays, or the next check would announce a post the
+     * person has already read (critique 2026-11-12 ENG-5).
      */
-    fun saveMemoryIfUnchanged(memory: AlertMemory, evaluatedWith: AlertSettings): Boolean = synchronized(lock) {
+    fun saveMemoryIfUnchanged(memory: AlertMemory, evaluatedWith: AlertSettings, read: AlertMemory): Boolean = synchronized(lock) {
         if (settings() != evaluatedWith) return false
-        saveMemory(memory)
+        saveMemory(memory, keepDispatch = preferences.getString("last_dispatch", null) != read.lastDispatch)
         true
     }
 
-    fun saveMemory(memory: AlertMemory) = synchronized(lock) {
+    fun saveMemory(memory: AlertMemory, keepDispatch: Boolean = false) = synchronized(lock) {
         preferences.edit().apply {
             if (memory.notifiedTournament == null) remove("notified_tournament") else putString("notified_tournament", memory.notifiedTournament)
-            if (memory.lastDispatch == null) remove("last_dispatch") else putString("last_dispatch", memory.lastDispatch)
+            if (!keepDispatch) { if (memory.lastDispatch == null) remove("last_dispatch") else putString("last_dispatch", memory.lastDispatch) }
             putBoolean("above_fired", memory.aboveFired)
             putBoolean("below_fired", memory.belowFired)
             putInt("big_move_side", memory.bigMoveSide)
@@ -186,7 +190,7 @@ class BERTAlertStore(context: Context) {
 
     /** A dispatch read in the open app is not news later. */
     fun markDispatchSeen(dispatch: String) = synchronized(lock) {
-        if (preferences.getBoolean("dispatch", false)) preferences.edit().putString("last_dispatch", dispatch).commit()
+        if (preferences.getBoolean("dispatch", false)) preferences.edit().putString("last_dispatch", dispatch).apply()
     }
 
     private companion object { val lock = Any() }

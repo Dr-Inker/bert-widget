@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Bert's day widget: the paper's corner and the depth of its shaded lower edge. -->
+    <dimen name="note_radius">20dp</dimen>
+    <dimen name="note_lip">4dp</dimen>
+</resources>

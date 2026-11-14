@@ -1,6 +1,9 @@
 package global.bert.widget
 
 import androidx.compose.ui.res.imageResource
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.FilterQuality
 import androidx.compose.ui.semantics.Role
@@ -46,6 +49,10 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import global.bert.widget.data.ActivityState
@@ -108,8 +115,11 @@ internal fun HomeScreen(modifier: Modifier, state: ActivityState, now: Long, ref
         val screenPx = (LocalConfiguration.current.screenHeightDp * LocalDensity.current.density).toInt()
         // Once the scene has scrolled up past the status bar, the bar is over the page, not the sky. Derived, so Home
         // recomposes when that flips, not on every scroll frame.
-        val covered by remember(widthPx, statusPx, screenPx) {
-            derivedStateOf { widthPx > 0 && scroll.value > placeHeightPx(widthPx, screenPx) - statusPx }
+        // Before the first measure the screen's own width stands in: Home's scroll is restored (a tab switch, a rotation)
+        // before its width is known, and the garden must count as scrolled away from that first frame (the day's word).
+        val widthGuessPx = (LocalConfiguration.current.screenWidthDp * LocalDensity.current.density).toInt()
+        val covered by remember(widthPx, widthGuessPx, statusPx, screenPx) {
+            derivedStateOf { (if (widthPx > 0) widthPx else widthGuessPx).let { w -> w > 0 && scroll.value > placeHeightPx(w, screenPx) - statusPx } }
         }
         // Where the You button floats over the scene (it scrolls with it, so this holds at any scroll), with a 4dp margin.
         // Top right on screen whatever the language's direction, like the picture it sits on (BertsPlace keeps the scene
@@ -171,29 +181,28 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
     val fresh = BERTHomeVisits.newSince(journal, visit, current)
 
     var board by rememberSaveable { mutableStateOf(false) }
-    val price = (quote as? QuoteState.Available)?.quote?.priceUsd
-    BertsPlace(now, activity?.mood, price, fresh.size, openBoard = { board = true }, openMarket = openMarket, meetBert = { meetBert = true; askedToMeet = true },
-        openTrail = { openLostTrail(context) }, skyCovered = skyCovered, overlay = youOverlay)
-    // 0.14: the speech bubble already leaves room under the scene, so the page starts close beneath it.
-    Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 4.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
-        val chosen = LocalMyBert.current.chosen
-        // The board keeps a labelled way in once its notes are read: otherwise the only one is the pixel noticeboard.
-        val boardHasNotes = current != null || journal.isNotEmpty()
-        // The board link and the official links are one quiet group; both rows are 48dp touch targets already,
-        // so the column's 18dp gap between them read as a hole.
+    // 0.15: the garden is where you play with Bert, not a menu. What its things used to open is just below it: the slate
+    // (Market), the note (the board), the trail section and the Play tab (The Lost Trail).
+    BertsPlace(now, activity?.mood, fresh.size, meetBert = { meetBert = true; askedToMeet = true },
+        skyCovered = skyCovered, overlay = youOverlay)
+    // 0.15, slate and paper (UX-2, UX-4, UX-9, ART-10): the garden carries on under Bert's bubble. The price is chalked on
+    // a slate, in dollars with how fresh it is, one tap from Market; Berthalla's note is pinned up on paper in his hand,
+    // one tap from the board. Offline is told apart from "no post" on the paper as on the board (SlateAndPaper.kt).
+    val boardHasNotes = current != null || journal.isNotEmpty()
+    val entry = journal.firstOrNull { it.text == current }
+    val use24Hour = android.text.format.DateFormat.is24HourFormat(context)
+    val delayedFeed = (state as? ActivityState.Available)?.let { it.updateDelayed || it.activity.isStaleAt(now) } == true
+    SlateAndPaper(placeTimeAt(now).time, slateFace(quote, now, use24Hour),
+        noteFace(state, entry, fresh.size, isNew = !delayedFeed && BERTHomeVisits.isNew(entry, visit, now), boardHasNotes = boardHasNotes,
+            slateSaysOffline = quote is QuoteState.Unavailable, now = now),
+        openMarket = openMarket, openBoard = { board = true })
+    Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 20.dp, top = 6.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(18.dp)) {
+        // Your Bert, when one is chosen, then Bert's own channels: one quiet group under the note.
         Column {
-            if (chosen != null || boardHasNotes) FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(8.dp),
-                itemVerticalAlignment = Alignment.CenterVertically) {
-                chosen?.let { MyBertChip(it) }
-                if (fresh.isNotEmpty()) TextButton(onClick = { board = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                    Text(if (fresh.size == 1) "1 new note on the board" else "${fresh.size.coerceAtMost(6)} new notes on the board",
-                        fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
-                } else if (boardHasNotes) TextButton(onClick = { board = true }, contentPadding = PaddingValues(horizontal = 4.dp)) {
-                    Text("Read the noticeboard", color = Muted, fontSize = 15.sp, fontWeight = FontWeight.Medium)
-                }
-            }
+            LocalMyBert.current.chosen?.let { Box(Modifier.heightIn(min = 48.dp), contentAlignment = Alignment.CenterStart) { MyBertChip(it) } }
             OfficialChips()
         }
+        LocalAppUpdate.current?.takeIf { !it.hiddenOnHome }?.let { UpdateRow(it) }
         var exitReport by rememberExitReport()
         exitReport?.let { report -> ExitReportCard(report) { exitReport = null } }
         if (meetBert) Box(Modifier.bringIntoViewRequester(meetRequester)) { MeetBertCard { visits.meetBertDismissed = true; meetBert = false } }
@@ -207,6 +216,9 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
         var hidden by remember { mutableStateOf(false) }
         val progress by produceState<GettingStarted?>(null, now) {
             if (value?.visible == false) return@produceState // hidden or finished: no more checks this session
+            value = withContext(Dispatchers.IO) { BERTOnboarding.progress(context.applicationContext) }
+            // Leaving the game copies its save asynchronously (see rememberLostTrailProgress): look once more.
+            delay(1_500)
             value = withContext(Dispatchers.IO) { BERTOnboarding.progress(context.applicationContext) }
         }
         progress?.takeIf { !hidden && it.visible }?.let { GettingStartedCard(it, openStep) {
@@ -237,8 +249,10 @@ private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntr
             var dispatch: String? = null
             when (state) {
                 ActivityState.Loading -> Text("checking the board…", color = Muted)
-                // The feed can be quiet for days; the board says so in his voice rather than passing an old note off as new.
-                ActivityState.Unavailable -> Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
+                // No feed and nothing saved: the connection, not the post. The postman's strike is for a feed that came
+                // back with nothing in it (quiet for days); the board says so in his voice rather than passing an old note off as new.
+                ActivityState.Unavailable -> Text(OFFLINE_BOARD, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
+                ActivityState.Empty -> Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
                 is ActivityState.Available -> {
                     dispatch = state.activity.dispatch
                     state.activity.dispatch?.let { UpdateText(it) } ?: Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
@@ -272,7 +286,8 @@ private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntr
     }
 }
 
-private const val NO_POST = "no post today. the postman’s on strike."
+/** The board's words in Bert's hand when there is nothing to pin up: a quiet feed, or no connection (shared with the note). */
+private const val OFFLINE_BOARD = OFFLINE_NOTE
 
 /** "WOOFmornin" is Bert's own good-morning; the rest follow the phone's clock. */
 internal fun greetingAt(epochMillis: Long, zone: ZoneId = ZoneId.systemDefault()): String =
@@ -335,7 +350,8 @@ private fun MeetBertCard(dismiss: () -> Unit) {
                 PixelBertPortrait(side, Modifier.clip(Small).background(PanelStrong))
             }
             Text("Meet Bert", color = Cream, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { heading() })
-            Text("Bert is the Mayor of Berthalla, a Pomeranian in a red hat. The pixel and cartoon Bert are drawn from Bertram, the real dog who started it all.",
+            Text("Bert is the Mayor of Berthalla, a Pomeranian in a red hat. The pixel and cartoon Bert are drawn from Bertram, the real dog who started it all. " +
+                "BERT is a community coin on Solana, named after him.",
                 color = Cream, fontSize = 15.sp, lineHeight = 22.sp)
             Text("This app and its daily updates come from Berthalla, a fan project. Official BERT: @bertcoincto and bert.global.",
                 color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
@@ -437,11 +453,26 @@ internal fun LostTrailContinueCard(progress: LostTrailProgress?, open: () -> Uni
         else -> "All six worlds cleared"
     }
     // Not a card: the game's own picture, hard-edged like the garden, and the words on the page. It is what lies
-    // through Bert's gate (the gate in the garden opens it too).
+    // through Bert's gate.
     Column(Modifier.fillMaxWidth().clickable(onClick = open, role = Role.Button), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("through the gate", fontFamily = BertHand, fontSize = 20.sp, color = Muted)
-        Image(ImageBitmap.imageResource(R.drawable.lost_trail), null, contentScale = ContentScale.Crop, filterQuality = FilterQuality.None,
-            modifier = Modifier.fillMaxWidth().aspectRatio(16f / 9f))
+        // The art is 640 x 360 pixels, each a 2 x 2 block in the 1280 x 720 file. It is drawn at whole device pixels per
+        // art pixel (visual-art-added-1) and fills the column: where the whole picture would only fit as a small
+        // stamp (1x on a 1080 px phone, two-thirds of the column), it is drawn one size up and the sides that do not fit
+        // are left off by trailFit, which keeps the gate, Bert, the moon and the volcano. Its full height always shows.
+        val art = ImageBitmap.imageResource(R.drawable.lost_trail)
+        BoxWithConstraints(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            val fit = trailFit(constraints.maxWidth)
+            val width = fit.shown * fit.k
+            val height = TRAIL_ART_H * fit.k
+            val density = LocalDensity.current
+            Canvas(Modifier.size(with(density) { width.toDp() }, with(density) { height.toDp() }).testTag("trail-art")) {
+                val cell = art.width / TRAIL_ART_W
+                drawImage(art, srcOffset = IntOffset(fit.start * cell, 0),
+                    srcSize = IntSize(fit.shown * cell, TRAIL_ART_H * cell),
+                    dstOffset = IntOffset.Zero, dstSize = IntSize(width, height), filterQuality = FilterQuality.None)
+            }
+        }
         Column(Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -461,6 +492,36 @@ internal fun LostTrailContinueCard(progress: LostTrailProgress?, open: () -> Uni
     }
 }
 
+/** The Lost Trail picture's own pixels (lost_trail.png is drawn on a 2 px grid). */
+internal const val TRAIL_ART_W = 640
+internal const val TRAIL_ART_H = 360
+
+// Where things sit across lost_trail.png, in art pixels (measured on the file).
+/** The left post of the gate; the stone wall and the big tree's trunk are to its left. */
+internal const val TRAIL_GATE_X = 84
+/** Just past the volcano's crater. */
+internal const val TRAIL_VOLCANO_X = 520
+/** Where the aurora begins; a cut here leaves clean night sky at the right edge. */
+internal const val TRAIL_AURORA_X = 528
+/** A window this wide, set against the right edge, holds the gate and the whole castle. */
+internal const val TRAIL_WITH_CASTLE = 560
+
+/** [k] device px per art pixel, and the [shown] art pixels across that are drawn, from [start]. */
+internal data class TrailFit(val k: Int, val start: Int, val shown: Int)
+
+/**
+ * The Lost Trail picture in a column [boxPx] device px wide: whole pixels at the scale nearest to filling the column
+ * (pixelFit), with a chosen window where the whole picture does not fit at that scale. The story reads left to right
+ * (gate, Bert, the path, the moon, the volcano, then the far castle under the aurora), and a centred crop cuts both
+ * the gate and the castle. So: wide enough for the gate and the castle, the window sits against the right edge; narrower,
+ * it ends where the aurora begins, giving up the castle and keeping everything from the gate to the volcano.
+ */
+internal fun trailFit(boxPx: Int): TrailFit {
+    val fit = pixelFit(boxPx, TRAIL_ART_W)
+    val start = if (fit.shown >= TRAIL_WITH_CASTLE) TRAIL_ART_W - fit.shown else maxOf(0, TRAIL_AURORA_X - fit.shown)
+    return TrailFit(fit.k, start, fit.shown)
+}
+
 /** One segment per world: cleared, under way, or still ahead. The counts beside it say the same in words. */
 @Composable
 private fun WorldsBar(cleared: Int, inProgress: Int?) {
@@ -468,8 +529,8 @@ private fun WorldsBar(cleared: Int, inProgress: Int?) {
         LostTrailProgress.WORLDS.indices.forEach { world ->
             val fill = when {
                 world < cleared -> Amber
-                world == inProgress -> Amber.copy(alpha = 0.4f)
-                else -> Navy
+                world == inProgress -> Amber.copy(alpha = 0.75f)
+                else -> Muted.copy(alpha = 0.55f) // a visible track: Navy on the Navy page was 1:1
             }
             Box(Modifier.weight(1f).height(6.dp).clip(Small).background(fill))
         }

@@ -5,6 +5,7 @@ import android.app.Application
 import android.app.NotificationManager
 import android.content.Context
 import global.bert.widget.data.AlertSettings
+import global.bert.widget.data.BERTActivity
 import global.bert.widget.data.BERTAlertStore
 import global.bert.widget.work.checkAlerts
 import kotlinx.coroutines.runBlocking
@@ -61,8 +62,30 @@ class BERTAlertDeliveryTest {
         val judged = AlertSettings(priceAbove = 0.016)
         store.save(judged)
         store.save(AlertSettings(priceAbove = 0.018)) // the person edits mid-check
-        assertFalse(store.saveMemoryIfUnchanged(store.memory().copy(aboveFired = true), judged))
+        assertFalse(store.saveMemoryIfUnchanged(store.memory().copy(aboveFired = true), judged, store.memory()))
         assertFalse(store.memory().aboveFired)
+    }
+
+    /**
+     * Critique 2026-11-12 ENG-5: the open app marks a new dispatch seen while a background check is between reading the
+     * alert memory and saving it. The check's older copy of the dispatch must not overwrite the one just seen, or the
+     * next run announces a post the person has already read.
+     */
+    @Test fun `a dispatch seen in the app during a check is not announced again`() {
+        shadowOf(context as Application).grantPermissions(Manifest.permission.POST_NOTIFICATIONS)
+        val store = BERTAlertStore(context)
+        store.save(AlertSettings(dispatch = true, priceAbove = 0.016))
+        store.saveMemory(store.memory().copy(lastDispatch = "Old post"))
+        seedQuote(0.0170) // a price alert, so the check has something to post and saves after posting
+        val stillOld = BERTActivity(System.currentTimeMillis() - 60_000, "Old post", "content", null)
+
+        checkAlerts(context, stillOld, post = { notices -> store.markDispatchSeen("New post"); notices.size })
+
+        assertEquals("the app's newer dispatch is kept", "New post", store.memory().lastDispatch)
+        assertTrue("the rest of the check is still saved", store.memory().aboveFired)
+        val manager = shadowOf(context.getSystemService(NotificationManager::class.java))
+        checkAlerts(context, BERTActivity(System.currentTimeMillis() - 60_000, "New post", "content", null))
+        assertTrue("no second 'New from Berthalla'", manager.allNotifications.none { it.channelId == "dispatch" })
     }
 
     @Test fun `changing a price level re-arms it`() {

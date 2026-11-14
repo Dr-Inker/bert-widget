@@ -7,6 +7,7 @@ import androidx.work.Constraints
 import androidx.work.CoroutineWorker
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
+import androidx.work.ListenableWorker
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.PeriodicWorkRequestBuilder
@@ -15,6 +16,7 @@ import androidx.work.WorkerParameters
 import global.bert.widget.alerts.BERTNotifier
 import global.bert.widget.data.BERTActivity
 import global.bert.widget.data.BERTActivityRepository
+import global.bert.widget.data.AlertNotice
 import global.bert.widget.data.BERTAlertRules
 import global.bert.widget.data.BERTAlertStore
 import global.bert.widget.data.BERTMarketHistoryRepository
@@ -56,15 +58,17 @@ internal fun checkAlerts(
     context: Context,
     activity: BERTActivity? = BERTActivityRepository(context).load(),
     now: Long = System.currentTimeMillis(),
+    post: (List<AlertNotice>) -> Int = { BERTNotifier.post(context, it) },
 ) {
     val store = BERTAlertStore(context)
     val settings = store.settings()
     if (!settings.anyEnabled) return
-    val (notices, memory) = BERTAlertRules.evaluate(settings, store.memory(), BERTQuoteRepository(context).load(), activity, now,
+    val read = store.memory()
+    val (notices, memory) = BERTAlertRules.evaluate(settings, read, BERTQuoteRepository(context).load(), activity, now,
         use24Hour = android.text.format.DateFormat.is24HourFormat(context))
     // Memory only advances for notices that were actually shown (or need no showing), so a missing
     // permission does not silently consume an alert.
-    if (notices.isEmpty() || BERTNotifier.post(context, notices) > 0) store.saveMemoryIfUnchanged(memory, settings)
+    if (notices.isEmpty() || post(notices) > 0) store.saveMemoryIfUnchanged(memory, settings, read)
 }
 
 /** Runs one refresh step; cancellation propagates, any other failure is reported as false. */
@@ -73,23 +77,35 @@ private inline fun bestEffort(step: () -> Unit): Boolean =
     catch (cancelled: CancellationException) { throw cancelled }
     catch (_: Exception) { false }
 
+/**
+ * One background run, [BERTRefreshWorker.doWork]'s body with its sources passed in so a test can fail any of them.
+ * Each step stands alone: a failed quote must not suppress feed alerts, the Bert widget or a re-render.
+ */
+internal suspend fun refreshInBackground(
+    context: Context,
+    runAttemptCount: Int,
+    quotes: BERTQuoteRepository = BERTQuoteRepository(context),
+    feed: BERTActivityRepository = BERTActivityRepository(context),
+    history: BERTMarketHistoryRepository = BERTMarketHistoryRepository(context),
+    render: suspend () -> Unit = { updateAllBERTWidgets(context) },
+): ListenableWorker.Result {
+    val quoteRefreshed = bestEffort { quotes.refresh() }
+    val activity = refreshActivityIfNeeded(context) { feed.refresh() }
+    bestEffort { checkAlerts(context, activity) }
+    // Best effort: the sparkline falls back to cached history plus device quotes.
+    bestEffort { history.refresh() }
+    val rendered = bestEffort { render() }
+    // Periodic-work retries back off up to 5 hours and replace the 15-minute cadence, so retry only briefly;
+    // after that the next period tries again on schedule.
+    return if ((quoteRefreshed && rendered) || runAttemptCount >= 2) ListenableWorker.Result.success() else ListenableWorker.Result.retry()
+}
+
 class BERTRefreshWorker(context: Context, parameters: WorkerParameters) :
     CoroutineWorker(context, parameters) {
-    override suspend fun doWork(): Result {
-        // Each step stands alone: a failed quote must not suppress feed alerts, the Bert widget or a re-render.
-        val quoteRefreshed = bestEffort { BERTQuoteRepository(applicationContext).refresh() }
-        val activity = refreshActivityIfNeeded(applicationContext)
-        bestEffort { checkAlerts(applicationContext, activity) }
-        // Best effort: the sparkline falls back to cached history plus device quotes.
-        bestEffort { BERTMarketHistoryRepository(applicationContext).refresh() }
-        val rendered = bestEffort { updateAllBERTWidgets(applicationContext) }
-        // Periodic-work retries back off up to 5 hours and replace the 15-minute cadence, so retry only briefly;
-        // after that the next period tries again on schedule.
-        return if ((quoteRefreshed && rendered) || runAttemptCount >= 2) Result.success() else Result.retry()
-    }
+    override suspend fun doWork(): Result = refreshInBackground(applicationContext, runAttemptCount)
 
     companion object {
-        private const val PERIODIC_WORK = "bert-periodic-quote-refresh"
+        internal const val PERIODIC_WORK = "bert-periodic-quote-refresh"
 
         /** Background refresh runs for placed widgets or switched-on alerts; the open app refreshes itself. */
         fun syncSchedule(context: Context) {

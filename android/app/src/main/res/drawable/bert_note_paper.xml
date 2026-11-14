@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Bert's day widget: cream paper with its lower edge in shade, so it reads as a sheet lying on the home screen. -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/note_shade" />
+            <corners android:radius="@dimen/note_radius" />
+        </shape>
+    </item>
+    <item android:bottom="@dimen/note_lip">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/note_paper" />
+            <corners android:radius="@dimen/note_radius" />
+        </shape>
+    </item>
+</layer-list>

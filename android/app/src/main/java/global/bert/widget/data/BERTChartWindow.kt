@@ -3,6 +3,8 @@ package global.bert.widget.data
 private const val HOUR_MILLIS = 3_600_000L
 private const val DAY_MILLIS = 24 * HOUR_MILLIS
 private const val LATE_START_SHARE = 50
+/** The fewest prices a drawn line must join; fewer is a dot or a dash, not a chart. */
+private const val MIN_LINE_PRICES = 3
 
 /**
  * How a long chart range is fetched from GeckoTerminal. [timeframe] and [aggregate] pick the candle size
@@ -34,6 +36,9 @@ enum class BERTChartWindow(val label: String, val durationMillis: Long, val cand
     /** Gaps wider than this are drawn as breaks: 30 minutes for the 5-minute history, 2.5 candles for long ranges. */
     val maxJoinGapMillis: Long get() = candles?.let { (it.intervalSeconds * 2_500L) } ?: (30 * 60_000L)
 
+    /** How far apart this range's prices are meant to be: one candle for a long range, the 5-minute history for the rest. */
+    val intervalMillis: Long get() = (candles?.intervalSeconds ?: BERTDirectSources.HISTORY_INTERVAL_SECONDS) * 1_000
+
     // Input is already combined and validated; normalize() would re-apply the 192-sample device cap
     // and drop the oldest hours of server history.
     fun samples(history: List<BERTPriceSample>, nowEpochMillis: Long): List<BERTPriceSample> {
@@ -47,16 +52,38 @@ enum class BERTChartWindow(val label: String, val durationMillis: Long, val cand
         series.filter { it.observedAtEpochMillis >= nowEpochMillis - durationMillis }
 
     /**
-     * Whether a long range's prices start noticeably after the window does, so the chart has to name its real first date
-     * instead of "1 year ago". The free API reaches back about 361 days, so a year that opens a few days late still reads
-     * as a year: the allowance is a fiftieth of the window (about a week of a year, three hours of a week). Half a year,
-     * from a second page that was refused, is not.
+     * Whether the prices start noticeably after the window does, so the chart has to say where they really start instead
+     * of "1 year ago" or "24h ago". The free API reaches back about 361 days, so a year that opens a few days late still
+     * reads as a year: the allowance is a fiftieth of the window (about a week of a year, three hours of a week, half an
+     * hour of a day) beyond one interval between prices. Half a year, from a second page that was refused, is not. The
+     * short ranges are held to the same rule: their 5-minute history can cover far less than a day (a new install, or the
+     * history unreachable and only this device's quotes kept), and three hours of prices must not read as 24 hours.
      */
     fun startsLate(series: List<BERTPriceSample>, nowEpochMillis: Long): Boolean {
-        val spec = candles ?: return false
         val first = series.firstOrNull() ?: return false
-        val firstOpen = first.observedAtEpochMillis - spec.intervalSeconds * 1_000
+        val firstOpen = first.observedAtEpochMillis - intervalMillis
         return firstOpen > nowEpochMillis - durationMillis + durationMillis / LATE_START_SHARE
+    }
+
+    /** Which prices a line reaches: each one within [maxJoinGapMillis] of a neighbour. The rest would be loose dots. */
+    fun joined(series: List<BERTPriceSample>): BooleanArray {
+        val joined = BooleanArray(series.size)
+        for (index in 0 until series.size - 1) {
+            if (series[index + 1].observedAtEpochMillis - series[index].observedAtEpochMillis <= maxJoinGapMillis) {
+                joined[index] = true
+                joined[index + 1] = true
+            }
+        }
+        return joined
+    }
+
+    /**
+     * Whether the prices make a line worth drawing: at least [MIN_LINE_PRICES] of them joined, and at least half. Fewer is
+     * a scatter of dots that reads as a broken chart, so the chart says there is not enough history yet instead.
+     */
+    fun hasLine(series: List<BERTPriceSample>): Boolean {
+        val joinedCount = joined(series).count { it }
+        return joinedCount >= MIN_LINE_PRICES && joinedCount * 2 >= series.size
     }
 
     /** The chart's left edge: the window's length ago, or the first price when the prices [startsLate]. */

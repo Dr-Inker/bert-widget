@@ -30,8 +30,17 @@ class BERTHoldingsStore(context: Context) {
         }.apply()
     }
 
+    /**
+     * "Show my holdings on the Market widget". On unless the person switched it off, so holdings entered before the
+     * switch existed keep showing as they did. Removing or editing holdings keeps the choice.
+     */
+    var showOnWidget: Boolean
+        get() = preferences.getBoolean(SHOW_ON_WIDGET_KEY, true)
+        set(value) { preferences.edit().putBoolean(SHOW_ON_WIDGET_KEY, value).apply() }
+
     companion object {
         private const val KEY = "token_amount"
         private const val COST_KEY = "total_cost_usd"
+        private const val SHOW_ON_WIDGET_KEY = "show_on_widget"
     }
 }
