@@ -172,7 +172,8 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
     // First frame: one small synchronous read (and record) so "first seen" and "New" never pop in after it.
     var journal by remember { mutableStateOf(activity?.let { journalStore.record(it, now) }.let { journalStore.entries() }) }
     LaunchedEffect(current) {
-        // The feed has no post time, so "first seen" is the honest one; record here too in case Home saw it first.
+        // Record here too in case Home saw it first: "first seen" is what counts as new, and a feed too old to carry
+        // the post's own time is dated by it.
         journal = withContext(Dispatchers.IO) {
             activity?.let { journalStore.record(it, now) }
             journalStore.entries()
@@ -186,8 +187,9 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
     BertsPlace(now, activity?.mood, fresh.size, meetBert = { meetBert = true; askedToMeet = true },
         skyCovered = skyCovered, overlay = youOverlay)
     // 0.15, slate and paper (UX-2, UX-4, UX-9, ART-10): the garden carries on under Bert's bubble. The price is chalked on
-    // a slate, in dollars with how fresh it is, one tap from Market; Berthalla's note is pinned up on paper in his hand,
-    // one tap from the board. Offline is told apart from "no post" on the paper as on the board (SlateAndPaper.kt).
+    // a slate, in dollars with how fresh it is, one tap from Market; the latest post from Berthalla is a printed clipping pinned
+    // up under it (0.15.1: typed, never in Bert's hand), one tap from the board. Offline is told apart from "no post" on
+    // the clipping as on the board (SlateAndPaper.kt).
     val boardHasNotes = current != null || journal.isNotEmpty()
     val entry = journal.firstOrNull { it.text == current }
     val use24Hour = android.text.format.DateFormat.is24HourFormat(context)
@@ -232,7 +234,7 @@ private fun ColumnScope.HomeContent(state: ActivityState, now: Long, quote: Quot
         fresh.map { it.firstSeenEpochMillis }.toSet(), makeCard = { board = false; makeCard(it) }) { board = false }
 }
 
-/** The noticeboard on the garden wall: today's note from Berthalla pinned over the earlier ones. */
+/** The noticeboard on the garden wall: the latest post from Berthalla pinned over the earlier ones, all typed (they are not Bert's own words). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntry?, visit: HomeVisit?, earlier: List<JournalEntry>,
@@ -248,22 +250,24 @@ private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntr
                 modifier = Modifier.semantics { heading() })
             var dispatch: String? = null
             when (state) {
-                ActivityState.Loading -> Text("checking the board…", color = Muted)
-                // No feed and nothing saved: the connection, not the post. The postman's strike is for a feed that came
-                // back with nothing in it (quiet for days); the board says so in his voice rather than passing an old note off as new.
-                ActivityState.Unavailable -> Text(OFFLINE_BOARD, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
-                ActivityState.Empty -> Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
+                ActivityState.Loading -> Text(CHECKING_NOTE, color = Muted)
+                // No feed and nothing saved: the connection, not the post. "No post" is for a feed that came back with
+                // nothing in it, rather than passing an old post off as new. The app's words, typed, not Bert's hand.
+                ActivityState.Unavailable -> Text(OFFLINE_BOARD, fontSize = 17.sp, color = Cream)
+                ActivityState.Empty -> Text(NO_POST, fontSize = 17.sp, color = Cream)
                 is ActivityState.Available -> {
                     dispatch = state.activity.dispatch
-                    state.activity.dispatch?.let { UpdateText(it) } ?: Text(NO_POST, fontFamily = BertHand, fontSize = 22.sp, color = Cream)
+                    state.activity.dispatch?.let { UpdateText(it) } ?: Text(NO_POST, fontSize = 17.sp, color = Cream)
                     val delayed = state.updateDelayed || state.activity.isStaleAt(now)
-                    val seen = entry?.let {
-                        formatObservedAt(it.firstSeenEpochMillis, now, use24Hour = android.text.format.DateFormat.is24HourFormat(context)).removePrefix("As of ")
-                    }
-                    val source = if (delayed) "Saved note from Berthalla" else "From Berthalla"
+                    val use24Hour = android.text.format.DateFormat.is24HourFormat(context)
+                    fun clock(at: Long) = formatObservedAt(at, now, use24Hour = use24Hour).removePrefix("As of ")
+                    // The post's own time when the feed gives it; else when this phone first saw it, and said so.
+                    val posted = state.activity.postedAtEpochMillis ?: entry?.postedAtEpochMillis
+                    val seen = posted?.let { "posted ${clock(it)}" } ?: entry?.let { "first seen ${clock(it.firstSeenEpochMillis)}" }
+                    val source = if (delayed) "Saved post from $BERTHALLA_BOT" else "From $BERTHALLA_BOT"
                     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (!delayed && BERTHomeVisits.isNew(entry, visit, now)) NewTag()
-                        Text(seen?.let { "$source, first seen $it" } ?: source, color = if (delayed) Amber else Muted, fontSize = 13.sp)
+                        Text(seen?.let { "$source, $it" } ?: source, color = if (delayed) Amber else Muted, fontSize = 13.sp)
                     }
                 }
             }
@@ -280,13 +284,13 @@ private fun NoticeboardSheet(state: ActivityState, now: Long, entry: JournalEntr
                     BERTIcon(BERTSymbol.ARROW, AccentText, Modifier.size(14.dp))
                 }
             }
-            EarlierFromBert(earlier.take(maxOf(3, fresh.size).coerceAtMost(6)), fresh, makeCard)
+            EarlierFromBerthalla(earlier.take(maxOf(3, fresh.size).coerceAtMost(6)), fresh, makeCard)
             TextButton(onClick = close, modifier = Modifier.testTag("noticeboard-close")) { Text("Close") }
         }
     }
 }
 
-/** The board's words in Bert's hand when there is nothing to pin up: a quiet feed, or no connection (shared with the note). */
+/** The board's words when there is nothing to pin up and no connection (shared with the clipping); typed, the app speaking. */
 private const val OFFLINE_BOARD = OFFLINE_NOTE
 
 /** "WOOFmornin" is Bert's own good-morning; the rest follow the phone's clock. */
@@ -317,7 +321,7 @@ internal fun moodPhrase(label: String): String = when (val mood = label.trim().l
     else -> mood
 }
 
-/** Bert's own channels, as two quiet chips under the wordmark; Berthalla is the fan project. */
+/** Bert's own channels, as two quiet chips under the wordmark. */
 @Composable
 private fun OfficialChips() {
     val context = LocalContext.current
@@ -350,10 +354,10 @@ private fun MeetBertCard(dismiss: () -> Unit) {
                 PixelBertPortrait(side, Modifier.clip(Small).background(PanelStrong))
             }
             Text("Meet Bert", color = Cream, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.semantics { heading() })
-            Text("Bert is the Mayor of Berthalla, a Pomeranian in a red hat. The pixel and cartoon Bert are drawn from Bertram, the real dog who started it all. " +
+            Text("Bert is the Mayor of Solana, a Pomeranian in a red hat. The pixel and cartoon Bert are drawn from Bertram, the real dog who started it all. " +
                 "BERT is a community coin on Solana, named after him.",
                 color = Cream, fontSize = 15.sp, lineHeight = 22.sp)
-            Text("This app and its daily updates come from Berthalla, a fan project. Official BERT: @bertcoincto and bert.global.",
+            Text("This app was forged in Berthalla, for Bertlievers. Its daily updates come from the Berthalla X bot. Official BERT: @bertcoincto and bert.global.",
                 color = Muted, fontSize = 14.sp, lineHeight = 20.sp)
             // A quiet dismissal: Today's "Make it a card" stays the one filled button on screen.
             val myBert = LocalMyBert.current
@@ -402,7 +406,7 @@ internal fun HomeTag(text: String, color: Color) {
         modifier = Modifier.clip(Small).background(color.copy(alpha = 0.14f)).padding(horizontal = 9.dp, vertical = 5.dp))
 }
 
-/** Bert's own channels, kept apart from Berthalla's so nobody mistakes the fan project for the official voice. */
+/** Bert's own channels, kept apart from Berthalla's so nobody mistakes the bot's posts for Bert's official accounts. */
 @Composable
 internal fun OfficialBertCard() {
     val context = LocalContext.current
@@ -538,14 +542,20 @@ private fun WorldsBar(cleared: Int, inProgress: Int?) {
 }
 
 @Composable
-private fun EarlierFromBert(entries: List<JournalEntry>, fresh: Set<Long>, makeCard: (String) -> Unit, modifier: Modifier = Modifier) {
+private fun EarlierFromBerthalla(entries: List<JournalEntry>, fresh: Set<Long>, makeCard: (String) -> Unit, modifier: Modifier = Modifier) {
     if (entries.isEmpty()) return
-    Box(modifier) { SectionLabel("EARLIER FROM BERT") }
+    // The earlier posts from Berthalla, dated when they were written where the feed said (else first seen); never Bert's own.
+    Box(modifier) { SectionLabel("EARLIER FROM BERTHALLA") }
     val formatter = remember { DateTimeFormatter.ofPattern("EEE d MMM", java.util.Locale.getDefault()) }
+    val withYear = remember { DateTimeFormatter.ofPattern("EEE d MMM yyyy", java.util.Locale.getDefault()) }
+    val thisYear = java.time.LocalDate.now().year
     entries.forEach { entry ->
         Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = Medium) {
             Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 8.dp, top = 14.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                val seen = formatter.format(Instant.ofEpochMilli(entry.firstSeenEpochMillis).atZone(ZoneId.systemDefault()))
+                // The post's own date where the feed gave it; else only when this phone first saw it, and said so.
+                val at = Instant.ofEpochMilli(entry.shownAtEpochMillis).atZone(ZoneId.systemDefault())
+                val day = (if (at.year != thisYear) withYear else formatter).format(at)
+                val seen = if (entry.postedAtEpochMillis != null) day else "first seen $day"
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (entry.firstSeenEpochMillis in fresh) NewTag()
                     Text(seen, color = Muted, fontSize = 12.sp)
@@ -554,7 +564,7 @@ private fun EarlierFromBert(entries: List<JournalEntry>, fresh: Set<Long>, makeC
                 Text(entry.text, color = Cream, fontSize = 15.sp, lineHeight = 22.sp, maxLines = 3, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(end = 10.dp))
                 TextButton(onClick = { makeCard(captionExcerpt(entry.text)) },
-                    modifier = Modifier.semantics { contentDescription = "Make a card from the update of $seen" }) { Text("Make it a card") }
+                    modifier = Modifier.semantics { contentDescription = "Make a card from the $day post from Berthalla" }) { Text("Make it a card") }
             }
         }
     }

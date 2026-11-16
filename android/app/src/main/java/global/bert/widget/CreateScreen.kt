@@ -89,7 +89,9 @@ private fun CaptionCardCreator(seedCaption: String?, consumeSeed: () -> Unit, op
     val scope = rememberCoroutineScope()
     val haptics = LocalHapticFeedback.current
     var caption by rememberSaveable { mutableStateOf("woofmornin. the mayor is in.") }
-    LaunchedEffect(seedCaption) { if (seedCaption != null) { caption = seedCaption; consumeSeed() } }
+    // A seed is a Berthalla post from the board: the card says so only while the caption is that post unedited.
+    var seededFrom by rememberSaveable { mutableStateOf<String?>(null) }
+    LaunchedEffect(seedCaption) { if (seedCaption != null) { caption = seedCaption; seededFrom = seedCaption; consumeSeed() } }
     var palette by rememberSaveable { mutableIntStateOf(0) }
     var artIndex by rememberSaveable { mutableIntStateOf(0) }
     var layoutIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -98,7 +100,8 @@ private fun CaptionCardCreator(seedCaption: String?, consumeSeed: () -> Unit, op
     // My Bert's art only while a Bert is chosen: going back to classic Bert returns the card to the photo.
     LaunchedEffect(chosenBert == null) { if (chosenBert == null && artIndex == CardArt.MY_BERT.ordinal) artIndex = CardArt.PHOTO.ordinal }
     val art = CardArt.entries[artIndex].takeIf { it != CardArt.MY_BERT || chosenBert != null } ?: CardArt.PHOTO
-    val style = CardStyle(art, CardLayout.entries[layoutIndex], CardFormat.entries[formatIndex])
+    val source = if (seededFrom?.let { stillBerthallas(it, caption) } == true) CaptionSource.BERTHALLA else CaptionSource.HOLDER
+    val style = CardStyle(art, CardLayout.entries[layoutIndex], CardFormat.entries[formatIndex], source)
     val library = remember { CaptionLibrary(context.applicationContext) }
     var sharing by remember { mutableStateOf(false) }
     var saving by remember { mutableStateOf(false) }

@@ -46,9 +46,38 @@ internal enum class CardLayout(val label: String) { NOTE("Note"), POSTER("Poster
 
 internal enum class CardFormat(val label: String, val width: Int, val height: Int) { SQUARE("Square", 1080, 1080), STORY("Story", 1080, 1920) }
 
-internal data class CardStyle(val art: CardArt = CardArt.PHOTO, val layout: CardLayout = CardLayout.NOTE, val format: CardFormat = CardFormat.SQUARE)
+internal data class CardStyle(val art: CardArt = CardArt.PHOTO, val layout: CardLayout = CardLayout.NOTE, val format: CardFormat = CardFormat.SQUARE,
+                              val source: CaptionSource = CaptionSource.HOLDER)
 
-internal data class RenderedCaption(val caption: String, val palette: Int, val bitmap: Bitmap, val style: CardStyle = CardStyle())
+/**
+ * Whose words the caption is, which the card's label says. The card leaves the phone, so it never puts words in Bert's
+ * mouth (0.15.1; until then its label named Bert as the writer, whoever wrote the words). [HOLDER]: the holder's own words, made with
+ * the app. [BERTHALLA]: a post from the Berthalla X bot, run by the BERT team, posting as Bert, brought from the board.
+ */
+internal enum class CaptionSource(val label: String, val shortLabel: String) {
+    HOLDER("MADE WITH THE BERT APP", "MADE WITH THE BERT APP"),
+    BERTHALLA("FROM THE BERTHALLA X BOT", "BERTHALLA X BOT"),
+}
+
+/** The source's label at [paint]'s size, its short form if the long one is wider than [maxWidth]. */
+internal fun cardLabel(source: CaptionSource, paint: Paint, maxWidth: Float): String =
+    source.label.takeIf { paint.measureText(it) <= maxWidth } ?: source.shortLabel
+
+/**
+ * Whether [caption] is still the post from Berthalla as the app put it in the field ([seed]): unedited, that is the same
+ * as the seed, or as the board's excerpt of it ([captionExcerpt]), once spacing, case and punctuation are evened out.
+ * Any other caption, a shorter piece of the post too, is the holder's: they chose the words, and MADE WITH THE BERT APP
+ * is true of every card.
+ */
+internal fun stillBerthallas(seed: String, caption: String): Boolean {
+    fun words(text: String) = text.lowercase().split(Regex("[^\\p{L}\\p{N}']+")).map { it.trim('\'') }.filter { it.isNotEmpty() }
+    val mine = words(caption)
+    return mine.isNotEmpty() && (mine == words(seed) || mine == words(captionExcerpt(seed)))
+}
+
+/** [oldLabel]: a saved card's image from before 0.15.1 that could not be drawn again; shown, never shared. */
+internal data class RenderedCaption(val caption: String, val palette: Int, val bitmap: Bitmap, val style: CardStyle = CardStyle(),
+                                    val oldLabel: Boolean = false)
 
 private fun decodeArt(context: Context, art: CardArt, options: BitmapFactory.Options): Bitmap? = when {
     art == CardArt.MY_BERT -> global.bert.widget.data.MyBertStore(context).imageFile.takeIf { it.isFile }?.let { BitmapFactory.decodeFile(it.path, options) }
@@ -138,9 +167,72 @@ internal fun artCrop(art: CardArt, sourceWidth: Int, sourceHeight: Int, aspect: 
 internal fun renderCaption(context: Context, caption: String, palette: Int, style: CardStyle = CardStyle(), type: CardType = CardType.of(context)): RenderedCaption =
     renderCaptionWithBounds(context, caption, palette, style, type).first
 
+/** The card's ground for each palette (Midnight, Cream, Lilac). */
+private val CARD_BACKGROUNDS = intArrayOf(0xFF071A2F.toInt(), 0xFFFFF5DF.toInt(), 0xFFE3CEFF.toInt())
+
+/** Note layout: the bottom of the rounded artwork, in card px; the label sits under it, the caption box 116px under it. */
+private fun noteArtBottom(format: CardFormat) = if (format == CardFormat.STORY) 260f + 900f else 56f + 580f
+/** Poster layout: the top of the caption band, in card px; the label sits in it, the caption box 76px into it. */
+private fun posterBandTop(format: CardFormat) = format.height - if (format == CardFormat.STORY) 720f else 450f
+
+/** The label's baseline: the same place in every version since the Note and Poster layouts (0.9). */
+private fun labelBaseline(style: CardStyle) =
+    if (style.layout == CardLayout.NOTE) noteArtBottom(style.format) + 66f else posterBandTop(style.format) + 40f
+
+/**
+ * The card's label ([CaptionSource.label], or its short form where the long one would not fit), centred on its
+ * baseline: on the Note under the artwork in the caption colour, on the Poster in the band in orange, spaced.
+ */
+private fun drawCardLabel(canvas: Canvas, style: CardStyle, palette: Int, bold: Typeface) {
+    val p = palette.coerceIn(CARD_BACKGROUNDS.indices)
+    val foreground = if (p == 0) 0xFFFFF5DF.toInt() else 0xFF071A2F.toInt()
+    val W = style.format.width
+    val label = if (style.layout == CardLayout.NOTE) Paint(Paint.ANTI_ALIAS_FLAG).apply { color = foreground; textSize = 32f; typeface = bold; textAlign = Paint.Align.CENTER }
+        else Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF9433.toInt().takeIf { p == 0 } ?: 0xFFB8452B.toInt(); textSize = 30f; typeface = bold; textAlign = Paint.Align.CENTER; letterSpacing = 0.12f }
+    canvas.drawText(cardLabel(style.source, label, W - if (style.layout == CardLayout.NOTE) 160f else 140f), W / 2f, labelBaseline(style), label)
+}
+
+/**
+ * The rows the label owns: flat card colour between the artwork (or the band's top) and the caption box, with nothing
+ * else drawn in them in any version since 0.9.
+ */
+private fun labelRows(style: CardStyle): IntRange =
+    if (style.layout == CardLayout.NOTE) (noteArtBottom(style.format) + 4).toInt() until (noteArtBottom(style.format) + 112).toInt()
+    else (posterBandTop(style.format) + 2).toInt() until (posterBandTop(style.format) + 72).toInt()
+
+/**
+ * [stored], a saved card's image, with only its label painted over by [style]'s, every other pixel kept: so a card's
+ * artwork (the holder's own Bert among them) is never replaced. Only where the label is proven to sit alone on flat
+ * card colour: the image is the layout's size, every pixel of the label's rows is the card colour except one ink
+ * region no taller than a line of capitals, centred, and narrower than the card's text; else null (the caller then
+ * keeps the stored image).
+ */
+internal fun repaintCardLabel(stored: Bitmap, palette: Int, style: CardStyle, bold: Typeface): Bitmap? {
+    if (stored.width != style.format.width || stored.height != style.format.height || palette !in CARD_BACKGROUNDS.indices) return null
+    val ground = CARD_BACKGROUNDS[palette]
+    val rows = labelRows(style)
+    val W = stored.width
+    var left = W; var right = -1; var top = Int.MAX_VALUE; var bottom = -1
+    val line = IntArray(W)
+    for (y in rows) {
+        stored.getPixels(line, 0, W, 0, y, W, 1)
+        for (x in 0 until W) if (line[x] != ground) { left = minOf(left, x); right = maxOf(right, x); top = minOf(top, y); bottom = maxOf(bottom, y) }
+    }
+    if (right < 0) return null // no label where one was drawn: not the layout this expects
+    val base = labelBaseline(style).toInt()
+    val centred = kotlin.math.abs((left + right) / 2f - W / 2f) <= 24f
+    val oneLine = bottom - top <= 36 && top >= base - 34 && bottom <= base + 10
+    if (!centred || !oneLine || right - left > W * 0.62f) return null
+    val out = stored.copy(Bitmap.Config.ARGB_8888, true)
+    val canvas = Canvas(out)
+    canvas.drawRect(0f, rows.first.toFloat(), W.toFloat(), (rows.last + 1).toFloat(), Paint().apply { color = ground })
+    drawCardLabel(canvas, style, palette, bold)
+    return out
+}
+
 internal fun renderCaptionWithBounds(context: Context, caption: String, palette: Int, style: CardStyle = CardStyle(),
                                      type: CardType = CardType.of(context)): Pair<RenderedCaption, CardBounds> {
-    val backgrounds = intArrayOf(0xFF071A2F.toInt(), 0xFFFFF5DF.toInt(), 0xFFE3CEFF.toInt())
+    val backgrounds = CARD_BACKGROUNDS
     val p = palette.coerceIn(backgrounds.indices)
     val foreground = if (p == 0) 0xFFFFF5DF.toInt() else 0xFF071A2F.toInt()
     val (W, H) = style.format.width to style.format.height
@@ -166,14 +258,13 @@ internal fun renderCaptionWithBounds(context: Context, caption: String, palette:
     try {
         if (style.layout == CardLayout.NOTE) {
             val side = if (style.format == CardFormat.STORY) 900f else 580f
-            val top = if (style.format == CardFormat.STORY) 260f else 56f
+            val top = noteArtBottom(style.format) - side
             val bounds = RectF((W - side) / 2, top, (W + side) / 2, top + side)
             canvas.save()
             canvas.clipPath(Path().apply { addRoundRect(bounds, 64f, 64f, Path.Direction.CW) })
             canvas.drawBitmap(art, artCrop(style.art, art.width, art.height, 1f), bounds, artPaint)
             canvas.restore()
-            val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = foreground; textSize = 32f; typeface = bold; textAlign = Paint.Align.CENTER }
-            canvas.drawText("A NOTE FROM BERT", W / 2f, bounds.bottom + 66f, label)
+            drawCardLabel(canvas, style, p, bold)
             val boxTop = bounds.bottom + 116f
             val boxHeight = captionBottom - boxTop
             textPaint.color = foreground
@@ -186,7 +277,7 @@ internal fun renderCaptionWithBounds(context: Context, caption: String, palette:
             drawn = RectF(80f, textTop, 80f + text.width, textTop + text.height)
         } else {
             // Poster: Bert fills the area above the caption band (plus the fade), so the band never covers him.
-            val bandHeight = if (style.format == CardFormat.STORY) 720f else 450f
+            val bandHeight = H - posterBandTop(style.format)
             val artBottom = (H - bandHeight + 60f).toInt()
             canvas.drawBitmap(art, artCrop(style.art, art.width, art.height, artBottom.toFloat() / W), Rect(0, 0, W, artBottom), artPaint)
             val band = backgrounds[p]
@@ -195,8 +286,7 @@ internal fun renderCaptionWithBounds(context: Context, caption: String, palette:
             }
             canvas.drawRect(0f, H - bandHeight - 220f, W.toFloat(), H - bandHeight, shade)
             canvas.drawRect(0f, H - bandHeight, W.toFloat(), H.toFloat(), Paint().apply { color = band })
-            val label = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0xFFFF9433.toInt().takeIf { p == 0 } ?: 0xFFB8452B.toInt(); textSize = 30f; typeface = bold; textAlign = Paint.Align.CENTER; letterSpacing = 0.12f }
-            canvas.drawText("A NOTE FROM BERT", W / 2f, H - bandHeight + 40f, label)
+            drawCardLabel(canvas, style, p, bold)
             textPaint.color = foreground
             val boxTop = H - bandHeight + 76f
             val boxHeight = captionBottom - boxTop
@@ -231,6 +321,8 @@ internal fun preferredShareChooser(send: Intent, title: String, canHandle: (Stri
 }
 
 internal fun captionShareIntent(context: Context, card: RenderedCaption): Intent {
+    // An image still naming Bert as the writer never leaves the phone.
+    require(!card.oldLabel) { "This card has its old label" }
     val directory = File(context.cacheDir, "caption-cards").apply { check(mkdirs() || isDirectory) }
     val cutoff = System.currentTimeMillis() - 24 * 60 * 60_000L
     directory.listFiles()?.filter { it.isFile && it.lastModified() < cutoff }?.forEach { it.delete() }

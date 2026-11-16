@@ -55,6 +55,27 @@ class HomeTodayTest {
         assertTrue(BERTJournal.parse("garbage").isEmpty())
     }
 
+    /** 0.15.1: a post's own time is kept with it; one saved by 0.15.0 (first seen, no time) learns it once, and keeps its place. */
+    @Test fun `the journal keeps the post's own time and learns it for a post saved without one`() {
+        val journal = BERTJournal(RuntimeEnvironment.getApplication())
+        assertTrue(journal.record(BERTActivity(1, "old post", "content", null), now = 1_000))
+        assertTrue(journal.record(BERTActivity(2, "new post", "content", null, postedAtEpochMillis = 1_500), now = 2_000))
+        assertEquals(1_500L, journal.entries().first().postedAtEpochMillis)
+        assertEquals(1_500L, journal.entries().first().shownAtEpochMillis)
+        assertEquals("first seen, without a post time", 1_000L, journal.entries().last().shownAtEpochMillis)
+        assertFalse(journal.record(BERTActivity(3, "old post", "content", null, postedAtEpochMillis = 900), now = 3_000))
+        val old = journal.entries().last()
+        assertEquals(listOf("new post", "old post"), journal.entries().map { it.text })
+        assertEquals(900L, old.postedAtEpochMillis)
+        assertEquals("still first seen when it was", 1_000L, old.firstSeenEpochMillis)
+        // A later, different time does not re-date it.
+        journal.record(BERTActivity(4, "old post", "content", null, postedAtEpochMillis = 950), now = 4_000)
+        assertEquals(900L, journal.entries().last().postedAtEpochMillis)
+        // And it survives the round trip; an entry written by 0.15.0 (no "p") reads with no post time.
+        assertEquals(journal.entries(), BERTJournal.parse(BERTJournal.encode(journal.entries())))
+        assertNull(BERTJournal.parse("""[{"t":"x","s":5}]""").single().postedAtEpochMillis)
+    }
+
     @Test fun `greeting follows the local clock, with Bert's own good morning`() {
         val day = 1_760_000_000_000L - 1_760_000_000_000L % 86_400_000L // a UTC midnight
         assertEquals("WOOFmornin, pack.", greetingAt(day + 8 * 3_600_000L, ZoneOffset.UTC))

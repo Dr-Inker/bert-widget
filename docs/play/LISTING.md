@@ -13,19 +13,19 @@ short and full descriptions into the console again, and answer Data safety as be
 - **Short description (≤80):** `Bert's garden keeps your clock. A pixel adventure, caption cards and widgets.`
 - **Full description:**
 
-> Bertram the Pomeranian — Bert to his friends — now lives on your phone.
+> Bertram the Pomeranian — Bert to his friends — now lives on your phone. An app for Bertlievers, forged in Berthalla.
 >
 > BERT is a community crypto token on Solana, named after Bert, and this app shows its public market price.
 >
-> **Home** — Bert's garden, at your time of day. He's out at the gate at dawn, does his rounds, naps after lunch, waits on the post and walks home at dusk; at night the lamp is on. Give him a pat, tap the things in his garden for a word about them, and watch his chalkboard count the days in a row you've come by. Under the garden the BERT price is chalked on a slate and Berthalla's latest note is pinned up on paper, and the live Flappy Bert tournament is just below.
+> **Home** — Bert's garden, at your time of day. He's out at the gate at dawn, does his rounds, naps after lunch, waits on the post and walks home at dusk; at night the lamp is on. Give him a pat, tap the things in his garden for a word about them, and watch his chalkboard count the days in a row you've come by. Under the garden the BERT price is chalked on a slate and the latest post from the Berthalla X bot is pinned up as a printed clipping, and the live Flappy Bert tournament is just below.
 >
 > **Play** — Super Bert World: The Lost Trail, a hand-made pixel platformer, playable offline. Six worlds, eighteen keepsakes, touch controls and saved lantern checkpoints. Flappy Bert's arcade and tournaments and Bert Music are on the same tab.
 >
 > **Create** — make caption cards with Bert in five artworks, as a note or a poster, square or story-sized. Save them on your phone and share them anywhere.
 >
-> **Widgets** — Bert's garden (a small window onto Home, wherever his day has got to), Bert's day (a note from Bert: his mood, his latest update in his own hand and the tournament countdown), the BERT price at a glance with a 24-hour chart, or the BERT market desk with market figures and your holdings' value. The day, price and market widgets show when their data is from, even offline.
+> **Widgets** — Bert's garden (a small window onto Home, wherever his day has got to), Bert's day (pixel Bert in his mood, the latest post from the Berthalla X bot, and the tournament countdown), the BERT price at a glance with a 24-hour chart, or the BERT market desk with market figures and your holdings' value. The day, price and market widgets show when their data is from, even offline.
 >
-> **Tools** — the BERT market price with price charts from an hour to a year (1H, 6H, 24H, 1W, 1M, 1Y) and links to CoinMarketCap and DEX Screener, an optional private holdings record, and opt-in alerts for tournaments, Berthalla's daily updates, price levels and big moves.
+> **Tools** — the BERT market price with price charts from an hour to a year (1H, 6H, 24H, 1W, 1M, 1Y) and links to CoinMarketCap and DEX Screener, an optional private holdings record, and opt-in alerts for tournaments, daily updates from Berthalla, price levels and big moves.
 >
 > **Themes** — five matching Home and Lock screen wallpaper packs, and the app in BERT Violet or the original Berthalla Navy, all under Tools › Style.
 >

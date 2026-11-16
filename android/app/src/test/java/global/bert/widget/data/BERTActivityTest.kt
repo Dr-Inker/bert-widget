@@ -55,6 +55,52 @@ class BERTActivityTest {
         assertNull(BERTActivity.parse("""{"updated_at":1788888601,"mood":"smug","latest_post":"\u202E\u202C"}""", now).dispatch)
     }
 
+    // 0.15.1: the post's own time and its X id (server 8f64c5a). Both optional; a bad one is dropped, never the post.
+    private fun withPost(extra: String) = BERTActivity.parse(fixture.replace("\"mood\":\"smug\",", "\"mood\":\"smug\",$extra"), now)
+
+    @Test fun `the post's own time and X id are read when valid`() {
+        val activity = withPost("\"latest_post_at\":1788800000,\"latest_post_x_id\":\"1983746501234567890\",")
+        assertEquals(1_788_800_000_000L, activity.postedAtEpochMillis)
+        assertEquals("1983746501234567890", activity.postXId)
+        assertTrue(activity.postIsOnX)
+        // Not the refresh's time: that stays the feed's.
+        assertEquals(1_788_888_601_000L, activity.updatedAtEpochMillis)
+        // Up to ten minutes ahead of a slow phone reads as now, like the feed's own timestamp.
+        assertEquals(now, withPost("\"latest_post_at\":${1_788_888_601 + 300},").postedAtEpochMillis)
+    }
+
+    @Test fun `an older feed without the post's time or X id still parses`() {
+        val activity = BERTActivity.parse(fixture, now)
+        assertNull(activity.postedAtEpochMillis)
+        assertNull(activity.postXId)
+        assertFalse(activity.postIsOnX)
+        assertEquals("A test dispatch from Bert.", activity.dispatch)
+    }
+
+    @Test fun `null post time and X id mean unknown and not on X`() {
+        val activity = withPost("\"latest_post_at\":null,\"latest_post_x_id\":null,")
+        assertNull(activity.postedAtEpochMillis)
+        assertNull(activity.postXId)
+        assertEquals("A test dispatch from Bert.", activity.dispatch)
+    }
+
+    @Test fun `a negative, zero, fractional, future or non-number post time is dropped, not the post`() {
+        for (bad in listOf("-1788800000", "0", "1788800000.5", "${1_788_888_601 + 601}", "17888886010000", "\"1788800000\"", "true")) {
+            val activity = runCatching { withPost("\"latest_post_at\":$bad,") }.getOrElse { error("$bad hid the post: $it") }
+            assertNull(bad, activity.postedAtEpochMillis)
+            assertEquals(bad, "A test dispatch from Bert.", activity.dispatch)
+        }
+    }
+
+    @Test fun `an X id that is not digits, too long, empty or a number is dropped, not the post`() {
+        for (bad in listOf("\"12a45\"", "\" 123\"", "\"-123\"", "\"1.5\"", "\"\"", "\"${"1".repeat(26)}\"", "\"\u0661\u0662\"", "1983746501234567890", "{}")) {
+            val activity = runCatching { withPost("\"latest_post_x_id\":$bad,") }.getOrElse { error("$bad hid the post: $it") }
+            assertNull(bad, activity.postXId)
+            assertEquals(bad, "A test dispatch from Bert.", activity.dispatch)
+        }
+        assertEquals("1".repeat(25), withPost("\"latest_post_x_id\":\"${"1".repeat(25)}\",").postXId)
+    }
+
     @Test fun `malformed optional event preserves the dispatch`() {
         val activity = BERTActivity.parse(fixture.replace("2026-12-01T00:00:00Z", "tomorrow"), now)
         assertNull(activity.event)

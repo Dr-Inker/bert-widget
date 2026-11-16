@@ -4,7 +4,8 @@
     <color name="bert_navy">#071A2F</color>
     <!-- BERT Violet's background (brand kit), the default scheme: window, splash and system bars. -->
     <color name="bert_violet">#100B16</color>
-    <!-- Bert's day widget (0.15): a note from Bert on paper; the event chalked on a slate. Numbers on slate, Bert's words on paper. -->
+    <!-- Bert's day widget (0.15): Bert's day on paper; the event chalked on a slate. Numbers on slate; Bert's own lines in his
+         handwriting; posts from Berthalla typed (0.15.1). -->
     <color name="note_paper">#F7EEDA</color>
     <color name="note_shade">#E6D5B5</color>
     <color name="note_shade_edge">#D8C49E</color>

@@ -31,7 +31,7 @@ data class AlertMemory(
 
 enum class AlertChannel(val id: String, val title: String, val description: String) {
     TOURNAMENT("tournament", "Tournament reminders", "When a Flappy Bert tournament is about to end"),
-    DISPATCH("dispatch", "Berthalla’s updates", "New updates from Berthalla, in Bert’s voice"),
+    DISPATCH("dispatch", "Updates from Berthalla", "New updates from Berthalla, in Bert’s voice"),
     PRICE("price", "Price alerts", "BERT crossing a price you chose, or a big move in 24 hours"),
 }
 

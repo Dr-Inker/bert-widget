@@ -68,7 +68,7 @@ private fun AroundThePackSheet(close: () -> Unit) {
             .testTag("pack-sheet"), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Text("around the pack", fontFamily = BertHand, fontSize = 26.sp, color = Cream, modifier = Modifier.semantics { heading() })
             OfficialBertCard()
-            ExperienceLink("Berthalla on X", "Daily posts in Bert’s voice from Berthalla, a fan project.", BERTSymbol.STORY, BERTLink.DISPATCHES)
+            ExperienceLink("Berthalla on X", "Daily posts in Bert’s voice from the Berthalla X bot, run by the BERT team.", BERTSymbol.STORY, BERTLink.DISPATCHES)
             ExperienceLink("Berthalla", "Games, music and the Bert Studio on berthalla.io.", BERTSymbol.PLAY, BERTLink.BERTHALLA)
             ExperienceLink("Meet the community", "Catch up with the pack.", BERTSymbol.PACK, BERTLink.COMMUNITY)
             ExperienceLink("Woofhub", "Dog adoption, care and profiles.", BERTSymbol.HEART, BERTLink.WOOFHUB)

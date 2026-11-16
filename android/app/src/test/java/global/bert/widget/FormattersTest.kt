@@ -27,6 +27,11 @@ class FormattersTest {
             assertEquals("As of 3:12 PM", formatObservedAt(observed, observed, Locale.US, use24Hour = false))
             assertEquals("As of 1 Oct", formatObservedAt(observed, observed + 24 * 3_600_000L, Locale.US, dateOnlyWhenOld = true))
             assertEquals("As of 15:12", formatObservedAt(observed, observed + 3_600_000L, Locale.US, dateOnlyWhenOld = true))
+            // Another year's date says its year (0.15.1): "28 Oct" a year on would read as this October.
+            val lastYear = 1_761_664_320_000L // 2025-10-28 15:12 UTC
+            assertEquals("As of 28 Oct 2025", formatObservedAt(lastYear, observed, Locale.US, dateOnlyWhenOld = true))
+            assertEquals("As of 28 Oct 2025 15:12", formatObservedAt(lastYear, observed, Locale.US))
+            assertEquals("As of 31 Dec 2025", formatObservedAt(1_767_139_200_000L, 1_767_225_600_000L + 3_600_000L, Locale.US, dateOnlyWhenOld = true))
         } finally {
             TimeZone.setDefault(zone)
         }

@@ -4,8 +4,14 @@ import android.content.Context
 import org.json.JSONArray
 import org.json.JSONObject
 
-/** One dispatch as this phone first saw it. The feed has no publication time, so the date is "first seen". */
-data class JournalEntry(val text: String, val mood: String?, val firstSeenEpochMillis: Long)
+/**
+ * One of Berthalla's posts as this phone first saw it: [firstSeenEpochMillis] (what "new since your last visit" counts),
+ * and [postedAtEpochMillis], when Berthalla wrote it, if the feed said (feeds before 0.15.1 did not).
+ */
+data class JournalEntry(val text: String, val mood: String?, val firstSeenEpochMillis: Long, val postedAtEpochMillis: Long? = null) {
+    /** The post's date as the board shows it: when it was written, else when this phone first saw it. */
+    val shownAtEpochMillis: Long get() = postedAtEpochMillis ?: firstSeenEpochMillis
+}
 
 /**
  * Every dispatch this phone has seen, newest first, kept on the device only. The feed holds just the latest post,
@@ -20,9 +26,16 @@ class BERTJournal(context: Context) {
     fun record(activity: BERTActivity, now: Long = System.currentTimeMillis()): Boolean = synchronized(lock) {
         val text = activity.dispatch ?: return false
         val current = entries()
-        // A dispatch seen before keeps its place and date, even if the feed falls back to it later.
-        if (current.any { it.text == text }) return false
-        val next = (listOf(JournalEntry(text, activity.mood, now)) + current).take(MAX_ENTRIES)
+        // A dispatch seen before keeps its place and date, even if the feed falls back to it later; it only learns its
+        // post time if it was first seen without one (saved by 0.15.0, before the feed carried it).
+        val seen = current.indexOfFirst { it.text == text }
+        if (seen >= 0) {
+            val posted = activity.postedAtEpochMillis
+            if (posted != null && current[seen].postedAtEpochMillis == null)
+                preferences.edit().putString(KEY, encode(current.toMutableList().also { it[seen] = it[seen].copy(postedAtEpochMillis = posted) })).apply()
+            return false
+        }
+        val next = (listOf(JournalEntry(text, activity.mood, now, activity.postedAtEpochMillis)) + current).take(MAX_ENTRIES)
         preferences.edit().putString(KEY, encode(next)).apply()
         true
     }
@@ -33,7 +46,7 @@ class BERTJournal(context: Context) {
         private val lock = Any()
 
         internal fun encode(entries: List<JournalEntry>): String = JSONArray().apply {
-            entries.forEach { put(JSONObject().put("t", it.text).putOpt("m", it.mood).put("s", it.firstSeenEpochMillis)) }
+            entries.forEach { put(JSONObject().put("t", it.text).putOpt("m", it.mood).put("s", it.firstSeenEpochMillis).putOpt("p", it.postedAtEpochMillis)) }
         }.toString()
 
         internal fun parse(raw: String?): List<JournalEntry> = runCatching {
@@ -41,7 +54,8 @@ class BERTJournal(context: Context) {
             (0 until minOf(array.length(), MAX_ENTRIES)).mapNotNull { i ->
                 val item = array.optJSONObject(i) ?: return@mapNotNull null
                 val text = item.optString("t").takeIf { it.isNotBlank() && it.length <= 800 } ?: return@mapNotNull null
-                JournalEntry(text, item.optString("m").takeIf { it.isNotBlank() && it.length <= 32 }, item.optLong("s").takeIf { it > 0 } ?: return@mapNotNull null)
+                JournalEntry(text, item.optString("m").takeIf { it.isNotBlank() && it.length <= 32 }, item.optLong("s").takeIf { it > 0 } ?: return@mapNotNull null,
+                    item.optLong("p").takeIf { it > 0 })
             }
         }.getOrDefault(emptyList())
     }

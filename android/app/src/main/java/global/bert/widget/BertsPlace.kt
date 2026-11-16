@@ -77,7 +77,10 @@ import kotlin.math.ceil
  * prints all in the picture.
  */
 
-/** Bert's handwriting, as on berthalla.io (Gochi Hand, SIL Open Font License 1.1). */
+/**
+ * Bert's handwriting, as on berthalla.io (Gochi Hand, SIL Open Font License 1.1). For Bert's own lines only: posts from
+ * Berthalla are the Berthalla X bot's, not typed by the dog, so they are printed (Outfit), never in his hand (0.15.1).
+ */
 internal val BertHand = FontFamily(Font(R.font.gochi_hand))
 
 /** Six renders of the same Godot scene, relit (not tinted) for the time of day. */

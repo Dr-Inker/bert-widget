@@ -8,7 +8,17 @@ data class BERTActivity(
     val dispatch: String?,
     val mood: String?,
     val event: BERTEvent?,
+    /**
+     * When Berthalla wrote the post (latest_post_at), if the feed says: the post's own date, never the refresh's. Null
+     * for an older feed without it, or a value the parser does not trust.
+     */
+    val postedAtEpochMillis: Long? = null,
+    /** The post's id on X (latest_post_x_id), digits only; null when the post was never published on X. */
+    val postXId: String? = null,
 ) {
+    /** Berthalla's post is on X (it has an X id); a fallback post that was never published is not. */
+    val postIsOnX: Boolean get() = postXId != null
+
     fun isStaleAt(now: Long): Boolean =
         updatedAtEpochMillis > now + 60_000 || now - updatedAtEpochMillis >= 30 * 60_000L
 
@@ -43,7 +53,22 @@ data class BERTActivity(
                 }.getOrNull()
             }
             if (dispatch == null && mood == null && event == null) throw EmptyActivityException()
-            return BERTActivity(minOf(seconds.toLong() * 1000, now), dispatch, mood, event)
+            // Optional (feeds before server 8f64c5a lack both); a bad value is dropped, never a reason to hide the post.
+            val postedAt = postTime(root.opt("latest_post_at"), now)
+            val xId = (root.opt("latest_post_x_id") as? String)?.takeIf { it.length in 1..MAX_X_ID && it.all { c -> c in '0'..'9' } }
+            return BERTActivity(minOf(seconds.toLong() * 1000, now), dispatch, mood, event, postedAt, xId)
+        }
+
+        private const val MAX_X_ID = 25
+
+        /**
+         * The post's time: a positive whole number of seconds, not ahead of the phone by more than the feed's own
+         * allowance ([MAX_CLOCK_LAG_MILLIS]; read as now if it is ahead within it). Anything else is null.
+         */
+        private fun postTime(raw: Any?, now: Long): Long? {
+            val value = (raw as? Number)?.toDouble() ?: return null
+            if (!value.isFinite() || value <= 0 || value % 1.0 != 0.0 || value > (now + MAX_CLOCK_LAG_MILLIS) / 1000.0) return null
+            return minOf(value.toLong() * 1000, now)
         }
 
         private const val MAX_CLOCK_LAG_MILLIS = 10 * 60_000L

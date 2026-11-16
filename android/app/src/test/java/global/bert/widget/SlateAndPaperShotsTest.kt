@@ -38,7 +38,7 @@ class SlateAndPaperShotsTest {
     private val note = "woofmornin. the ladybug holds the screen door like the wind can wait its turn."
 
     private fun home(name: String, hour: Int = 9, fontScale: Float = 1f, quote: (Long) -> QuoteState = { fresh(it) },
-                     activity: (Long) -> ActivityState = { ActivityState.Available(BERTActivity(it - 60_000, note, "content", null)) },
+                     activity: (Long) -> ActivityState = { ActivityState.Available(BERTActivity(it - 60_000, note, "content", null, it - 2 * 3_600_000L, "1983746501234567890")) },
                      scheme: BERTScheme = BERTScheme.DEFAULT, scrollToNote: Boolean = false, freshNotes: Int = 0,
                      press: String? = null, myBert: Boolean = false, tap: String? = null, tapAfterMs: Long = 270, streak: Int = 0) {
         val now = ZonedDateTime.of(2026, 9, 9, hour, 9, 0, 0, ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -121,6 +121,10 @@ class SlateAndPaperShotsTest {
     @Test fun priceLoading() = home("home-slate-price-loading", quote = { QuoteState.Loading })
     @Test fun noNote() = home("home-slate-no-note", activity = { ActivityState.Empty })
     @Test fun offline() = home("home-slate-offline", activity = { ActivityState.Unavailable })
+    // 0.15.1: a post that never went out on X (no X id), written days ago, and a long one at 320dp and large text.
+    @Test fun notOnX() = home("home-slate-not-on-x", activity = { ActivityState.Available(BERTActivity(it - 60_000, note, "content", null, it - 3 * 86_400_000L, null)) })
+    @Test @Config(qualifiers = "w320dp-h640dp-xxhdpi") fun narrow320NewFont20() = home("home-slate-320-font2.0-new", fontScale = 2f, scrollToNote = true, freshNotes = 2,
+        activity = { ActivityState.Available(BERTActivity(it - 60_000, note, "content", null, it - 30 * 60_000L, "1983746501234567890")) })
     @Test fun offlineNoPrice() = home("home-slate-offline-no-price", activity = { ActivityState.Unavailable }, quote = { QuoteState.Unavailable("No connection") })
     @Test fun freshNotes() = home("home-slate-fresh-notes", freshNotes = 2)
     @Test fun pressedSlate() = home("home-slate-pressed-slate", press = "home-price")

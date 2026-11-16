@@ -126,8 +126,11 @@ routine, not the feature.
 ### What lives in the place (no cards)
 
 - **The noticeboard.** A small board nailed to the garden wall carries the day's Berthalla update, pinned over a torn
-  corner of yesterday's. Tap it to read the whole note. If the feed is stale, the board says so in his voice ("no post
-  today. the postman's on strike.") rather than showing an old note as new.
+  corner of yesterday's. Tap it to read the whole note. If the feed is stale, the board says so rather than showing an
+  old note as new.
+  - 0.15.1 rule: Bert's own lines are in his handwriting; Berthalla's posts are printed clippings. Berthalla is the BERT
+    team's X bot posting in Bert's voice, not Bert typing, so its posts (and the board's "no post" and offline words, which are the app's) are
+    typed and attributed to Berthalla, never in Bert's hand.
 - **The price tag.**
   - A crooked paper tag nailed to the gate post: "$0.0154", in a small pixel hand, ugly on purpose. Tap it for
     Market.

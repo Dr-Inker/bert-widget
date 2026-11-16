@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   Bert's day widget: words drawn as a bitmap (Glance cannot set a font on Text). Shown unscaled (scaleType center), so
-  the handwriting stays exactly as drawn; its content description is the full text, so TalkBack reads it.
+  the handwriting and the typed post stay exactly as drawn; its content description is the full text, so TalkBack reads it.
 -->
 <ImageView xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/note_image"

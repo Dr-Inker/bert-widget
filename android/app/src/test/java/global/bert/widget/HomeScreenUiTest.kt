@@ -80,18 +80,47 @@ class HomeScreenUiTest {
         // The price is on the slate under the garden; tapping it opens Market.
         compose.onNodeWithTag("home-price").assertHasClickAction()
         // The update and the earlier ones are on the noticeboard, one tap from the pinned note.
-        compose.onAllNodesWithText("EARLIER FROM BERT").assertCountEquals(0)
+        compose.onAllNodesWithText("EARLIER FROM BERTHALLA").assertCountEquals(0)
         compose.onNodeWithTag("board-row").performScrollTo().performClick()
         compose.onNodeWithTag("noticeboard").assertExists()
-        compose.onNodeWithText("EARLIER FROM BERT").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("EARLIER FROM BERTHALLA").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("an older dispatch from the town hall.").assertExists()
+        compose.onAllNodesWithText("EARLIER FROM BERT").assertCountEquals(0)
         capture("home-board")
     }
+    /**
+     * What the app is, in the owner's words (0.15.1): forged in Berthalla, for Bertlievers; its updates from the Berthalla
+     * X bot. Meet Bert and About say so, whole, at text 2.0 on a 320dp phone too.
+     */
+    @Test @Config(qualifiers = "w320dp-h640dp-xhdpi") fun meetBertAndAboutSayWhatTheAppIsAtLargeText() {
+        home(dispatch(), fontScale = 2f)
+        compose.onNodeWithText("This app was forged in Berthalla, for Bertlievers. Its daily updates come from the Berthalla X bot. " +
+            "Official BERT: @bertcoincto and bert.global.").performScrollTo().assertIsDisplayed()
+        capture("home-meet-bert-320-font2.0")
+        compose.onNodeWithText("About, privacy & feedback", substring = true).performScrollTo().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("An app for Bertlievers, forged in Berthalla. Its daily updates come from the Berthalla X bot, run by the BERT team, " +
+            "posting in Bert’s voice.", substring = true).assertExists()
+        captureSheet("about-320-font2.0")
+    }
+
+    @Test fun aboutSaysWhatTheAppIs() {
+        BERTHomeVisits(compose.activity).meetBertDismissed = true
+        home(dispatch())
+        compose.onNodeWithText("About, privacy & feedback", substring = true).performScrollTo().performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("An app for Bertlievers, forged in Berthalla.", substring = true).assertExists()
+        captureSheet("about")
+    }
+
     @Test fun meetBertShowsOnceAndReturnsOnALongPressOfBert() {
         home(dispatch())
         compose.onNodeWithText("Meet Bert").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("drawn from Bertram", substring = true).assertExists()
-        compose.onNodeWithText("Berthalla, a fan project", substring = true).assertExists()
+        // Canon (and @bertcoincto's bio): the Mayor of Solana. Berthalla is a place, not his town; its posts come from the Berthalla X bot.
+        compose.onNodeWithText("Bert is the Mayor of Solana, a Pomeranian in a red hat.", substring = true).assertExists()
+        compose.onNodeWithText("Mayor of Berthalla", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("This app was forged in Berthalla, for Bertlievers.", substring = true).assertExists()
         // UX-2: one plain sentence says what BERT is.
         compose.onNodeWithText("BERT is a community coin on Solana, named after him.", substring = true).assertExists()
         capture("home-meet-bert")
@@ -124,8 +153,8 @@ class HomeScreenUiTest {
         compose.onNodeWithTag("note-link", useUnmergedTree = true).assertTextEquals("2 new notes on the board ›")
         compose.onNodeWithTag("board-row").assertIsDisplayed().performClick()
         compose.onAllNodesWithText("New").onFirst().assertExists()
-        compose.onNodeWithText("From Berthalla, first seen", substring = true).assertExists()
-        compose.onNodeWithText("EARLIER FROM BERT").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("From the Berthalla X bot, run by the BERT team, first seen", substring = true).assertExists()
+        compose.onNodeWithText("EARLIER FROM BERTHALLA").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("the bakery opened early for the pups.").assertExists()
         capture("home-returning-earlier")
     }
@@ -145,7 +174,7 @@ class HomeScreenUiTest {
         compose.onNodeWithTag("board-row").assertIsDisplayed().assertHasClickAction()
         assertTrue(text("board-row").contains("woofmornin. the mayor is in."))
         compose.onNodeWithTag("board-row").performClick()
-        compose.onNodeWithText("From Berthalla, first seen", substring = true).assertExists()
+        compose.onNodeWithText("From the Berthalla X bot, run by the BERT team, first seen", substring = true).assertExists()
         capture("home-read-noticeboard")
     }
 
@@ -188,30 +217,30 @@ class HomeScreenUiTest {
         home(ActivityState.Available(BERTActivity(now - 60_000, null, "content", null)))
         // Still a labelled way in (the 4 November response's "Read the noticeboard", now on the note), and it says why it is bare.
         compose.onNodeWithTag("board-row").assertIsDisplayed().assertHasClickAction()
-        assertTrue(text("board-row"), text("board-row").contains("no post today. the postman’s on strike."))
+        assertTrue(text("board-row"), text("board-row").contains(NO_POST))
         compose.onNodeWithTag("note-link", useUnmergedTree = true).assertTextEquals("Read the board ›")
         compose.onNodeWithTag("board-row").performClick()
-        compose.onNodeWithText("EARLIER FROM BERT").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("EARLIER FROM BERTHALLA").performScrollTo().assertIsDisplayed()
     }
 
     @Test fun withNothingOnTheBoardTheNoteSaysSoAndOpensNothing() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(ActivityState.Empty)
-        assertTrue(text("board-row"), text("board-row").contains("no post today. the postman’s on strike."))
+        assertTrue(text("board-row"), text("board-row").contains("No post from Berthalla right now."))
         compose.onNodeWithTag("board-row").assertHasNoClickAction()
         compose.onNodeWithTag("note-link", useUnmergedTree = true).assertDoesNotExist()
     }
 
     // UX-4: offline is not "no post". With no feed and nothing saved the row and the board say the connection is the
-    // problem; the postman's strike is only for a feed that loaded with nothing in it.
+    // problem; "no post" is only for a feed that loaded with nothing in it.
     @Test fun offlineTheRowAndTheBoardBlameTheConnectionNotThePostman() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(ActivityState.Unavailable, quote = quote(now - 30_000))
-        assertTrue(text("board-row"), text("board-row").contains("can’t reach the board right now. check your connection."))
-        assertTrue(spoken("board-row"), spoken("board-row").contains("can’t reach the board right now. check your connection."))
+        assertTrue(text("board-row"), text("board-row").contains("Can’t reach the feed from Berthalla right now. Check your connection."))
+        assertTrue(spoken("board-row"), spoken("board-row").contains("Can’t reach the feed from Berthalla right now. Check your connection."))
         // Nothing saved to read, so nothing to open, as in 0.14.2 (and the garden's noticeboard opens nothing since 0.15).
         compose.onNodeWithTag("board-row").assertHasNoClickAction()
-        compose.onNodeWithText("postman", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("No post", substring = true).assertDoesNotExist()
         compose.onNodeWithTag("noticeboard").assertDoesNotExist()
         capture("home-offline-board")
     }
@@ -219,7 +248,7 @@ class HomeScreenUiTest {
     @Test fun anEmptyFeedIsNoPostNotABadConnection() {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(ActivityState.Empty)
-        compose.onNodeWithText("reach the board", substring = true).assertDoesNotExist()
+        compose.onNodeWithText("reach Berthalla", substring = true).assertDoesNotExist()
         assertTrue(text("board-row"), text("board-row").contains(NO_POST))
     }
 
@@ -278,7 +307,7 @@ class HomeScreenUiTest {
         BERTHomeVisits(compose.activity).meetBertDismissed = true
         home(ActivityState.Available(BERTActivity(now - 60_000, "an update saved earlier.", "smug", null), updateDelayed = true))
         compose.onNodeWithTag("board-row").performScrollTo().performClick()
-        compose.onNodeWithText("Saved note from Berthalla, first seen", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("Saved post from the Berthalla X bot, run by the BERT team, first seen", substring = true).assertIsDisplayed()
         compose.onNodeWithText("New").assertDoesNotExist()
     }
     @Test fun largeTextHomeKeepsTheLineAndTheTrailCard() {
@@ -513,6 +542,21 @@ class HomeScreenUiTest {
         compose.onNodeWithText("Continue · Ember Foundry").performClick()
         val game = org.robolectric.Shadows.shadowOf(compose.activity).nextStartedActivity
         assertEquals(LostTrailActivity::class.java.name, game.component?.className)
+    }
+
+    /** A bottom sheet is a window of its own: its root, drawn on its own. */
+    private fun captureSheet(name: String) {
+        compose.waitForIdle()
+        compose.mainClock.advanceTimeBy(1_000)
+        // The newest window the app added (the sheet's), from the window manager's list of root views.
+        val global = Class.forName("android.view.WindowManagerGlobal").getMethod("getInstance").invoke(null)
+        val views = global.javaClass.getDeclaredField("mViews").apply { isAccessible = true }.get(global) as List<*>
+        val sheet = views.last() as android.view.View
+        val bitmap = Bitmap.createBitmap(sheet.width, sheet.height, Bitmap.Config.ARGB_8888)
+        compose.runOnIdle { sheet.draw(Canvas(bitmap)) }
+        val target = File("build/outputs/host-ui/$name.png")
+        requireNotNull(target.parentFile).mkdirs()
+        target.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
     }
 
     private fun capture(name: String) {

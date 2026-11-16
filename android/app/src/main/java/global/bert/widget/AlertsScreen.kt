@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -28,7 +29,10 @@ import global.bert.widget.data.AlertSettings
 import global.bert.widget.data.BERTAlertRules
 import global.bert.widget.data.BERTAlertStore
 import global.bert.widget.data.QuoteState
+import global.bert.widget.data.positionDecimalSeparator
 import global.bert.widget.data.parsePositionNumber
+import global.bert.widget.data.formatPositionInput
+import global.bert.widget.data.formatPositionShown
 import global.bert.widget.work.BERTRefreshWorker
 
 @Composable
@@ -37,8 +41,9 @@ internal fun AlertsScreen(quote: QuoteState, store: BERTAlertStore? = null) {
     val alerts = remember { store ?: BERTAlertStore(context.applicationContext) }
     var settings by remember { mutableStateOf(alerts.settings()) }
     var permitted by remember { mutableStateOf(BERTNotifier.canPost(context)) }
-    var above by rememberSaveable { mutableStateOf(settings.priceAbove?.let(::formatExactTokenAmount)?.replace(",", "").orEmpty()) }
-    var below by rememberSaveable { mutableStateOf(settings.priceBelow?.let(::formatExactTokenAmount)?.replace(",", "").orEmpty()) }
+    // In the phone's own number format, so a saved level reads back (and parses) the way the holder typed it.
+    var above by rememberSaveable { mutableStateOf(settings.priceAbove?.let { formatPositionInput(it) }.orEmpty()) }
+    var below by rememberSaveable { mutableStateOf(settings.priceBelow?.let { formatPositionInput(it) }.orEmpty()) }
     var saved by remember { mutableStateOf(false) }
     // Set on save when the fresh price is already past a level, so the next-check alert is not a surprise.
     var crossed by remember { mutableStateOf(false to false) }
@@ -80,7 +85,7 @@ internal fun AlertsScreen(quote: QuoteState, store: BERTAlertStore? = null) {
     Card(colors = CardDefaults.cardColors(containerColor = Panel), shape = RoundedCornerShape(20.dp)) {
         Column(Modifier.fillMaxWidth().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             AlertSwitch("Tournament ending", "Once, in the last 24 hours of a Flappy Bert tournament.", settings.tournament) { enable(settings.copy(tournament = it)) }
-            AlertSwitch("Berthalla’s updates", "When Berthalla posts a new update in Bert’s voice.", settings.dispatch) { enable(settings.copy(dispatch = it)) }
+            AlertSwitch("Updates from Berthalla", "When the Berthalla X bot posts a new update in Bert’s voice.", settings.dispatch) { enable(settings.copy(dispatch = it)) }
         }
     }
 
@@ -91,17 +96,21 @@ internal fun AlertsScreen(quote: QuoteState, store: BERTAlertStore? = null) {
             Text("Each alert fires when BERT crosses your price, then re-arms once the price comes back 3% (or when you change the level).", color = Muted, fontSize = 13.sp)
             val aboveValue = parsePositionNumber(above)?.takeIf { it > 0 }
             val belowValue = parsePositionNumber(below)?.takeIf { it > 0 }
+            // An example price in the phone's own decimals ("0.02" or "0,02").
+            val point = positionDecimalSeparator()
             OutlinedTextField(above, { above = it; saved = false; crossed = false to crossed.second }, Modifier.fillMaxWidth(), label = { Text("Alert above (USD)") },
                 singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 isError = above.isNotBlank() && aboveValue == null, supportingText = {
-                    if (above.isNotBlank() && aboveValue == null) Text("Enter a price like 0.02")
+                    if (above.isNotBlank() && aboveValue == null) Text("Enter a price like 0${point}02")
                     else if (crossed.first) Text("BERT is already above this — it will alert on the next check.", color = Amber)
+                    else if (aboveValue != null) Text(levelSaid("above", aboveValue, settings.priceAbove), Modifier.testTag("alert-above-level"))
                 })
             OutlinedTextField(below, { below = it; saved = false; crossed = crossed.first to false }, Modifier.fillMaxWidth(), label = { Text("Alert below (USD)") },
                 singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 isError = below.isNotBlank() && belowValue == null, supportingText = {
-                    if (below.isNotBlank() && belowValue == null) Text("Enter a price like 0.012")
+                    if (below.isNotBlank() && belowValue == null) Text("Enter a price like 0${point}012")
                     else if (crossed.second) Text("BERT is already below this — it will alert on the next check.", color = Amber)
+                    else if (belowValue != null) Text(levelSaid("below", belowValue, settings.priceBelow), Modifier.testTag("alert-below-level"))
                 })
             val valid = (above.isBlank() || aboveValue != null) && (below.isBlank() || belowValue != null)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -130,6 +139,13 @@ internal fun AlertsScreen(quote: QuoteState, store: BERTAlertStore? = null) {
     }
     Text("Alerts never include your holdings. Price checks use the same public market data as the rest of the app.", color = Muted, fontSize = 12.sp, lineHeight = 18.sp)
 }
+
+/**
+ * Under a price field, the level it reads as, in the phone's own number format: what is stored ("Saved: alerts above
+ * $0,015"), or what saving will store. So a level typed one way and read another is seen before it is relied on.
+ */
+internal fun levelSaid(side: String, value: Double, saved: Double?): String =
+    if (value == saved) "Saved: alerts $side \$${formatPositionShown(value)}" else "Alerts $side \$${formatPositionShown(value)} once saved"
 
 /** A titled switch with a line under it; Alerts and Holdings use it. */
 @Composable

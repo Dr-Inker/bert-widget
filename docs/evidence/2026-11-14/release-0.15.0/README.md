@@ -9,7 +9,7 @@ says 0.15.0 (35); the 0.14.2 link is 404; the live privacy page has the new line
 `Android Builds\BERT-Play\` (hashes re-checked there), with the six screenshots in `screenshots-0.15.0\` and
 `LISTING-0.15.0.md`. Rollback: `git -C /opt/berthalla reset --hard e023e2d`, then the deploy script.
 
-**GitHub:** squashed onto `main` after a scrub scan of the added lines. The 12 November critique is kept out of the
+**GitHub:** squashed onto `main` (`f6263ba`) after a scrub scan of the added lines (`github-push.txt`). The 12 November critique is kept out of the
 public repository (it is at `/opt/bert-widget-qa/private/CRITIQUE-2026-11-12.md` and in local history): the owner
 said "push" without saying whether it should go, so the cautious reading was taken. Say the word and it goes in.
 

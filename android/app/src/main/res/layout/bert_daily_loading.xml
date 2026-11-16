@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- First frame of Bert's day, until the note is drawn: the same paper, pixel Bert and a line saying the note is coming. -->
+<!-- First frame of Bert's day, until the note is drawn: the same paper, pixel Bert and a line saying the post from Berthalla is coming. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -23,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="10dp"
         android:layout_weight="1"
-        android:text="A note from Bert is on its way."
+        android:text="The latest post from Berthalla is on its way."
         android:textColor="@color/note_ink"
         android:textSize="15sp" />
 </LinearLayout>

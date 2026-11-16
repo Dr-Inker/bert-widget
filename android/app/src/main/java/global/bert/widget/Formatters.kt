@@ -64,7 +64,9 @@ fun formatObservedAt(
     val sameDay = observed.get(Calendar.YEAR) == now.get(Calendar.YEAR) &&
         observed.get(Calendar.DAY_OF_YEAR) == now.get(Calendar.DAY_OF_YEAR)
     val time = if (use24Hour) "HH:mm" else "h:mm a"
-    val pattern = if (sameDay) time else if (dateOnlyWhenOld) "d MMM" else "d MMM $time"
+    // Another year's date says its year ("28 Oct 2025"): a date without one reads as this year's.
+    val date = if (observed.get(Calendar.YEAR) != now.get(Calendar.YEAR)) "d MMM yyyy" else "d MMM"
+    val pattern = if (sameDay) time else if (dateOnlyWhenOld) date else "$date $time"
     return "As of ${SimpleDateFormat(pattern, locale).format(Date(observedAtEpochMillis))}"
 }
 

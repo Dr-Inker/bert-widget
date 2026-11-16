@@ -5,9 +5,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsFocusedAsState
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -55,13 +53,14 @@ import java.util.Locale
 
 /*
  * 0.15, "slate and paper": the garden carries on down the page. Under Bert's bubble, the price is chalked on a slate in a
- * wooden frame, like the chalkboard standing in the scene, and Berthalla's note is a cream paper note pinned up in his
- * handwriting. One rule for the whole app from here: numbers are chalked on slate; Bert's words are on paper.
+ * wooden frame, like the chalkboard standing in the scene, and the latest post from Berthalla is a printed clipping pinned
+ * up under it (0.15.1). The Berthalla X bot, run by the BERT team, posts in Bert's voice; it is not Bert, so its posts are
+ * never in his hand. The rule for the whole app: numbers are chalked on slate; Bert's own lines are in his handwriting; posts from Berthalla are
+ * printed clippings.
  *
  * Both are scene materials, not app panels: drawn on the scene's own art-pixel grid (k device px per art px, from
- * placeFrame, as the bubble is), with stepped corners and outlines like the bubble's, and lit for the time of day (the
- * paper is the bubble's own paper in each light, so it never glares under the night scene). They are the same in every
- * app colour scheme.
+ * placeFrame, as the bubble is), with outlines like the bubble's, and lit for the time of day (the clipping's newsprint
+ * dims with the scene, so it never glares under the night scene). They are the same in every app colour scheme.
  */
 
 /** The slate and its frame in the scene's light: the chalkboard by the gate's colours by day, dimmer at dusk and night. */
@@ -88,13 +87,27 @@ internal data class SlateTone(
     }
 }
 
-/** The note's paper (the bubble's own, [BubbleTone]) with its eyebrow and link inks and the pin, in the scene's light. */
-internal data class PaperTone(val paper: BubbleTone, val eyebrow: Color, val link: Color, val pin: Color, val pinLight: Color, val pinDark: Color) {
+/**
+ * The clipping's newsprint in the scene's light: cooler and greyer than Bert's cream paper (the bubble's, [BubbleTone]),
+ * so a printed post never reads as his handwritten note. [ink] for the post, [eyebrow] for the dateline and its rule,
+ * [muted] for the byline, [link], [showThrough] for the faint print of the clipping's other side, and the pin.
+ */
+internal data class ClipTone(
+    val outline: Color, val fill: Color, val shade: Color, val showThrough: Color,
+    val ink: Color, val eyebrow: Color, val muted: Color, val link: Color,
+    val pin: Color, val pinLight: Color, val pinDark: Color,
+) {
     companion object {
         fun of(time: PlaceTime) = when (time) {
-            PlaceTime.DUSK -> PaperTone(BubbleTone.of(time), Color(0xFF6E543A), Color(0xFF643A96), Color(0xFFC23C2B), Color(0xFFD9644F), Color(0xFF952A1E))
-            PlaceTime.NIGHT -> PaperTone(BubbleTone.of(time), Color(0xFF54412D), Color(0xFF52307C), Color(0xFF9E3A2E), Color(0xFFB8584B), Color(0xFF762A20))
-            else -> PaperTone(BubbleTone.of(time), Color(0xFF7D6043), Color(0xFF6B3FA0), Color(0xFFD8402C), Color(0xFFF0705C), Color(0xFFA82A1C))
+            PlaceTime.DUSK -> ClipTone(Color(0xFF24130F), Color(0xFFD3D0C6), Color(0xFFBAB6AB), Color(0xFFCDCAC0),
+                Color(0xFF1E1D21), Color(0xFF4A4950), Color(0xFF4E4D55), Color(0xFF643A96),
+                Color(0xFFC23C2B), Color(0xFFD9644F), Color(0xFF952A1E))
+            PlaceTime.NIGHT -> ClipTone(Color(0xFF07050A), Color(0xFFAFAEA8), Color(0xFF9C9A93), Color(0xFFAAA9A3),
+                Color(0xFF141317), Color(0xFF35343A), Color(0xFF39383E), Color(0xFF46276A),
+                Color(0xFF9E3A2E), Color(0xFFB8584B), Color(0xFF762A20))
+            else -> ClipTone(Color(0xFF2B2A30), Color(0xFFE2E1DA), Color(0xFFC6C5BC), Color(0xFFDBDAD2),
+                Color(0xFF1F1F24), Color(0xFF515159), Color(0xFF56565E), Color(0xFF6B3FA0),
+                Color(0xFFD8402C), Color(0xFFF0705C), Color(0xFFA82A1C))
         }
     }
 }
@@ -127,47 +140,81 @@ internal fun slateFace(quote: QuoteState, now: Long, use24Hour: Boolean, locale:
 
 private const val PRICE_UNAVAILABLE_SPOKEN = "Price unavailable. Check your connection."
 
-/** What the note says: an Outfit [eyebrow], the [body] in Bert's hand, and a [link] when a tap opens the board. */
-internal data class NoteFace(val eyebrow: String, val body: String, val link: String?, val spoken: String)
-
-internal const val NO_POST = "no post today. the postman’s on strike."
-internal const val OFFLINE_NOTE = "can’t reach the board right now. check your connection."
-private const val OFFLINE_NOTE_SHORT = "can’t reach the board right now."
+/**
+ * What the clipping says, all of it typed (Outfit): an [eyebrow] naming Berthalla and the post's date, the [body],
+ * the [byline] saying who Berthalla is, and a [link] when a tap opens the board. [spoken] is the lot for TalkBack.
+ */
+internal data class NoteFace(val eyebrow: String, val body: String, val byline: String, val link: String?, val spoken: String)
 
 /**
- * The note under the slate. With today's note: the note itself (its whitespace folded, so three lines carry as much of it
- * as fit), when it was first seen, and the way to the board. Without one, the board's own words for why: the connection
- * when there is no feed and nothing saved ([ActivityState.Unavailable], said shorter when the slate above already says to
- * check it), the postman for a feed with nothing in it. The link stays whenever the board has notes to read; [fresh]
- * counts the notes first seen since the last visit (not today's).
+ * Who posts from Berthalla, said wherever its posts are. Berthalla is a place (like Valhalla), never a person or a
+ * maker: its posts come from the Berthalla X bot, run by the BERT team, in Bert's voice; not Bert's own words.
+ */
+internal const val BERTHALLA_BOT = "the Berthalla X bot, run by the BERT team"
+/** The clipping's byline: who wrote the post. */
+internal const val BYLINE = "the BERT team’s X bot, posting as Bert"
+// The app's own states and the feed's, typed like the rest of the clipping (never in Bert's hand), and only what is so.
+internal const val NO_POST = "No post from Berthalla right now."
+internal const val OFFLINE_NOTE = "Can’t reach the feed from Berthalla right now. Check your connection."
+private const val OFFLINE_NOTE_SHORT = "Can’t reach the feed from Berthalla right now."
+internal const val CHECKING_NOTE = "Checking the feed from Berthalla…"
+
+/**
+ * The clipping under the slate. With a post: Berthalla's name (and "ON X" when the post is on X) and the post's date in
+ * the eyebrow, the post itself (its whitespace folded, so three lines carry as much of it as fit), and the way to the
+ * board. The date is the post's own ([BERTActivity.postedAtEpochMillis]); a feed too old to carry it falls back to when
+ * this phone first saw the post ([entry]), never the feed's refresh time. Without a post, the feed's own words for why:
+ * the connection when there is no feed and nothing saved ([ActivityState.Unavailable], said shorter when the slate above
+ * already says to check it), "no post" for a feed with nothing in it. The link stays whenever the board has notes to
+ * read; [fresh] counts the notes first seen since the last visit (not today's).
  */
 internal fun noteFace(state: ActivityState, entry: JournalEntry?, fresh: Int, isNew: Boolean, boardHasNotes: Boolean,
                       slateSaysOffline: Boolean, now: Long, zone: ZoneId = ZoneId.systemDefault(), locale: Locale = Locale.getDefault()): NoteFace {
-    val current = (state as? ActivityState.Available)?.activity?.dispatch
+    val activity = (state as? ActivityState.Available)?.activity
+    val current = activity?.dispatch
     val link = when {
         fresh == 1 -> "1 new note on the board"
         fresh > 1 -> "${fresh.coerceAtMost(6)} new notes on the board"
         else -> "Read the board"
     }
     val linkSpoken = if (fresh > 0) ". $link" else ""
+    // Each part's words kept together, so a long eyebrow breaks at a dot, never inside "BERTHALLA ON X" or "THIS MORNING".
+    fun eyebrow(vararg parts: String?) = parts.filterNotNull().joinToString(" · ") { it.replace(' ', '\u00A0') }
     if (current != null) {
-        val seen = entry?.let { boardWhen(it.firstSeenEpochMillis, now, zone, locale) }
-        val head = if (isNew) "NEW ON THE BOARD" else "ON THE BOARD"
+        val postedAt = activity.postedAtEpochMillis ?: entry?.shownAtEpochMillis
+        val onX = activity.postIsOnX
+        val head = if (onX) "BERTHALLA ON X" else "BERTHALLA"
         val note = current.split(Regex("\\s+")).filter { it.isNotEmpty() }.joinToString(" ")
-        val said = (if (isNew) "New on the board" else "On the board") + (seen?.let { ", ${it.lowercase(locale)}" } ?: "")
-        // Each part's words kept together, so a long eyebrow breaks at the dot, never inside "THIS MORNING".
-        return NoteFace(listOfNotNull(head, seen).joinToString(" · ") { it.replace(' ', '\u00A0') }, note, link, "$said: $note$linkSpoken")
+        val said = (if (isNew) "New. " else "") + (if (onX) "The Berthalla X bot, run by the BERT team, posted" else "The Berthalla X bot, run by the BERT team, wrote") +
+            (postedAt?.let { spokenWhen(it, now, zone, locale) }?.let { " $it" } ?: "")
+        return NoteFace(eyebrow("NEW".takeIf { isNew }, head, postedAt?.let { boardWhen(it, now, zone, locale) }), note, BYLINE, link,
+            "$said: $note$linkSpoken")
     }
     val body = when (state) {
         ActivityState.Unavailable -> if (slateSaysOffline) OFFLINE_NOTE_SHORT else OFFLINE_NOTE
-        ActivityState.Loading -> "checking the board…"
+        ActivityState.Loading -> CHECKING_NOTE
         else -> NO_POST
     }
     val opens = boardHasNotes || fresh > 0
-    return NoteFace("ON THE BOARD", body, link.takeIf { opens }, "On the board: $body" + if (opens) linkSpoken else "")
+    return NoteFace(eyebrow("BERTHALLA"), body, BYLINE, link.takeIf { opens }, "From $BERTHALLA_BOT. $body" + if (opens) linkSpoken else "")
 }
 
-/** When a note was first seen, as the eyebrow says it: "THIS MORNING", "YESTERDAY", "MONDAY", "5 SEP"; null if ahead of the clock. */
+/** [boardWhen] as TalkBack says it: "this morning", "yesterday", "on Monday", "on 5 September"; null if ahead of the clock. */
+internal fun spokenWhen(at: Long, now: Long, zone: ZoneId = ZoneId.systemDefault(), locale: Locale = Locale.getDefault()): String? {
+    val shown = boardWhen(at, now, zone, locale) ?: return null
+    val then = Instant.ofEpochMilli(at).atZone(zone)
+    val days = ChronoUnit.DAYS.between(then.toLocalDate(), Instant.ofEpochMilli(now).atZone(zone).toLocalDate())
+    return when {
+        days <= 1 -> shown.lowercase(locale)
+        days < 7 -> "on " + DateTimeFormatter.ofPattern("EEEE", locale).format(then)
+        else -> "on " + DateTimeFormatter.ofPattern(if (then.year != Instant.ofEpochMilli(now).atZone(zone).year) "d MMMM yyyy" else "d MMMM", locale).format(then)
+    }
+}
+
+/**
+ * When a post was written (or first seen), as the eyebrow says it: "THIS MORNING", "YESTERDAY", "MONDAY", "5 SEP", and
+ * "28 OCT 2025" in another year; null if ahead of the clock.
+ */
 internal fun boardWhen(seenAt: Long, now: Long, zone: ZoneId = ZoneId.systemDefault(), locale: Locale = Locale.getDefault()): String? {
     val seen = Instant.ofEpochMilli(seenAt).atZone(zone)
     val today = Instant.ofEpochMilli(now).atZone(zone)
@@ -183,7 +230,8 @@ internal fun boardWhen(seenAt: Long, now: Long, zone: ZoneId = ZoneId.systemDefa
         }
         days == 1L -> "YESTERDAY"
         days < 7 -> DateTimeFormatter.ofPattern("EEEE", locale).format(seen).uppercase(locale)
-        else -> DateTimeFormatter.ofPattern("d MMM", locale).format(seen).uppercase(locale).replace(".", "")
+        // Another year's date says its year ("28 OCT 2025"), so an old post never reads as this year's.
+        else -> DateTimeFormatter.ofPattern(if (seen.year != today.year) "d MMM yyyy" else "d MMM", locale).format(seen).uppercase(locale).replace(".", "")
     }
 }
 
@@ -217,7 +265,7 @@ internal fun SlateAndPaper(time: PlaceTime, slate: SlateFace, note: NoteFace, op
         val between = art(GAP_BETWEEN) * k
         Layout(content = {
             Slate(k, SlateTone.of(time), slate, openMarket)
-            Note(k, PaperTone.of(time), note, openBoard)
+            Note(k, ClipTone.of(time), note, openBoard)
         }, Modifier.fillMaxWidth()) { measurables, constraints ->
             val each = Constraints.fixedWidth(w * k)
             val placed = measurables.map { it.measure(each) }
@@ -502,84 +550,123 @@ private fun slateArt(w: Int, h: Int, tone: SlateTone): ObjectArt {
 private const val GRAIN_PERCENT = 16
 private const val GRAIN_ALPHA = 0.55f
 
-// The paper's pin, in art px: a round head 8 px across inside its 1 px outline, its top this far down the note.
+// The clipping's pin, in art px: a round head 8 px across inside its 1 px outline, its top this far down the clipping.
 private const val PIN_HEAD = 8
 private const val PIN_TOP = 4
-/** The paper's stepped corner, the bubble's own. */
-private val PAPER_CORNER = intArrayOf(3, 1, 1)
-/** The bottom right corner is turned up this far (art px). */
-private const val DOG_EAR = 8
+/** The clipping's hard shadow on the page: this many art px to the right and down (light from the upper left, as the pin's glint). */
+private const val SHADOW_X = 1
+private const val SHADOW_Y = 2
+/** The dateline's rule under the eyebrow, in art px: a thick line, a gap, a thin one (a newspaper's Oxford rule); with room above and below. */
+private const val RULE_ABOVE = 3
+private const val RULE_ROWS = 4
+private const val RULE_BELOW = 4
 
 @Composable
-private fun Note(k: Int, tone: PaperTone, face: NoteFace, open: () -> Unit) {
+private fun Note(k: Int, tone: ClipTone, face: NoteFace, open: () -> Unit) {
     val density = LocalDensity.current
     fun art(dp: Dp) = with(density) { kotlin.math.round(dp.toPx() / k).toInt() }
-    val insets = ArtInsets(1 + art(15.dp), PIN_TOP + PIN_HEAD + 2 + art(8.dp), 1 + art(15.dp), 1 + 2 + art(10.dp))
+    val insets = ArtInsets(1 + art(15.dp), PIN_TOP + PIN_HEAD + 2 + art(8.dp), 1 + art(15.dp) + SHADOW_X, 1 + 1 + art(10.dp) + SHADOW_Y)
     val press = remember { MutableInteractionSource() }
     val pressed by press.collectIsPressedAsState()
     val focused by press.collectIsFocusedAsState()
-    val art = remember(tone) { { w: Int, h: Int -> ObjectArt(paperBitmap(w, h, tone)) } }
+    val art = remember(tone) { { w: Int, h: Int -> ObjectArt(clippingBitmap(w, h, tone)) } }
     val opens = face.link != null
     val tap = if (opens) Modifier.clickable(press, indication = null, onClickLabel = "Read the noticeboard", role = Role.Button, onClick = open) else Modifier
     PixelObject(k, insets, art, { if (opens && (pressed || focused)) DIPPED else null },
         Modifier.testTag("board-row").then(tap).semantics(mergeDescendants = true) { contentDescription = face.spoken }) {
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(face.eyebrow, color = tone.eyebrow, fontFamily = Outfit, fontSize = 11.sp, lineHeight = 15.sp,
-                fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
-            Text(face.body, Modifier.testTag("note-body"), color = tone.paper.ink, fontFamily = BertHand, fontSize = 19.sp, lineHeight = 24.sp,
-                maxLines = 3, overflow = TextOverflow.Ellipsis)
-            face.link?.let {
-                Text("$it ›", Modifier.testTag("note-link"), color = tone.link, fontFamily = Outfit, fontSize = 13.sp, lineHeight = 18.sp,
-                    fontWeight = FontWeight.SemiBold)
-            }
-        }
+        ClippingWords(k, tone, face)
     }
 }
 
 /**
- * The note, one bitmap pixel per art px: the bubble's paper with its stepped corners and outline and the same two rows
- * of shade along the bottom (the paper's thickness), the bottom right corner turned up, and a red pin at the top centre
- * with a highlight, a shadow side, and its shadow on the paper.
+ * The clipping's words, all typed: the dateline, an Oxford rule, the post, the byline and the link. Laid out by hand so
+ * the rule falls on whole art px (the words' box starts on one), [RULE_ABOVE] under the dateline's last line.
  */
-private fun paperBitmap(w: Int, h: Int, tone: PaperTone): ImageBitmap {
-    val px = IntArray(w * h)
-    val outline = tone.paper.outline.toArgb(); val fill = tone.paper.fill.toArgb(); val shade = tone.paper.shade.toArgb()
-    // The turned-up corner: the corner itself is gone (behind the fold), and the flap lies on the paper.
-    val earX = w - 1 - DOG_EAR; val earY = h - 1 - DOG_EAR
-    fun cut(x: Int, y: Int) = x >= earX && y >= earY && (x - earX) + (y - earY) > DOG_EAR
-    fun inside(x: Int, y: Int): Boolean {
-        if (x !in 0 until w || y !in 0 until h || cut(x, y)) return false
-        val edge = minOf(y, h - 1 - y)
-        val inset = if (edge < PAPER_CORNER.size) PAPER_CORNER[edge] else 0
-        return x >= inset && x < w - inset
+@Composable
+private fun ClippingWords(k: Int, tone: ClipTone, face: NoteFace) {
+    val rule = remember { IntArray(1) }
+    Layout(content = {
+        Text(face.eyebrow, Modifier.testTag("note-eyebrow"), color = tone.eyebrow, fontFamily = Outfit, fontSize = 11.sp, lineHeight = 15.sp,
+            fontWeight = FontWeight.SemiBold, letterSpacing = 1.sp)
+        Text(face.body, Modifier.testTag("note-body"), color = tone.ink, fontFamily = Outfit, fontSize = 17.sp, lineHeight = 24.sp,
+            maxLines = 3, overflow = TextOverflow.Ellipsis)
+        Text(face.byline, Modifier.testTag("note-byline"), color = tone.muted, fontFamily = Outfit, fontSize = 12.sp, lineHeight = 16.sp)
+        face.link?.let {
+            Text("$it ›", Modifier.testTag("note-link"), color = tone.link, fontFamily = Outfit, fontSize = 13.sp, lineHeight = 18.sp,
+                fontWeight = FontWeight.SemiBold)
+        }
+    }, Modifier.drawWithContent {
+        // The Oxford rule across the column, in the dateline's ink: two art px thick, one apart, one thin.
+        for ((row, rows) in listOf(0 to 2, RULE_ROWS - 1 to 1)) drawRect(tone.eyebrow, androidx.compose.ui.geometry.Offset(0f, (rule[0] + row * k).toFloat()),
+            androidx.compose.ui.geometry.Size(size.width, (rows * k).toFloat()))
+        drawContent()
+    }) { measurables, constraints ->
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val placed = measurables.map { it.measure(loose) }
+        fun grid(v: Int) = (v + k - 1) / k * k
+        val ys = IntArray(placed.size)
+        var y = grid(placed[0].height) + RULE_ABOVE * k
+        rule[0] = y
+        y += (RULE_ROWS + RULE_BELOW) * k
+        ys[1] = y; y += placed[1].height + 6.dp.roundToPx()
+        ys[2] = y; y += placed[2].height
+        if (placed.size > 3) { y += 8.dp.roundToPx(); ys[3] = y; y += placed[3].height }
+        layout(constraints.maxWidth, y) { placed.forEachIndexed { i, p -> p.place(0, ys[i]) } }
     }
-    for (y in 0 until h) for (x in 0 until w) {
-        if (!inside(x, y)) continue
-        val edge = !inside(x - 1, y) || !inside(x + 1, y) || !inside(x, y - 1) || !inside(x, y + 1)
-        val flap = x >= earX && y >= earY
+}
+
+/**
+ * The clipping, one bitmap pixel per art px: newsprint cut square with scissors (straight edges and sharp corners, no
+ * stepped corners like Bert's paper and no turned-up corner), a 1 px outline, one row of shade along the bottom (thin
+ * paper, half the note's thickness), the faint print of its other side showing through, a hard shadow on the page
+ * under it, and a red pin at the top centre with a highlight, a shadow side, and its shadow on the paper.
+ */
+private fun clippingBitmap(w: Int, h: Int, tone: ClipTone): ImageBitmap {
+    val px = IntArray(w * h)
+    val outline = tone.outline.toArgb(); val fill = tone.fill.toArgb(); val shade = tone.shade.toArgb(); val through = tone.showThrough.toArgb()
+    val pw = w - SHADOW_X; val ph = h - SHADOW_Y
+    val shadow = 0x59000000
+    for (y in SHADOW_Y until h) for (x in SHADOW_X until w) if (x >= pw || y >= ph) px[y * w + x] = shadow
+    for (y in 0 until ph) for (x in 0 until pw) {
         px[y * w + x] = when {
-            edge -> outline
-            // The flap's two folded edges are outlined; inside it is the paper's underside, in shade.
-            flap && (x == earX || y == earY) -> outline
-            flap -> shade
-            !inside(x, y + 2) || !inside(x, y + 3) -> shade
+            x == 0 || y == 0 || x == pw - 1 || y == ph - 1 -> outline
+            y == ph - 2 -> shade
             else -> fill
+        }
+    }
+    // The other side's print, faint: two columns of "words" (short runs on every fourth row, a gutter between the
+    // columns, and a paragraph's last line ending short), kept clear of the edges and the pin. Placed by a hash of
+    // their position so they keep still.
+    fun hash(a: Int, b: Int) = ((a * 73_856_093) xor (b * 19_349_663)).let { (it xor (it ushr 13)) and 0x7fffffff }
+    val pinBottom = PIN_TOP + PIN_HEAD + 3
+    val gutter = pw / 2
+    for ((left, right) in listOf(5 to gutter - 3, gutter + 3 to pw - 5)) for (y in 6 until ph - 5 step 4) {
+        // A paragraph ends now and then: its line stops part way, and the next starts indented.
+        val end = if (hash(y, left) % 6 == 0) left + (right - left) * (3 + hash(left, y) % 4) / 10 else right
+        var x = left + if (hash(y - 4, left) % 6 == 0) 3 else 0
+        while (x < end - 2) {
+            val len = 2 + hash(x, y) % 7
+            for (cx in x until minOf(x + len, end)) {
+                if (y < pinBottom && kotlin.math.abs(cx - gutter) <= PIN_HEAD) continue
+                if (px[y * w + cx] == fill) px[y * w + cx] = through
+            }
+            x += len + 2 + hash(y, x) % 2
         }
     }
     // The pin: a round head (a 10 px disc with its outline), a glint up and to the left, a shaded crescent down and to
     // the right, and its shadow on the paper two px below and one to the right.
     val pin = tone.pin.toArgb(); val pinLight = tone.pinLight.toArgb(); val pinDark = tone.pinDark.toArgb()
-    val px0 = (w - PIN_HEAD) / 2 - 1; val py0 = PIN_TOP - 1
+    val px0 = (pw - PIN_HEAD) / 2 - 1; val py0 = PIN_TOP - 1
     val size = PIN_HEAD + 2
     val mid = (size - 1) / 2f
     fun head(x: Int, y: Int) = x in 0 until size && y in 0 until size && (x - mid) * (x - mid) + (y - mid) * (y - mid) <= mid * mid + mid
     for (y in 0 until size) for (x in 0 until size) {
         val ax = px0 + x + 1; val ay = py0 + y + 2
-        if (head(x, y) && ax in 0 until w && ay in 0 until h && px[ay * w + ax] == fill) px[ay * w + ax] = shade
+        if (head(x, y) && ax in 0 until pw && ay in 0 until ph && (px[ay * w + ax] == fill || px[ay * w + ax] == through)) px[ay * w + ax] = shade
     }
     for (y in 0 until size) for (x in 0 until size) {
         val ax = px0 + x; val ay = py0 + y
-        if (!head(x, y) || ax !in 0 until w || ay !in 0 until h) continue
+        if (!head(x, y) || ax !in 0 until pw || ay !in 0 until ph) continue
         val rim = !head(x - 1, y) || !head(x + 1, y) || !head(x, y - 1) || !head(x, y + 1)
         // The lit side is a disc pushed up and to the left; whatever of the head lies outside it is in shade.
         val lit = (x - mid + 1.2f) * (x - mid + 1.2f) + (y - mid + 1.2f) * (y - mid + 1.2f) <= (mid - 1.1f) * (mid - 1.1f)

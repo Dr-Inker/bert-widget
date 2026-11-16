@@ -61,6 +61,84 @@ class CaptionCardV2Test {
         }
     }
 
+    /**
+     * 0.15.1: a card made from a Berthalla post on the board leaves the phone, so its label says it is from the Berthalla X bot
+     * posting as Bert, never "A NOTE FROM BERT" (0.15.0 labelled it as Bert's own). The holder's own captions say MADE
+     * WITH THE BERT APP. The label's full wording fits both layouts' bands at both sizes.
+     */
+    @Test fun aCardFromABerthallaPostSaysItIsBerthallas() {
+        val post = "woofmornin. the ladybug holds the screen door like the wind can wait its turn."
+        for (format in CardFormat.entries) for (layout in CardLayout.entries) {
+            val holder = renderCaption(context, post, 0, CardStyle(CardArt.PHOTO, layout, format)).bitmap
+            val berthalla = renderCaption(context, post, 0, CardStyle(CardArt.PHOTO, layout, format, CaptionSource.BERTHALLA))
+            assertFalse("$layout $format: a Berthalla post still says A NOTE FROM BERT", holder.sameAs(berthalla.bitmap))
+            assertEquals(CaptionSource.BERTHALLA, berthalla.style.source)
+            File("build/outputs/host-ui/caption-card-berthalla-${layout.name.lowercase()}-${format.name.lowercase()}.png").apply { parentFile?.mkdirs() }
+                .outputStream().use { berthalla.bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+            // Only the label differs: the caption, art and foot are the same card.
+            val rows = (0 until format.height).count { y -> (0 until format.width step 3).any { x -> holder.getPixel(x, y) != berthalla.bitmap.getPixel(x, y) } }
+            assertTrue("$layout $format: $rows rows differ, more than a label's", rows in 1..60)
+        }
+        // The holder's own words (the default style is the holder's).
+        assertTrue(renderCaption(context, caption, 1).bitmap.sameAs(renderCaption(context, caption, 1, CardStyle(source = CaptionSource.HOLDER)).bitmap))
+        assertEquals("MADE WITH THE BERT APP", CaptionSource.HOLDER.label)
+        // The full wording fits the bands (Note: 32px bold in 920px; Poster: 30px bold, spaced, in 940px).
+        val bold = CardType.of(context).bold
+        val note = android.graphics.Paint().apply { textSize = 32f; typeface = bold }
+        val poster = android.graphics.Paint().apply { textSize = 30f; typeface = bold; letterSpacing = 0.12f }
+        assertEquals("FROM THE BERTHALLA X BOT", cardLabel(CaptionSource.BERTHALLA, note, 1080 - 160f))
+        assertEquals("FROM THE BERTHALLA X BOT", cardLabel(CaptionSource.BERTHALLA, poster, 1080 - 140f))
+        assertEquals("BERTHALLA X BOT", cardLabel(CaptionSource.BERTHALLA, poster, 400f))
+    }
+
+    /**
+     * 0.15.1: a card never says "A NOTE FROM BERT", whoever wrote it: a holder's own words were put in Bert's mouth. The
+     * label is one of two, and the phrase is nowhere in the app's code, layouts or strings.
+     */
+    @Test fun noCardSaysANoteFromBert() {
+        assertEquals(setOf("MADE WITH THE BERT APP", "FROM THE BERTHALLA X BOT"), CaptionSource.entries.map { it.label }.toSet())
+        // The holder's card and Berthalla's are told apart on the card itself.
+        for (format in CardFormat.entries) for (layout in CardLayout.entries)
+            assertFalse("$layout $format", renderCaption(context, caption, 0, CardStyle(CardArt.PHOTO, layout, format)).bitmap
+                .sameAs(renderCaption(context, caption, 0, CardStyle(CardArt.PHOTO, layout, format, CaptionSource.BERTHALLA)).bitmap))
+        val sources = File("src/main").walkTopDown().filter { it.isFile && (it.extension == "kt" || it.extension == "xml") }.toList()
+        assertTrue(sources.size > 50)
+        val found = sources.filter { it.readText().contains("NOTE FROM BERT", ignoreCase = true) }.map { it.name }
+        assertTrue("A NOTE FROM BERT is still in $found", found.isEmpty())
+    }
+
+    @Test fun aBerthallaCardSavesAndReopensAsBerthallas() {
+        val library = CaptionLibrary(context)
+        val style = CardStyle(CardArt.PHOTO, CardLayout.POSTER, CardFormat.SQUARE, CaptionSource.BERTHALLA)
+        val saved = library.save(renderCaption(context, caption, 0, style))
+        assertEquals(style, CaptionLibrary(context).list().single { it.id == saved.id }.style)
+        assertEquals(style, library.open(saved.id).style)
+    }
+
+    /**
+     * A caption is Berthalla's only while it is unedited: the post as the app put it in the field (the whole post, or
+     * the board's excerpt of it), spacing, case and punctuation aside. Anything else, a shorter unbroken piece too, is
+     * the holder's. 0.15.1's first rules counted shared words, then accepted any piece, so a holder's own words
+     * ("sell your bert" from "never sell your bert") shipped under Berthalla's name.
+     */
+    @Test fun aCaptionIsBerthallasOnlyWhileItIsUnedited() {
+        val post = "woofmornin. the ladybug holds the screen door like the wind can wait its turn."
+        assertTrue(stillBerthallas(post, post))
+        assertTrue("the board's excerpt", stillBerthallas(post, captionExcerpt(post)))
+        assertTrue("spacing, case and punctuation", stillBerthallas(post, "  Woofmornin — the ladybug holds the SCREEN door like the wind can wait its turn!! "))
+        val long = "never sell your bert. " + "the pack keeps its word and the garden keeps its gate, whatever the chart says this week. ".repeat(2)
+        assertTrue("a long post's excerpt, as the board gives it", stillBerthallas(long, captionExcerpt(long)))
+        assertFalse("a shorter unbroken piece", stillBerthallas("never sell your bert", "sell your bert"))
+        assertFalse("a piece of the post", stillBerthallas(post, "the ladybug holds the screen door"))
+        assertFalse("the post with the holder's words after it", stillBerthallas(post, "the wind can wait its turn. sell BERT now"))
+        assertFalse("its words in the holder's sentence", stillBerthallas(post, "the ladybug never holds the door"))
+        assertFalse("a word changed", stillBerthallas(post, "woofmornin. the ladybug holds the garden gate like the wind can wait its turn."))
+        assertFalse("emptied", stillBerthallas(post, ""))
+        assertFalse("blank", stillBerthallas(post, "  "))
+        assertFalse("one word of it", stillBerthallas(post, "ladybug"))
+        assertTrue("a one-word post, unedited", stillBerthallas("woof.", "Woof"))
+    }
+
     @Test fun storyCardRoundTripsWithItsStyle() {
         val library = CaptionLibrary(context)
         val style = CardStyle(CardArt.MOON, CardLayout.POSTER, CardFormat.STORY)

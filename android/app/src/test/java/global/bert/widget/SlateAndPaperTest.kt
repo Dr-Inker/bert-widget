@@ -87,38 +87,84 @@ class SlateAndPaperTest {
     // ---- What the note says ----
 
     private val text = "woofmornin. the ladybug holds\nthe screen door."
-    private fun feed(now: Long, dispatch: String? = text) = ActivityState.Available(BERTActivity(now - 60_000, dispatch, "content", null))
+    private fun feed(now: Long, dispatch: String? = text, postedAt: Long? = null, xId: String? = "1983746501234567890") =
+        ActivityState.Available(BERTActivity(now - 60_000, dispatch, "content", null, postedAt, xId))
 
-    @Test fun theNoteIsTodaysNoteWithWhenItWasFirstSeen() {
+    @Test fun theClippingNamesBerthallaAndThePostsOwnDate() {
         val now = at(10)
-        val face = noteFace(feed(now), JournalEntry(text, "content", at(8)), fresh = 0, isNew = false, boardHasNotes = true,
+        // Written at 8 (the feed's own time), first seen at 9:30: the eyebrow is the post's date.
+        val face = noteFace(feed(now, postedAt = at(8)), JournalEntry(text, "content", at(9, 30)), fresh = 0, isNew = false, boardHasNotes = true,
             slateSaysOffline = false, now = now, zone = zone, locale = Locale.UK)
-        assertEquals("ON\u00A0THE\u00A0BOARD · THIS\u00A0MORNING", face.eyebrow)
+        assertEquals("BERTHALLA\u00A0ON\u00A0X · THIS\u00A0MORNING", face.eyebrow)
         assertEquals("its lines run on as one", "woofmornin. the ladybug holds the screen door.", face.body)
+        assertEquals(BYLINE, face.byline)
+        assertEquals("the BERT team’s X bot, posting as Bert", face.byline)
         assertEquals("Read the board", face.link)
-        assertEquals("On the board, this morning: woofmornin. the ladybug holds the screen door.", face.spoken)
+        assertEquals("The Berthalla X bot, run by the BERT team, posted this morning: woofmornin. the ladybug holds the screen door.", face.spoken)
         // New since the last visit, and earlier notes that came in too.
-        val news = noteFace(feed(now), JournalEntry(text, "content", at(8)), fresh = 2, isNew = true, boardHasNotes = true,
+        val news = noteFace(feed(now, postedAt = at(8)), JournalEntry(text, "content", at(8)), fresh = 2, isNew = true, boardHasNotes = true,
             slateSaysOffline = false, now = now, zone = zone, locale = Locale.UK)
-        assertEquals("NEW\u00A0ON\u00A0THE\u00A0BOARD · THIS\u00A0MORNING", news.eyebrow)
+        assertEquals("NEW · BERTHALLA\u00A0ON\u00A0X · THIS\u00A0MORNING", news.eyebrow)
         assertEquals("2 new notes on the board", news.link)
-        assertTrue(news.spoken, news.spoken.startsWith("New on the board, this morning:") && news.spoken.endsWith(". 2 new notes on the board"))
+        assertTrue(news.spoken, news.spoken.startsWith("New. The Berthalla X bot, run by the BERT team, posted this morning:") && news.spoken.endsWith(". 2 new notes on the board"))
         assertEquals("1 new note on the board", noteFace(feed(now), null, 1, false, true, false, now, zone, Locale.UK).link)
         assertEquals("never more than the board shows", "6 new notes on the board", noteFace(feed(now), null, 9, false, true, false, now, zone, Locale.UK).link)
+    }
+
+    @Test fun aPostNotOnXIsBerthallasWithoutOnX() {
+        val now = at(10)
+        val face = noteFace(feed(now, postedAt = at(10, day = 4), xId = null), null, 0, false, true, false, now, zone, Locale.UK)
+        assertEquals("BERTHALLA · FRIDAY", face.eyebrow)
+        assertEquals("The Berthalla X bot, run by the BERT team, wrote on Friday: woofmornin. the ladybug holds the screen door.", face.spoken)
+        val old = noteFace(feed(now, postedAt = at(10, day = 1) - 30L * 86_400_000), null, 0, false, true, false, now, zone, Locale.UK)
+        assertEquals("BERTHALLA\u00A0ON\u00A0X · 2\u00A0AUG", old.eyebrow)
+        assertTrue(old.spoken, old.spoken.startsWith("The Berthalla X bot, run by the BERT team, posted on 2 August:"))
+    }
+
+    /** 0.15.0 dated the note by when it was first seen, under "ON THE BOARD", as if it were Bert's: never again. */
+    @Test fun theClippingNeverPassesAPostOffAsBertsOwn() {
+        val now = at(10)
+        for (state in listOf(feed(now, postedAt = at(8)), feed(now, xId = null), ActivityState.Unavailable, ActivityState.Empty, ActivityState.Loading)) {
+            val face = noteFace(state, null, 0, false, true, false, now, zone, Locale.UK)
+            assertTrue("$state: ${face.eyebrow}", face.eyebrow.replace('\u00A0', ' ').contains("BERTHALLA"))
+            // TalkBack names who posted: the Berthalla X bot, run by the BERT team (Berthalla itself is a place).
+            assertTrue("$state: ${face.spoken}", Regex("^(New\\. )?(The|From the) Berthalla X bot, run by the BERT team").containsMatchIn(face.spoken))
+            assertEquals(BYLINE, face.byline)
+            assertFalse(face.eyebrow, face.eyebrow.contains("FROM BERT") || face.eyebrow.contains("ON\u00A0THE\u00A0BOARD"))
+        }
+    }
+
+    /** The feed's refresh time (updated_at) is never the post's date: an older feed without one falls back to first seen. */
+    @Test fun theRefreshTimeIsNeverThePostsDate() {
+        val now = at(10)
+        // Refreshed a minute ago, written three days ago: the eyebrow says Sunday (6 September), not this morning.
+        val written = noteFace(feed(now, postedAt = at(20, day = 6)), JournalEntry(text, "content", at(9, 55)), 0, false, true, false, now, zone, Locale.UK)
+        assertEquals("BERTHALLA\u00A0ON\u00A0X · SUNDAY", written.eyebrow)
+        // No post time in the feed: when this phone first saw it (yesterday evening), not the refresh a minute ago.
+        val older = noteFace(feed(now, postedAt = null), JournalEntry(text, "content", at(19, day = 8)), 0, false, true, false, now, zone, Locale.UK)
+        assertEquals("BERTHALLA\u00A0ON\u00A0X · YESTERDAY", older.eyebrow)
+        // Neither known: no date at all, rather than the refresh's.
+        val unknown = noteFace(feed(now, postedAt = null), null, 0, false, true, false, now, zone, Locale.UK)
+        assertEquals("BERTHALLA\u00A0ON\u00A0X", unknown.eyebrow)
+        assertEquals("The Berthalla X bot, run by the BERT team, posted: woofmornin. the ladybug holds the screen door.", unknown.spoken)
+        // A journal entry that learned the post's time later is dated by it.
+        val learned = noteFace(feed(now, postedAt = null), JournalEntry(text, "content", at(9, 55), postedAtEpochMillis = at(6, day = 7)), 0, false, true, false, now, zone, Locale.UK)
+        assertEquals("BERTHALLA\u00A0ON\u00A0X · MONDAY", learned.eyebrow)
     }
 
     @Test fun offlineIsNotNoPost() {
         val now = at(10)
         val offline = noteFace(ActivityState.Unavailable, null, 0, false, boardHasNotes = false, slateSaysOffline = false, now = now)
-        assertEquals("can’t reach the board right now. check your connection.", offline.body)
+        assertEquals("Can’t reach the feed from Berthalla right now. Check your connection.", offline.body)
+        assertEquals("BERTHALLA", offline.eyebrow)
         assertNull("nothing saved to read: no link, no tap", offline.link)
         // The slate above already says to check the connection.
-        assertEquals("can’t reach the board right now.", noteFace(ActivityState.Unavailable, null, 0, false, false, true, now).body)
+        assertEquals("Can’t reach the feed from Berthalla right now.", noteFace(ActivityState.Unavailable, null, 0, false, false, true, now).body)
         val empty = noteFace(ActivityState.Empty, null, 0, false, boardHasNotes = false, slateSaysOffline = false, now = now)
-        assertEquals("no post today. the postman’s on strike.", empty.body)
+        assertEquals("No post from Berthalla right now.", empty.body)
         assertNull(empty.link)
         assertEquals(NO_POST, noteFace(feed(now, dispatch = null), null, 0, false, false, false, now).body)
-        assertEquals("checking the board…", noteFace(ActivityState.Loading, null, 0, false, false, false, now).body)
+        assertEquals("Checking the feed from Berthalla…", noteFace(ActivityState.Loading, null, 0, false, false, false, now).body)
         // With notes saved on the board, every one of them still leads there.
         for (state in listOf(ActivityState.Unavailable, ActivityState.Empty, ActivityState.Loading, feed(now, dispatch = null)))
             assertEquals("$state", "Read the board", noteFace(state, null, 0, false, boardHasNotes = true, slateSaysOffline = false, now = now).link)
@@ -137,6 +183,11 @@ class SlateAndPaperTest {
         assertEquals("FRIDAY", said(at(10, day = 4))) // 4 September 2026 is a Friday
         assertEquals("1 SEP", boardWhen(at(10, day = 1), at(10, day = 9), zone, Locale.US))
         assertNull("ahead of the phone's clock", said(at(23, day = 10)))
+        // Another year's date says its year, so a year-old post never reads as this year's.
+        val lastYear = ZonedDateTime.of(2025, 10, 28, 10, 0, 0, 0, zone).toInstant().toEpochMilli()
+        assertEquals("28 OCT 2025", boardWhen(lastYear, now, zone, Locale.UK))
+        assertEquals("on 28 October 2025", spokenWhen(lastYear, now, zone, Locale.UK))
+        assertEquals("on 1 September", spokenWhen(at(10, day = 1), now, zone, Locale.UK))
     }
 
     // ---- On the page ----
@@ -201,8 +252,9 @@ class SlateAndPaperTest {
         for ((hour, time) in listOf(10 to PlaceTime.DAY, 19 to PlaceTime.DUSK, 23 to PlaceTime.NIGHT)) {
             home(hour)
             val shot = capture()
-            // The note is the bubble's own paper in that light; the slate is its own slate.
-            assertEquals("$time paper", BubbleTone.of(time).fill.toArgb(), material(shot, "board-row", 3))
+            // The clipping is its own newsprint in that light, never the bubble's cream paper; the slate is its own slate.
+            assertEquals("$time newsprint", ClipTone.of(time).fill.toArgb(), material(shot, "board-row", 3))
+            assertTrue("$time: the clipping is Bert's paper", ClipTone.of(time).fill != BubbleTone.of(time).fill)
             assertEquals("$time slate", SlateTone.of(time).slate.toArgb(), material(shot, "home-price", 1 + 5 + 3))
         }
     }
@@ -281,6 +333,20 @@ class SlateAndPaperTest {
 
     @Test @Config(qualifiers = "w430dp-h932dp-xxhdpi") fun onAWidePhoneNothingClips() {
         home(23); assertNothingClipsOrOverlaps("430dp night")
+    }
+
+    /** Every word on the clipping is typed in Outfit: none of it in Bert's hand (0.15.0 set the post in Gochi Hand). */
+    @Test fun theClippingIsTypedNotHandwritten() {
+        for (activity in listOf<(Long) -> ActivityState>({ feed(it, postedAt = it - 3_600_000) }, { ActivityState.Unavailable }, { ActivityState.Empty })) {
+            home(10, activity = activity)
+            for (tag in listOf("note-eyebrow", "note-body", "note-byline")) {
+                val family = layout(tag).layoutInput.style.fontFamily
+                assertEquals("$tag", Outfit, family)
+                assertTrue("$tag is in Bert's hand", family != BertHand)
+            }
+            assertEquals(BYLINE, layout("note-byline").layoutInput.text.text)
+            assertTrue(layout("note-eyebrow").layoutInput.text.text, layout("note-eyebrow").layoutInput.text.text.contains("BERTHALLA"))
+        }
     }
 
     @Test fun eachTapsWhereItsRowDid() {

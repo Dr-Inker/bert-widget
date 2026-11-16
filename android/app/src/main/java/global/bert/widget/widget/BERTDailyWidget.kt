@@ -41,9 +41,10 @@ import global.bert.widget.data.MyBertRepository
 import global.bert.widget.data.MyBertStore
 
 /**
- * Bert's day: a note from Bert, on paper (0.15). Pixel Bert acts the feed's mood with a handwritten "feeling …", his latest
- * post is in his handwriting under a "FROM BERT · 6:45 AM" eyebrow, and the tournament is chalked on a slate. Paper and
- * slate are fixed materials, so the note looks the same under every theme pack. No market data. Tapping opens Home.
+ * Bert's day, on paper (0.15). Pixel Bert acts the feed's mood with a handwritten "feeling …"; the latest post from Berthalla
+ * is typed under "BERTHALLA · 28 OCT", the post's own date (0.15.1: the Berthalla X bot's post, never in Bert's hand); and the
+ * tournament is chalked on a slate. Paper and slate are fixed materials, so the note looks the same under every theme
+ * pack. No market data. Tapping opens Home.
  */
 class BERTDailyWidget : GlanceAppWidget() {
     override val sizeMode: SizeMode = SizeMode.Exact
@@ -112,21 +113,23 @@ private fun NoteContent(revision: Int, activity: BERTActivity?, myBert: WidgetBe
                 plan.slate?.let { NotePieceView(it, d) }
             }
         } else Column(GlanceModifier.fillMaxSize().padding(start = plan.pad.asDp(), top = plan.pad.asDp(), end = plan.pad.asDp(), bottom = plan.bottomPad.asDp())) {
+            val besideStamp = plan.stamp?.takeIf { !plan.stampBelow }
             Row(GlanceModifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                 NotePieceView(plan.bert, d)
-                if (!plan.captionBelow && (plan.caption != null || plan.stamp != null)) {
+                if (!plan.captionBelow && (plan.caption != null || besideStamp != null)) {
                     Spacer(GlanceModifier.width(plan.columnGap.asDp()))
                     Column {
                         plan.caption?.let { NotePieceView(it, d) }
-                        plan.stamp?.let { if (plan.caption != null) Spacer(GlanceModifier.height(plan.captionGap.asDp())); NotePieceView(it, d) }
+                        besideStamp?.let { if (plan.caption != null) Spacer(GlanceModifier.height(plan.captionGap.asDp())); NotePieceView(it, d) }
                     }
                 }
             }
-            // Where the mood and the time do not fit beside Bert, they go on their own lines under him.
+            // Where the mood does not fit beside Bert, it and the stamp go on their own lines under him; where only
+            // Berthalla's name does not, the name goes over the post.
             if (plan.captionBelow) {
                 plan.caption?.let { Spacer(GlanceModifier.height(plan.captionGap.asDp())); NotePieceView(it, d) }
                 plan.stamp?.let { Spacer(GlanceModifier.height(plan.captionGap.asDp())); NotePieceView(it, d) }
-            }
+            } else if (plan.stampBelow) plan.stamp?.let { Spacer(GlanceModifier.height(plan.stampGap.asDp())); NotePieceView(it, d) }
             plan.post?.let { Spacer(GlanceModifier.height(plan.postGap.asDp())); NotePieceView(it, d) }
             Spacer(GlanceModifier.defaultWeight())
             plan.slate?.let { NotePieceView(it, d) }

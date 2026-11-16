@@ -43,7 +43,8 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
     val detailScroll = key(selectedId) { rememberScrollState() }
     val entries by produceState<List<SavedCaption>?>(null, revision) {
         value = null
-        try { value = withContext(Dispatchers.IO) { library.list() } }
+        // Cards saved before 0.15.1 are drawn again with their true label first, so the thumbnails show it too.
+        try { value = withContext(Dispatchers.IO) { runCatching { library.relabelOld() }; library.list() } }
         catch (cancelled: CancellationException) { throw cancelled }
         catch (_: Exception) { error = "Your collection couldn’t load. Try again." }
     }
@@ -61,7 +62,8 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
     if (loading) {
         Box(modifier.padding(20.dp)) { LinearProgressIndicator(Modifier.fillMaxWidth()) }
     } else BERTScreenContent(modifier, if (selectedId == null) collectionScroll else detailScroll) {
-    Text(if (selectedId == null) "Your collection" else "Made by you.", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+    // A saved card may be the holder's words or a Berthalla post: the heading is true of both.
+    Text(if (selectedId == null) "Your collection" else "Saved card", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.Bold)
     if (selectedId != null) {
         TextButton(onClick = backToCollection, enabled = !busy) { Text("Back to collection") }
         card?.let { ready ->
@@ -71,7 +73,12 @@ internal fun SavedCardsScreen(modifier: Modifier = Modifier, makeCard: () -> Uni
                         .aspectRatio(ready.bitmap.width.toFloat() / ready.bitmap.height).clip(RoundedCornerShape(20.dp)))
             }
             Text(ready.caption, color = Cream, fontSize = 17.sp, lineHeight = 24.sp)
-            Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = {
+            // Saved before 0.15.1 and not relabelled (its picture would have changed): its image still names Bert as the
+            // writer, so it is kept, and stays on the phone.
+            if (ready.oldLabel) Text("This card has an old label that couldn’t be changed without changing its picture, so it stays on " +
+                "this phone and can’t be shared. You can make it again in Create.", color = Amber, fontSize = 14.sp, lineHeight = 20.sp,
+                modifier = Modifier.testTag("saved-card-old-label"))
+            else Button(colors = actionButtonColors(), border = actionButtonBorder(), onClick = {
                 busy = true; error = null
                 scope.launch {
                     try {

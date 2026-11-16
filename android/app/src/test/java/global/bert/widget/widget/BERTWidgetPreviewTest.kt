@@ -75,6 +75,7 @@ class BERTWidgetPreviewTest {
             .put("source", JSONObject().put("name", "geckoterminal").put("intervalSeconds", 300)).put("points", points).toString()).commit()
         val status = JSONObject().put("updated_at", NOW / 1000 - 120).put("mood", "content")
             .put("latest_post", "the blanket settled heavier on its own. like the season finally taught it how to hold still.")
+            .put("latest_post_at", NOW / 1000 - 40 * 60).put("latest_post_x_id", "1983746501234567890")
             .put("flappy", JSONObject().put("name", "Weekend Dash").put("ends_at", Instant.ofEpochMilli(NOW + 30 * 3_600_000L).toString()).put("status", "live").put("pool", 250)
                 .put("top", JSONArray().put(JSONObject().put("rank", 1).put("name", "Biscuit").put("score", 143).put("prize", 100))))
         context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().putString("last_valid_activity", status.toString()).commit()

@@ -72,12 +72,15 @@ class BERTContrastTest {
                     check("home slate ${time.name.lowercase()} ${ground.first} / $name", ink, ground.second)
                 }
             }
-            val paper = PaperTone.of(time)
-            // And while a finger holds it, when the paper dips (PAPER_DIP).
-            val held = paper.paper.fill.let { Color(it.red * PAPER_DIP, it.green * PAPER_DIP, it.blue * PAPER_DIP) }
-            for ((name, ink) in listOf("note" to paper.paper.ink, "eyebrow, 11sp" to paper.eyebrow, "link" to paper.link)) {
-                check("home note ${time.name.lowercase()} / $name", ink, paper.paper.fill)
-                check("home note ${time.name.lowercase()} held / $name", ink, held)
+            // Berthalla's clipping: every ink on its newsprint and on the faint print showing through from its other side,
+            // and both while a finger holds it, when the paper dips (PAPER_DIP).
+            val clip = ClipTone.of(time)
+            fun held(c: Color) = Color(c.red * PAPER_DIP, c.green * PAPER_DIP, c.blue * PAPER_DIP)
+            for ((ground, fill) in listOf("newsprint" to clip.fill, "show-through" to clip.showThrough)) {
+                for ((name, ink) in listOf("post" to clip.ink, "eyebrow, 11sp" to clip.eyebrow, "byline, 12sp" to clip.muted, "link" to clip.link)) {
+                    check("home clipping ${time.name.lowercase()} $ground / $name", ink, fill)
+                    check("home clipping ${time.name.lowercase()} $ground held / $name", ink, held(fill))
+                }
             }
         }
         // WidgetPalette uses these theme colors directly; negative 24h change is 12sp bold.

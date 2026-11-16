@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import global.bert.widget.data.BERTActivityRepository
+import global.bert.widget.formatObservedAt
 import global.bert.widget.data.MyBert
 import global.bert.widget.data.MyBertStore
 import global.bert.widget.theme.BERTThemePack
@@ -31,7 +32,7 @@ import java.io.File
 import java.time.Instant
 
 /**
- * Bert's day as a note from Bert, on paper (0.15), judged on the real widget: composed by Glance, inflated on the host
+ * Bert's day on paper (0.15), judged on the real widget: composed by Glance, inflated on the host
  * and drawn. Every check reads the view tree or the pixels the launcher would show, so each could fail.
  */
 @RunWith(RobolectricTestRunner::class)
@@ -42,16 +43,21 @@ class BertNoteWidgetTest {
 
     @After fun reset() {
         RuntimeEnvironment.setFontScale(1f)
+        context.getSharedPreferences("bert_journal", Context.MODE_PRIVATE).edit().clear().commit()
         MyBertStore(context).forget()
         BERTThemeStore(context).save(BERTThemePack.DEFAULT)
     }
 
     // ---- Fixtures ------------------------------------------------------------------------------------------------------------
 
-    private fun seed(post: String? = LONG_POST, mood: String? = "content", event: Boolean = true, agoMillis: Long = 60_000L) {
+    /** The feed: refreshed [agoMillis] ago; the post written [postedAgoMillis] ago (null: an older feed without the time), on X if [xId]. */
+    private fun seed(post: String? = LONG_POST, mood: String? = "content", event: Boolean = true, agoMillis: Long = 60_000L,
+                     postedAgoMillis: Long? = 2 * 3_600_000L, xId: String? = "1983746501234567890") {
         val now = System.currentTimeMillis()
         val status = JSONObject().put("updated_at", (now - agoMillis) / 1000)
         post?.let { status.put("latest_post", it) }
+        postedAgoMillis?.let { status.put("latest_post_at", (now - it) / 1000) }
+        xId?.let { status.put("latest_post_x_id", it) }
         mood?.let { status.put("mood", it) }
         if (event) status.put("flappy", JSONObject().put("name", "The Autumn Arc").put("ends_at", Instant.ofEpochMilli(now + (60L * 24 + 6) * 3_600_000 + 1_800_000).toString())
             .put("status", "live").put("pool", 250).put("top", JSONArray().put(JSONObject().put("rank", 1).put("name", "LamexCrypt").put("score", 143).put("prize", 100))))
@@ -59,6 +65,11 @@ class BertNoteWidgetTest {
     }
 
     private fun seedNothing() = context.getSharedPreferences("bert_activity", Context.MODE_PRIVATE).edit().clear().commit()
+
+    private fun plan(w: Int, h: Int) = planNote(context, w.toFloat(), h.toFloat(), BERTActivityRepository(context).load(), System.currentTimeMillis(), WidgetBert.load(context), false)
+
+    /** The post's piece: its description is the post, or (where the stamp gave way) the post after who wrote it. */
+    private fun Note.post(post: String) = pieces.firstOrNull { it.description == post || it.description?.endsWith(": $post") == true }
 
     private fun chooseMyBert() {
         val picture = BitmapFactory.decodeStream(javaClass.getResourceAsStream("/mybert/bert-2206.png"))
@@ -140,7 +151,8 @@ class BertNoteWidgetTest {
     /** What the plan shows of the post: all of it, or a start that ends at a word with an ellipsis, or at a sentence's end. */
     private fun cutProblems(w: Int, h: Int, post: String): List<String> {
         val plan = planNote(context, w.toFloat(), h.toFloat(), BERTActivityRepository(context).load(), System.currentTimeMillis(), WidgetBert.load(context), false)
-        val shown = plan.post?.shown ?: return listOf("post not shown")
+        // A run-in name ("BERTHALLA · ") is not part of the post.
+        val shown = plan.post?.shown?.removePrefix(SAVED_RUN_IN)?.removePrefix(RUN_IN_LONG)?.removePrefix(RUN_IN_SHORT) ?: return listOf("post not shown")
         if (shown == post) return emptyList()
         val body = shown.removeSuffix("…")
         val atWord = post.startsWith(body.trimEnd(',', ';', ':')) && (body.length >= post.length || post.getOrNull(body.length)?.let { it.isWhitespace() || it in ",;:" } == true)
@@ -152,7 +164,7 @@ class BertNoteWidgetTest {
 
     // ---- What it is -------------------------------------------------------------------------------------------------------
 
-    /** Paper, pixel Bert in the mood's pose, his mood and his words in his hand; no system-font text and no stock photo. */
+    /** Paper, pixel Bert in the mood's pose, his mood in his hand, Berthalla's post typed; no system-font text and no stock photo. */
     @Test fun bertsDayIsANoteFromBertOnPaper() {
         seed(mood = "content")
         for ((w, h) in listOf(180 to 180, 360 to 200)) {
@@ -160,7 +172,7 @@ class BertNoteWidgetTest {
             val paper = (0 until n.bitmap.height step 4).sumOf { y -> (0 until n.bitmap.width step 4).count { x -> n.bitmap.getPixel(x, y) == PAPER } }
             val total = (n.bitmap.height / 4 + 1) * (n.bitmap.width / 4 + 1)
             assertTrue("${w}x$h: paper is ${paper * 100 / total}% of the widget", paper * 100 / total >= 35)
-            assertTrue("${w}x$h: the post as Bert's handwriting, read in full by TalkBack", n.pieces.any { it.description == LONG_POST })
+            assertTrue("${w}x$h: the post, read in full by TalkBack", n.pieces.any { it.description == LONG_POST })
             assertEquals("${w}x$h: the mood in words", "Bert is feeling content", n.described("Bert is")?.description)
             assertTrue("${w}x$h: no system-font text: ${n.texts.map { it.text }}", n.texts.isEmpty())
             val sprite = n.sprite ?: error("${w}x$h: no pixel Bert")
@@ -257,7 +269,11 @@ class BertNoteWidgetTest {
                 for ((w, h) in SIZES) {
                     val n = render(w, h, "fit-$kind-s${(scale * 10).toInt()}-${w}x$h")
                     // Beyond Android's 1.3 step the post may be cut anywhere, but a note with room for it still shows some.
-                    val beyond = if (w * h >= 150 * 150 && n.pieces.none { it.description == post }) listOf("post gone at x$scale") else emptyList()
+                    // Room includes Berthalla's name, which a post never goes without and which is never cut: at text 2.0
+                    // "BERTHALLA" alone, at the 10sp floor, is wider than the words of a note under 160dp wide, and a
+                    // note under 140dp tall (a 4x1) leaves its words column too narrow for it, so there the post goes too.
+                    val nameFits = scale < 2f || (w >= 160 && h >= 140)
+                    val beyond = if (w * h >= 150 * 150 && nameFits && n.post(post) == null) listOf("post gone at x$scale") else emptyList()
                     report["$kind x$scale ${w}x$h"] = fitProblems(n) + (if (scale <= 1.3f) cutProblems(w, h, post) else beyond) +
                         listOfNotNull("no mood caption".takeIf { n.described("Bert is") == null })
                 }
@@ -281,9 +297,10 @@ class BertNoteWidgetTest {
                 val n = render(w, h, "ladder-s${(scale * 10).toInt()}-${w}x$h")
                 val plan = planNote(context, w.toFloat(), h.toFloat(), BERTActivityRepository(context).load(), System.currentTimeMillis(), null, false)
                 val post = plan.post
-                val slate = n.described("Flappy Bert tournament"); val stamp = n.described("From Bert")
+                val slate = n.described("Flappy Bert tournament"); val stamp = plan.stamp
                 if (post == null) { wrong += "x$scale ${w}x$h: no post"; continue }
-                if ((slate != null || stamp != null) && post.shown != LONG_POST && post.lines < 2) wrong += "x$scale ${w}x$h: extras kept while the post has ${post.lines} line"
+                // The slate is an extra; Berthalla's name is not (a post in sight always has it).
+                if (slate != null && post.shown != LONG_POST && post.lines < 2) wrong += "x$scale ${w}x$h: the slate kept while the post has ${post.lines} line"
                 if ((w to h) in FOUR_BY_TWO && (slate == null || stamp == null)) wrong += "x$scale ${w}x$h: 4x2 dropped ${listOfNotNull("slate".takeIf { slate == null }, "eyebrow".takeIf { stamp == null })}"
                 if ((w to h) in TWO_BY_TWO && stamp == null) wrong += "x$scale ${w}x$h: 2x2 without the time"
                 plan.slate?.shown?.let { if (!Regex("\\d+[dh]").containsMatchIn(it) || !(it.startsWith("The Autumn Arc ·") || it.startsWith("Flappy ·"))) wrong += "slate '$it'" }
@@ -294,13 +311,18 @@ class BertNoteWidgetTest {
 
     // ---- States ---------------------------------------------------------------------------------------------------------------
 
-    /** A copy the feed has not refreshed for 30 minutes says SAVED and its time, in rust; the unconfirmed tournament is not chalked. */
+    /**
+     * A copy the feed has not refreshed for 30 minutes says SAVED, in rust, and that Berthalla's feed (not Bert's) has not
+     * updated; the unconfirmed tournament is not chalked.
+     */
     @Test fun aStaleCopySaysWhenItIsFrom() {
         seed(LONG_POST, "content", event = true, agoMillis = 3 * 3_600_000L)
         for ((w, h) in listOf(120 to 110, 180 to 180, 360 to 200)) {
             val n = render(w, h, "stale-${w}x$h")
             val stamp = n.described("Saved copy from")
             if ((w to h) != (120 to 110)) assertTrue("${w}x$h: no saved stamp in ${n.pieces.map { it.description }}", stamp != null)
+            stamp?.description?.let { assertTrue(it, it.contains("the feed from Berthalla has not updated since") && !it.contains("Bert’s feed")) }
+            plan(w, h).stamp?.shown?.let { assertTrue(it, it.contains("BERTHALLA") && (it.startsWith("SAVED") || (w to h) == (120 to 110))) }
             stamp?.let { s ->
                 val ink = (0 until s.bitmap.height).flatMap { y -> (0 until s.bitmap.width).map { x -> s.bitmap.getPixel(x, y) } }.filter { android.graphics.Color.alpha(it) == 255 }
                 assertTrue("${w}x$h: the saved stamp is rust", ink.isNotEmpty() && ink.groupingBy { it }.eachCount().maxBy { it.value }.key == STALE)
@@ -310,13 +332,132 @@ class BertNoteWidgetTest {
         }
     }
 
-    /** Fresh, the time is in the eyebrow over the post at 4x2 and beside Bert at 2x2. */
-    @Test fun aFreshNoteSaysWhenItIsFrom() {
-        seed(LONG_POST, "content", event = true)
+    /** Fresh, "BERTHALLA" and the post's time are in the eyebrow over the post at 4x2 and beside Bert at 2x2. */
+    @Test fun aFreshNoteSaysWhoseItIsAndWhenItWasWritten() {
+        seed(LONG_POST, "content", event = true, postedAgoMillis = 2 * 3_600_000L)
+        val posted = formatObservedAt(System.currentTimeMillis() - 2 * 3_600_000L, use24Hour = false, dateOnlyWhenOld = true).removePrefix("As of ")
         for ((w, h) in TWO_BY_TWO + FOUR_BY_TWO) {
             val n = render(w, h, "fresh-${w}x$h")
-            assertTrue("${w}x$h: no time in ${n.pieces.map { it.description }}", n.described("From Bert, ") != null)
+            val stamp = plan(w, h).stamp ?: error("${w}x$h: no stamp")
+            val shown = stamp.shown!!.replace(" X BOT", "").replace('\n', ' ').replace("BERTHALLA ${posted.uppercase()}", "BERTHALLA · ${posted.uppercase()}")
+            assertEquals("${w}x$h", "BERTHALLA · ${posted.uppercase()}", shown)
+            // At 4x2 there is room to say what Berthalla is, so it never reads as a place Bert writes from.
+            if ((w to h) in FOUR_BY_TWO) assertEquals("${w}x$h", "BERTHALLA X BOT · ${posted.uppercase()}", stamp.shown)
+            assertTrue("${w}x$h: ${n.pieces.map { it.description }}", n.described("The Berthalla X bot, run by the BERT team, posted ") != null)
         }
+    }
+
+    /** 0.15.0 headed the post "FROM BERT · 6:45 AM", as if Bert wrote it: no size, state or text size says so now. */
+    @Test fun nothingSaysFromBert() {
+        val wrong = mutableListOf<String>()
+        for (scale in listOf(1f, 2f)) {
+            RuntimeEnvironment.setFontScale(scale)
+            for ((kind, setup) in listOf<Pair<String, () -> Unit>>("fresh" to { seed() }, "stale" to { seed(agoMillis = 3 * 3_600_000L) },
+                "no-time" to { seed(postedAgoMillis = null, xId = null) }, "no-post" to { seed(post = null) }, "nothing" to { seedNothing() })) {
+                setup()
+                for ((w, h) in SIZES) {
+                    val p = plan(w, h)
+                    for (piece in p.pieces) for (text in listOfNotNull(piece.shown, piece.description))
+                        if (Regex("from bert\\b|bert’s feed|bert's feed|bert’s next note", RegexOption.IGNORE_CASE).containsMatchIn(text)) wrong += "$kind x$scale ${w}x$h: '$text'"
+                }
+            }
+        }
+        // And what the planned pieces cannot see: the widget's first frame, its picker entries and every string and
+        // layout it is built from (0.15.0's loading line said "A note from Bert is on its way.").
+        val bertish = Regex("from bert\\b|note from bert|bert’s next note|bert's next note|bert’s feed|bert's feed", RegexOption.IGNORE_CASE)
+        val resources = listOf(File("src/main/res/layout"), File("src/main/res/xml"), File("src/main/res/values"))
+            .flatMap { it.listFiles().orEmpty().filter { f -> f.name.endsWith(".xml") } }
+        assertTrue(resources.any { it.name == "bert_daily_loading.xml" })
+        for (file in resources) Regex("android:(?:text|description|label|contentDescription)=\"([^\"]*)\"|<string[^>]*>([^<]*)</string>")
+            .findAll(file.readText()).map { it.groupValues.drop(1).joinToString("") }
+            .filter { bertish.containsMatchIn(it) }.forEach { wrong += "${file.name}: '$it'" }
+        for (choice in global.bert.widget.WidgetChoices) for (text in listOf(choice.name, choice.detail))
+            if (bertish.containsMatchIn(text)) wrong += "widget picker: '$text'"
+        assertTrue(wrong.joinToString("\n"), wrong.isEmpty())
+    }
+
+    /** Berthalla's post is typed (Outfit) at every size: only Bert's own mood is in his hand. */
+    @Test fun thePostIsTypedNotInBertsHand() {
+        val wrong = mutableListOf<String>()
+        for (scale in listOf(1f, 1.3f, 2f)) {
+            RuntimeEnvironment.setFontScale(scale)
+            seed(LONG_POST, "content", event = true)
+            for ((w, h) in SIZES) {
+                val p = plan(w, h)
+                p.post?.let { if (it.typeface == null || inBertsHand(context, it)) wrong += "x$scale ${w}x$h: post in Bert's hand" }
+                p.stamp?.let { if (inBertsHand(context, it)) wrong += "x$scale ${w}x$h: stamp in Bert's hand" }
+                p.caption?.let { if (!inBertsHand(context, it)) wrong += "x$scale ${w}x$h: the mood is not in his hand" }
+            }
+        }
+        assertTrue(wrong.joinToString("\n"), wrong.isEmpty())
+    }
+
+    /**
+     * Whose post it is, everywhere it is shown: at every size the ladder covers, at text 1.0, 1.3 and 2.0, fresh or saved,
+     * long or short, with or without My Bert, a post in sight has "BERTHALLA" in sight with it (the post gives up lines
+     * before the name goes), and TalkBack hears Berthalla's name and that it is the BERT team's X bot.
+     */
+    @Test fun thePostIsAlwaysAttributedToBerthalla() {
+        val wrong = mutableListOf<String>()
+        val savedRunIns = mutableListOf<String>()
+        for (scale in listOf(1f, 1.3f, 2f)) {
+            RuntimeEnvironment.setFontScale(scale)
+            for ((kind, setup) in listOf<Pair<String, () -> Unit>>(
+                "long" to { seed(LONG_POST, "melancholy", event = true) },
+                "short" to { seed(SHORT_POST, "giddy", event = false) },
+                "stale" to { seed(LONG_POST, "smug", event = true, agoMillis = 3 * 3_600_000L) },
+                "no-time" to { seed(LONG_POST, "content", event = true, postedAgoMillis = null, xId = null) },
+                "mybert" to { chooseMyBert(); seed(LONG_POST, "restless", event = true) },
+            )) {
+                setup()
+                for ((w, h) in SIZES) {
+                    val p = plan(w, h)
+                    val post = p.post ?: continue
+                    val runIn = post.shown?.removePrefix(SAVED_RUN_IN)?.startsWith("BERTHALLA") == true
+                    if (p.stamp?.shown?.contains("BERTHALLA") != true && !runIn) wrong += "$kind x$scale ${w}x$h: a post with no BERTHALLA in sight"
+                    // A saved copy says SAVED in sight, in its stamp or before its run-in name, at the 2x2 and 4x2 sizes
+                    // at text 1.0; where the word cannot fit at all, the rust alone says so.
+                    if (kind == "stale" && scale == 1f && (w to h) in TWO_BY_TWO + FOUR_BY_TWO &&
+                        p.stamp?.shown?.contains("SAVED") != true && post.shown?.startsWith(SAVED_RUN_IN) != true)
+                        wrong += "$kind x$scale ${w}x$h: a saved copy without SAVED in sight"
+                    if (post.shown?.startsWith(SAVED_RUN_IN + "BERTHALLA") == true) savedRunIns += "x$scale ${w}x$h"
+                    // The name is never broken across lines ("BERTHAL / LA"): the stamp's lines break at spaces, and a
+                    // run-in name ends its first line at a space or the end of the name.
+                    p.stamp?.shown?.let { if (!it.split('\n').all { line -> "BERTHALLA" !in line || Regex("\\bBERTHALLA\\b").containsMatchIn(line) }) wrong += "$kind x$scale ${w}x$h: stamp '$it'" }
+                    val heard = (p.stamp?.description ?: post.description).orEmpty().contains("The Berthalla X bot, run by the BERT team")
+                    if (!heard) wrong += "$kind x$scale ${w}x$h: TalkBack hears no Berthalla (${p.stamp?.description} / ${post.description?.take(40)})"
+                }
+                MyBertStore(context).forget()
+            }
+        }
+        // Where the name runs in at the post's start, a saved copy says SAVED before it (seen at some size).
+        println("NOTE REPORT saved run-ins: $savedRunIns")
+        assertTrue("no saved copy ever ran SAVED in before the name", savedRunIns.isNotEmpty())
+        assertTrue(wrong.joinToString("\n"), wrong.isEmpty())
+    }
+
+    /** The feed's refresh time (updated_at) is never shown as the post's: the post's own date, else first seen, else none. */
+    @Test fun theRefreshTimeIsNeverThePostsTime() {
+        val now = System.currentTimeMillis()
+        // Refreshed a minute ago, written three days ago: the stamp is the date, not a time today.
+        seed(LONG_POST, "content", event = false, agoMillis = 60_000L, postedAgoMillis = 3 * 86_400_000L)
+        val written = formatObservedAt(now - 3 * 86_400_000L, use24Hour = false, dateOnlyWhenOld = true).removePrefix("As of ").uppercase()
+        val refreshed = formatObservedAt(now - 60_000L, use24Hour = false, dateOnlyWhenOld = true).removePrefix("As of ").uppercase()
+        for ((w, h) in TWO_BY_TWO + FOUR_BY_TWO) {
+            val shown = plan(w, h).stamp?.shown.orEmpty()
+            assertTrue("${w}x$h: '$shown'", shown.contains(written) && !shown.contains(refreshed))
+        }
+        // An older feed without the post's time, and no record of when it was first seen: Berthalla's name, no time at all.
+        seed(LONG_POST, "content", event = false, agoMillis = 60_000L, postedAgoMillis = null)
+        for ((w, h) in TWO_BY_TWO + FOUR_BY_TWO) {
+            val stamp = plan(w, h).stamp ?: error("${w}x$h: no stamp")
+            assertTrue("${w}x$h: ${stamp.shown}", stamp.shown in setOf("BERTHALLA X BOT", "BERTHALLA"))
+            assertEquals("${w}x$h", "The Berthalla X bot, run by the BERT team", stamp.description)
+        }
+        // With the journal's first sight of it (Home saw it yesterday), that is its date.
+        global.bert.widget.data.BERTJournal(context).record(BERTActivityRepository(context).load()!!, now = now - 86_400_000L)
+        val seen = formatObservedAt(now - 86_400_000L, use24Hour = false, dateOnlyWhenOld = true).removePrefix("As of ").uppercase()
+        assertEquals("BERTHALLA X BOT · $seen", plan(360, 200).stamp?.shown)
     }
 
     /** No feed yet: F/10 and the app's own line (not in Bert's hand); no mood, time or slate. With a mood but no post, the mood still shows. */
@@ -364,14 +505,15 @@ class BertNoteWidgetTest {
 
     // ---- Reading it -----------------------------------------------------------------------------------------------------------
 
-    /** TalkBack: the mood, then when it is from, then the post in full, then the tournament. Pixel Bert is decorative. */
+    /** TalkBack: the mood, then whose post it is and when it was written, then the post in full, then the tournament. Pixel Bert is decorative. */
     @Test fun talkBackReadsTheMoodTheTimeThePostAndTheEvent() {
         seed(LONG_POST, "content", event = true)
         for ((w, h) in listOf(180 to 180, 360 to 200)) {
             val n = render(w, h, "talkback-${w}x$h")
             val spoken = n.pieces.mapNotNull { it.description }
-            assertEquals("${w}x$h", listOf("Bert is feeling content", "From Bert, ", LONG_POST, "Flappy Bert tournament, The Autumn Arc, 60 days 6 hours left"),
-                spoken.map { if (it.startsWith("From Bert, ")) "From Bert, " else it })
+            assertEquals("${w}x$h", listOf("Bert is feeling content", "The Berthalla X bot, run by the BERT team, posted ", LONG_POST,
+                "Flappy Bert tournament, The Autumn Arc, 60 days 6 hours left"),
+                spoken.map { if (it.startsWith("The Berthalla X bot, run by the BERT team, posted ")) "The Berthalla X bot, run by the BERT team, posted " else it })
             assertTrue("pixel Bert is not announced", n.sprite!!.view.importantForAccessibility == View.IMPORTANT_FOR_ACCESSIBILITY_NO)
         }
     }

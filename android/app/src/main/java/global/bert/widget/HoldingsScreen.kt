@@ -99,8 +99,10 @@ private fun HoldingsValue(value: String) {
 
 @Composable
 private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save: (BERTPosition) -> Unit) {
-    var amount by rememberSaveable(position.amount) { mutableStateOf(position.amount?.toBigDecimal()?.stripTrailingZeros()?.toPlainString() ?: "") }
-    var cost by rememberSaveable(position.totalCostUsd) { mutableStateOf(position.totalCostUsd?.toBigDecimal()?.stripTrailingZeros()?.toPlainString() ?: "") }
+    // In the phone's own number format, so what was saved reads back, and parses, the way it was typed.
+    var amount by rememberSaveable(position.amount) { mutableStateOf(position.amount?.let { formatPositionInput(it) } ?: "") }
+    var cost by rememberSaveable(position.totalCostUsd) { mutableStateOf(position.totalCostUsd?.let { formatPositionInput(it) } ?: "") }
+    val point = positionDecimalSeparator()
     var attempted by rememberSaveable { mutableStateOf(false) }
     val parsedAmount = parsePositionNumber(amount)
     val parsedCost = parsePositionNumber(cost)
@@ -116,9 +118,9 @@ private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save
                 supportingText = {
                     // Echo the interpretation so a grouping slip (1.500 meant as 1,500) is visible before saving.
                     Text(when {
-                        amountError -> "Enter zero or more, using a decimal point."
-                        parsedAmount != null -> "Saves as ${formatExactTokenAmount(parsedAmount)} BERT"
-                        else -> "Use a decimal point, e.g. 250000.5"
+                        amountError -> "Enter zero or more, with $point for decimals."
+                        parsedAmount != null -> "Saves as ${formatPositionShown(parsedAmount)} BERT"
+                        else -> "Use $point for decimals, e.g. 250000${point}5"
                     })
                 },
             )
@@ -126,7 +128,11 @@ private fun PositionEditor(position: BERTPosition, onCancel: (() -> Unit)?, save
                 value = cost, onValueChange = { cost = it }, modifier = Modifier.fillMaxWidth(),
                 label = { Text("Total cost in USD (optional)") }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), isError = costError,
-                supportingText = { Text(if (costError) "Enter a valid USD amount or leave blank." else "Total paid for this amount, not price per token.") },
+                supportingText = { Text(when {
+                    costError -> "Enter a valid USD amount or leave blank."
+                    parsedCost != null -> "Saves as \$${formatPositionShown(parsedCost)} in total"
+                    else -> "Total paid for this amount, not price per token."
+                }) },
             )
             Button(colors = solidActionButtonColors(), onClick = {
                 attempted = true

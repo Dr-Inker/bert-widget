@@ -1,11 +1,93 @@
 # Next session — BERT app
 
+## START HERE (memo 16 November 2026, evening): 0.15.1 is LIVE on berthalla.io; Play upload and the community note are the owner's
+
+**Live.** The owner saw the preview on the S25 and said "yes lets go pls". 0.15.1 (36), built from `5531f8e` (code
+`17a0830`, gate PASS, 531 tests), is on berthalla.io: site `a2db38f`, APK `4fd0ba70…` under both names, `release.json`
+0.15.1, `check-page.cjs public` passes. The AAB (`470aafaa…`), mapping, six screenshots and `LISTING-0.15.1.md` are on
+the PC in `Android Builds\BERT-Play\`. GitHub `main` carries it (squashed, scrubbed; pushed 16 November). Record:
+`docs/evidence/2026-11-16/release-0.15.1/README.md`.
+Rollback: `git -C /opt/berthalla revert a2db38f` + the deploy script (never `reset --hard` there: another session has
+uncommitted work in that tree).
+
+Owed by the owner:
+1. Play upload of 0.15.1 (36); the "What's new" text is in the release record. Play is still on 0.12.0.
+2. One community note: 0.14.0 installs have no update check (0.14.2 and 0.15.0 website installs hear within a day).
+3. Whether berthalla.io's homepage should keep "Decree of the Mayor" for the posts (left alone).
+
+On the S25: BERT Preview 0.15.1 (`4d3cea6`) with a 4×2 Bert's day widget on the second home page and two test cards
+in Saved; the real app there is still 0.14.0 (its price and market widgets are on the third home page).
+
+Next, for 0.16, from the four-critic review of 16 Nov (`/opt/bert-widget-qa/private/critique-2026-11-16/SUMMARY.md`;
+its reports wrongly say "fan bot"): the slogans on Play, Create and Tools; one Bert and one wordmark, and the launcher
+icon; Bert at night; a widget prompt on first run; a Bert-plus-holdings widget; and, the owner's lore, the gates of
+Berthalla ("where true Bertlievers will end up") against the garden gate and "through the gate".
+
+## Memo 16 November 2026 (afternoon), superseded by the one above: 0.15.1 (36) built, gated and reviewed on `v0151-clipping`
+
+Worktree `/opt/bert-widget-v0151`, branch `v0151-clipping` from `v015`; code `17a0830` (HEAD adds the Play listing wording and this memo). Nothing pushed, nothing on
+berthalla.io, nothing on Play. Waiting on the owner's look at the preview, then the usual release recipe.
+
+**Owner's rules (16 Nov).** Berthalla is a PLACE, thought of like Valhalla ("the gates of Berthalla is where true
+Bertlievers will end up"). The bot is "the Berthalla X bot", run by the official BERT team: never "fan bot", "fan
+project" or "fan app", and never Berthalla as a person or maker ("Berthalla posts", "Berthalla's", "made by Berthalla").
+The app is "an app for Bertlievers, forged in Berthalla" (not "born in"). The point of 0.15.1 is that the posts are the
+bot's, not Bert's own words (Bert is a real dog). `BerthallaWordingTest` fails on all the wrong forms.
+
+What 0.15.1 changes:
+- **Berthalla's posts are a printed clipping, not Bert's handwriting.** Home: newsprint, pinned, typed in Outfit, headed
+  "BERTHALLA ON X · <post date>", byline "the BERT team's X bot, posting as Bert". Bert's day widget: "BERTHALLA X BOT ·
+  time", falling back to "BERTHALLA · time", then "BERTHALLA"; a visible post always has a visible name. The board,
+  TalkBack text and the widget's loading text name Berthalla. Bert's handwriting is only on his own garden lines.
+- **The feed carries the post's own date and X id** (`latest_post_at`, `latest_post_x_id`; server `/opt/berthalla`
+  `scripts/gen_status.py`, commits `8f64c5a`, `e12f9e7`, live since 16 Nov). The app dates the post by them; the journal
+  keeps the time.
+- **Cards.** From an unedited post: "FROM THE BERTHALLA X BOT". Anything a holder typed or edited:
+  "MADE WITH THE BERT APP". "A NOTE FROM BERT" is gone. Old saved cards have only their label repainted (every other
+  pixel kept); one that can't be relabelled safely is kept, shown with a note, and can't be shared.
+- **Meet Bert says "Mayor of Solana"** (canon). About opens "An app for Bertlievers, forged in Berthalla. Its daily
+  updates come from the Berthalla X bot, run by the BERT team, posting in Bert's voice." The Play listing draft
+  (`docs/play/LISTING.md`) carries the same line.
+- **Typed numbers** (alerts, holdings): the phone's own format first, then the other habit only where it can mean one
+  thing ("0,015" is 0.015 on every phone; 0.15.0 saved it as 15). Any script's digits; the Arabic marks keep their
+  meaning; lakhs in IN, BD, NP, PK. Ambiguous input is refused. Alerts shows the saved level back.
+
+Evidence, all in `/opt/bert-widget-qa/look-0.15.1/`: gate `gate-17a0830.log` (exit 0; Node 15/15, 531 Android unit
+tests, lint, debug build, Lost Trail check); renders in `home-renders/`, `widget-renders/`, `round2/`, `round3/`,
+`round4/`, `round5/`. Four independent review rounds (Opus, high); the last verdict was "ship", and its one Should is
+fixed in `7335e14`. Round five (`cc0d423`, `17a0830`) is a wording pass only, gated but not separately reviewed.
+Preview: `/opt/bert-widget-qa/preview-0.15.1/bert-0.15.1-preview-4d3cea6.apk` (sha256 `2c2f798b…9a93`, Preview key
+`5c1f4ef8…`, `check-preview-apk.py` exit 0). The earlier `…-7335e14.apk` has the superseded wording; don't use it.
+
+**S25 check, 16 Nov (preview `4d3cea6` over the 0.15.0 preview, en-GB; evidence `/opt/bert-widget-qa/look-0.15.1/device/`):**
+the Home clipping at golden hour with the day's post; two cards saved in 0.15.0 (photo/note, Mayor/poster) relabelled on
+first open of Saved, with only the label box changed (0.5% of pixels) and `source: HOLDER` written; "0,015" typed in
+Alerts reads "Alerts above $0.015 once saved" (nothing saved); Meet Bert and About show the forged wording. The Bert's day widget, 4×2, added from
+Tools › Style with the owner's say (it sits on the second home page): "BERTHALLA X BOT · 14:00" over the typed post,
+pixel Bert "feeling giddy", the tournament slate, One UI corners clean (`after-10-widget-4x2.png`). The phone's other
+BERT widgets (price, market desk, third home page) are the real 0.14.0 app's. NOT yet seen on the phone: the widget at
+2×2, night, TalkBack. adb `input text` through `ssh pc` drops characters
+and PowerShell eats a comma: type with single `input keyevent` calls.
+
+Still to look at on the S25: the clipping on Home by day and night; the Bert's day widget at
+2×2 and 4×2 (header fits, One UI corners); an old saved card after the update (label changed, picture the same);
+typing an alert with a comma; TalkBack on the clipping.
+
+Next:
+1. Owner's look at the preview.
+2. Release recipe as 0.15.0's (`docs/evidence/2026-11-14/release-0.15.0/`): signed APK and AAB, website line and
+   privacy page if needed, `release.json`, `check-page.cjs public`. The berthalla.io homepage still presents the posts as
+   "Decree of the Mayor"; left alone, the owner's call.
+3. Still open from the four-critic review of 16 Nov (`/opt/bert-widget-qa/private/critique-2026-11-16/SUMMARY.md`), for
+   0.16: the slogans on Play, Create and Tools; one Bert and one wordmark, and the launcher icon; Bert at night; a
+   widget prompt on first run; a Bert-plus-holdings widget. The critics' reports use "fan bot"; that wording is wrong.
+
 ## START HERE (memo 14 November 2026, evening): 0.15.0 is LIVE on berthalla.io; Play upload and the community note are the owner's
 
 **Live.** The owner tried the preview ("just downloaded it and its pretty good") and then said "Run it and push".
 0.15.0 (35), built from `e135215` (gate PASS, 490 tests), is on berthalla.io: site `c4ceb5b`, APK `6fe4c8b2…` under
 both names, `release.json` 0.15.0, `check-page.cjs public` passes. The AAB (`9ce41d4b…`), mapping, six screenshots and
-`LISTING-0.15.0.md` are on the PC in `Android Builds\BERT-Play\`. GitHub `main` has the squash. Record:
+`LISTING-0.15.0.md` are on the PC in `Android Builds\BERT-Play\`. GitHub `main` = `f6263ba` (squashed, scrubbed). Record:
 `docs/evidence/2026-11-14/release-0.15.0/README.md`. Rollback: `git -C /opt/berthalla reset --hard e023e2d`, then
 `scripts/deploy_website_vultr.sh`.
 
@@ -137,7 +219,8 @@ has no update check), and the GitHub squash (held then; done with 0.15.0). The
 
 **Next: 0.15, "slate and paper".** The owner asked "is that the best you can do?", saw two mockup sheets
 (`/opt/bert-widget-qa/look-0.15/home.png`, `widgets.png`) and handed over the lead. Direction: numbers are chalked
-on slate, Bert's words are on paper in his handwriting. Home's price line and board row become a slate and a pinned
+on slate, Bert's words are on paper in his handwriting (0.15.1 narrows it: Bert's own lines are in his handwriting;
+Berthalla's posts are printed clippings). Home's price line and board row become a slate and a pinned
 note; the Bert's day widget becomes a paper note where pixel Bert acts the mood; plus the night puffs fix and a
 themed launcher icon. Later, same direction: garden backgrounds on Bert's pixel grid, and Tools/Alerts.
 
